@@ -10,15 +10,15 @@ RePolyA is a versatile multi-agent framework geared for expansive research and i
   2. Topical Research of Biotech Companies
 
 ## Quick Links:
-- [Installation Guide](link_to_installation_guide)
-- [Configuration](link_to_configuration)
-- [Documentation](link_to_docs)
+- [Installation Guide](https://github.com/yiouyou/RePolyA/blob/main/INSTALLATION_GUIDE)
+- [Configuration Guide](https://github.com/yiouyou/RePolyA/blob/main/CONFIGURATION_GUIDE)
+- [Documentation](https://github.com/yiouyou/RePolyA/blob/main/DOCUMENTATION)
 
 ## Contribute
-Help us refine RePolyA. Refer to our [Contribution Guide](link_to_contributing).
+Help us refine RePolyA. Refer to our [Contribution Guide](https://github.com/yiouyou/RePolyA/blob/main/CONTRIBUTION_GUIDE).
 
 ## License
-RePolyA is under the Apache 2.0 License. See [LICENSE.md](https://github.com/yiouyou/RePolyA/blob/main/LICENSE) for details.
+RePolyA is under the Apache 2.0 License. See [LICENSE](https://github.com/yiouyou/RePolyA/blob/main/LICENSE) for details.
 
 ## Acknowledgements
 Gratitude to all contributors and the broader research community.
