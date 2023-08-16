@@ -18,7 +18,7 @@ RePolyA is a versatile multi-agent framework geared for expansive research and i
 Help us refine RePolyA. Refer to our [Contribution Guide](link_to_contributing).
 
 ## License
-RePolyA is under the XYZ License. See [LICENSE.md](link_to_license) for details.
+RePolyA is under the Apache 2.0 License. See [LICENSE.md](https://github.com/yiouyou/RePolyA/blob/main/LICENSE) for details.
 
 ## Acknowledgements
 Gratitude to all contributors and the broader research community.
