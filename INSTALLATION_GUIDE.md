@@ -40,7 +40,7 @@ Before beginning the installation, make sure you have:
 
 4. **Configuration** (If required)
 
-   Certain modules or functionalities might need additional configuration or setup, such as setting environment variables or configuring external services. Refer to the [Configuration Guide](https://github.com/yiouyou/RePolyA/blob/main/CONFIGURATION_GUIDE) for more specifics.
+   Certain modules or functionalities might need additional configuration or setup, such as setting environment variables or configuring external services. Refer to the [Configuration Guide](https://github.com/yiouyou/RePolyA/blob/main/CONFIGURATION_GUIDE.md) for more specifics.
 
 5. **Verify Installation**
 

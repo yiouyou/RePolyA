@@ -4,7 +4,7 @@ Thank you for your interest in contributing to RePolyA! Every contribution, big 
 
 ## Getting Started
 
-1. **Fork the Repository**: Start by forking the [RePolyA repository](https://github.com/yiouyou/RePolyA/tree/main) to your account.
+1. **Fork the Repository**: Start by forking the [RePolyA repository](https://github.com/yiouyou/RePolyA) to your account.
 2. **Clone the Fork**: Once forked, you can clone your forked repo with `git clone <your-forked-repo-url>`
 
 ## Setting Up

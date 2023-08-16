@@ -29,7 +29,7 @@ Before running the cases, ensure you have:
    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
    ```
 3. **Installed Dependencies**: `pip install -r requirements.txt`
-4. **Configured the Environment**: Follow our [Configuration Guide](https://github.com/yiouyou/RePolyA/blob/main/CONTRIBUTION_GUIDE) to set up necessary keys and settings.
+4. **Configured the Environment**: Follow our [Configuration Guide](https://github.com/yiouyou/RePolyA/blob/main/CONTRIBUTION_GUIDE.md) to set up necessary keys and settings.
 
 ## Running the Cases
 
@@ -71,7 +71,7 @@ For questions or feedback, feel free to [open an issue](link_to_github_issues) o
 
 ## License
 
-RePolyA is under the [Apache License 2.0](https://github.com/yiouyou/RePolyA/blob/main/LICENSE).
+RePolyA is under the [Apache License 2.0](https://github.com/yiouyou/RePolyA/blob/main/LICENSE.md).
 
 ---
 
