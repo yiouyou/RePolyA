@@ -1,8 +1,8 @@
 # coding=utf-8
 import sys
 
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 import urllib3
 urllib3.disable_warnings()
@@ -47,7 +47,7 @@ def chg_btn_color_if_input(_input):
 ##### writing assistant
 def auto_wa(_topic):
     _text = generated_text(_topic)
-    _file = _topic.replace(' ','_') + ".md"
+    _file = "./workspace/" + _topic.replace(' ','_') + ".md"
     with open(_file, 'w', encoding='utf-8') as wf:
         wf.write(_text)
     return [_text, gr.update(value=_file)]
