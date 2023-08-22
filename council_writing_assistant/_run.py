@@ -83,8 +83,9 @@ search_chain = Chain(
 
 
 # Initialize Controller and Evaluator
+controller_llm = OpenAILLM.from_env(model='gpt-4')
 controller = WritingAssistantController(
-    openai_llm,
+    controller_llm,
     top_k_execution_plan=3
 )
 evaluator = BasicEvaluatorWithSource()
