@@ -1,3 +1,24 @@
+*~$*
+tmp*
+*_examples
+
+# key
+key.yaml
+
+# chroma
+.chroma
+
+# mermaid
+*.mmd
+
+# logs
+logs/*
+!logs/.gitkeep
+
+# workspace
+workspace/*
+!workspace/.gitkeep
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
