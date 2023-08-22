@@ -3,16 +3,21 @@ import threading
 import time
 
 import logging
+# import os
+# _log_path = './logs/wa.log'
+# if os.path.exists(_log_path):
+#     os.remove(_log_path)
 logging.basicConfig(
     # format="\n[%(name)s:%(funcName)s:]\n%(message)s",
     format="\n[%(funcName)s:]\n%(message)s",
     datefmt="%Y-%m-%d %H:%M:%S%z",
     encoding='utf-8',
-    filename="./logs/wa.log",
+    filename='./logs/wa.log',
     filemode="a",
 )
 logging.getLogger("council").setLevel(logging.INFO)
 # logging.getLogger("council").setLevel(logging.DEBUG)
+logger = logging.getLogger("council")
 
 from council.runners import Budget, Parallel
 from council.contexts import AgentContext, ChatHistory
@@ -24,6 +29,7 @@ from council.llm.openai_llm import OpenAILLM
 from .skills import SectionWriterSkill, OutlineWriterSkill, GoogleAggregatorSkill, CustomGoogleSearchSkill, CustomGoogleNewsSkill, LLMRetrievalSkill
 from .controller import WritingAssistantController
 from .evaluator import BasicEvaluatorWithSource
+from .const import WORKSPACE_ROOT
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -98,6 +104,7 @@ agent = Agent(controller, [outline_chain, writer_chain], evaluator)
 
 
 def generated_text(_topic):
+    _text = "test"
     # s = Spinner()
     # s.start()
     chat_history.add_user_message(_topic)
@@ -105,8 +112,13 @@ def generated_text(_topic):
     # s.stop()
     _text = result.messages[-1].message.message
     _text = _text.replace("```", "")
-    print(f"\n```markdown\n{_text}\n```\n")
-    return _text
+    # print(f"\n```markdown\n{_text}\n```\n")
+    _fn = _topic.replace(' ', '_')[:20] + ".md"
+    _file = WORKSPACE_ROOT / _fn
+    with open(_file, 'w', encoding='utf-8') as wf:
+        wf.write(_text)
+    logger.info(_file)
+    return _text, _file
 
 
 def main():
@@ -118,7 +130,7 @@ def main():
         else:
             if user_input == '':
                 user_input = "Tell me about the history of box manufacturing."
-            _txt = generated_txt(user_input)
+            _txt = generated_text(user_input)
             print(f"\n```markdown\n{_txt}\n```\n")
     print("Goodbye!")
 

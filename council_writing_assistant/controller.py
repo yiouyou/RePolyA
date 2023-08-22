@@ -115,7 +115,7 @@ class WritingAssistantController(ControllerBase):
         current_iteration_results = []
         for scored_result in all_eval_results:
             message = scored_result.message
-            logger.debug(f"**message: {message}")
+            logger.debug(f"message: {message}")
             if message.data['iteration'] == self._iteration:
                 current_iteration_results.append(message)
         ## If multiple outlines or articles were generated in the last iteration, 

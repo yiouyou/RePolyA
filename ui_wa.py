@@ -37,7 +37,6 @@ def read_logs():
         return f.read()
 
 def chg_btn_color_if_input(_input):
-    import gradio as gr
     if _input:
         return gr.update(variant="primary")
     else:
@@ -46,10 +45,13 @@ def chg_btn_color_if_input(_input):
 
 ##### writing assistant
 def auto_wa(_topic):
-    _text = generated_text(_topic)
-    _file = "./workspace/" + _topic.replace(' ','_') + ".md"
-    with open(_file, 'w', encoding='utf-8') as wf:
-        wf.write(_text)
+    import os
+    _log_path = './logs/wa.log'
+    if os.path.exists(_log_path):
+        with open(_log_path, 'w', encoding='utf-8') as wf:
+            wf.write('')
+    _text, _file = generated_text(_topic)
+    # print(_file)
     return [_text, gr.update(value=_file)]
 
 ##### UI
