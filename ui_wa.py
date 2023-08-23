@@ -27,8 +27,7 @@ class Logger:
         self.log.flush()
         
     def isatty(self):
-        return False    
-
+        return False
 # sys.stdout = Logger("./logs/wa.log")
 
 def read_logs(_input):
@@ -52,12 +51,10 @@ def auto_wa(_topic):
     _topic20 = _topic.replace(' ', '_')[:20]
     _fn = "wa_" + _topic20 + ".log"
     _log_path = LOG_ROOT / _fn
+    with open(_log_path, 'w', encoding='utf-8') as wf:
+        wf.write('')
     ### sys.stdout
-    sys.stdout = Logger(_log_path)
-    ### if exists, clean
-    if os.path.exists(_log_path):
-        with open(_log_path, 'w', encoding='utf-8') as wf:
-            wf.write('')
+    sys.stdout = Logger(_log_path)        
     ### generate text
     _text, _file = generated_text(_topic)
     return [_text, gr.update(value=_file)]
