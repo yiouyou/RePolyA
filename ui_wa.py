@@ -29,7 +29,7 @@ class Logger:
     def isatty(self):
         return False    
 
-sys.stdout = Logger("./logs/wa.log")
+# sys.stdout = Logger("./logs/wa.log")
 
 def read_logs(_input):
     sys.stdout.flush()
@@ -111,9 +111,10 @@ with gr.Blocks(title=_description) as demo:
 
 if __name__ == "__main__":
 
+    _port = sys.argv[1]
     demo.queue(concurrency_count=1).launch(
         server_name="0.0.0.0",
-        server_port=7788,
+        server_port=_port,
         share=False,
         favicon_path="./asset/favicon_wa.png",
         # auth = ('sz','1123'),
