@@ -111,7 +111,7 @@ with gr.Blocks(title=_description) as demo:
 
 if __name__ == "__main__":
 
-    _port = sys.argv[1]
+    _port = int(sys.argv[1])
     demo.queue(concurrency_count=1).launch(
         server_name="0.0.0.0",
         server_port=_port,
