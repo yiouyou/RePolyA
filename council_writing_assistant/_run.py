@@ -88,9 +88,7 @@ agent = Agent(controller, [outline_chain, writer_chain], evaluator)
 
 def generated_text(_topic):
     ##### log
-    _topic20 = _topic.replace(' ', '_')[:20]
-    _fn = "wa_" + _topic20 + ".log"
-    _log_path = LOG_ROOT / _fn
+    _log_path = LOG_ROOT / 'wa.log'
     import logging
     logging.basicConfig(
         # format="\n[%(name)s:%(funcName)s:]\n%(message)s",
@@ -113,8 +111,10 @@ def generated_text(_topic):
     _text = result.messages[-1].message.message
     _text = _text.replace("```", "")
     # print(f"\n```markdown\n{_text}\n```\n")
-    _fn = _topic20 + ".md"
-    _file = WORKSPACE_ROOT / _fn
+    ##### write md
+    _topic20 = _topic.replace(' ', '_')[:20]
+    _mdfn = _topic20 + ".md"
+    _file = WORKSPACE_ROOT / _mdfn
     with open(_file, 'w', encoding='utf-8') as wf:
         wf.write(_text)
     logger.info(_file)
@@ -131,9 +131,7 @@ def main():
             if user_input == '':
                 user_input = "Tell me about the history of box manufacturing."
             ##### log
-            _topic20 = user_input.replace(' ', '_')[:20]
-            _fn = "wa_" + _topic20 + ".log"
-            _log_path = LOG_ROOT / _fn
+            _log_path = LOG_ROOT / 'wa.log'
             import logging
             logging.basicConfig(
                 format="\n[%(name)s:%(funcName)s:]\n%(message)s",
@@ -146,6 +144,8 @@ def main():
             logging.getLogger("council").setLevel(logging.DEBUG)
             logger = logging.getLogger("council")
             _text = generated_text(user_input)
+            ##### write md
+            _topic20 = user_input.replace(' ', '_')[:20]
             _fn = _topic20 + ".md"
             _file = WORKSPACE_ROOT / _fn
             with open(_file, 'w', encoding='utf-8') as wf:

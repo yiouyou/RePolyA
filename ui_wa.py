@@ -13,6 +13,12 @@ from functools import partial
 from council_writing_assistant import generated_text, LOG_ROOT
 
 
+def chg_btn_color_if_input(_topic):
+    if _topic:
+        return gr.update(variant="primary")
+    else:
+        return gr.update(variant="secondary")
+
 class Logger:
     def __init__(self, filename):
         self.terminal = sys.stdout
@@ -28,34 +34,21 @@ class Logger:
         
     def isatty(self):
         return False
-# sys.stdout = Logger("./logs/wa.log")
 
-def read_logs(_input):
+_log_path = LOG_ROOT / 'wa.log'
+sys.stdout = Logger(_log_path)
+
+def read_logs():
     sys.stdout.flush()
-    _topic20 = _input.replace(' ', '_')[:20]
-    _fn = "wa_" + _topic20 + ".log"
-    _log_path = LOG_ROOT / _fn
+    ### read log
     with open(_log_path, "r") as f:
-        return f.read()
-
-def chg_btn_color_if_input(_input):
-    if _input:
-        return gr.update(variant="primary")
-    else:
-        return gr.update(variant="secondary")
-
+        _log = f.read()
+    return _log
 
 ##### writing assistant
 def auto_wa(_topic):
-    import os
-    _topic20 = _topic.replace(' ', '_')[:20]
-    _fn = "wa_" + _topic20 + ".log"
-    _log_path = LOG_ROOT / _fn
     with open(_log_path, 'w', encoding='utf-8') as wf:
         wf.write('')
-    ### sys.stdout
-    sys.stdout = Logger(_log_path)        
-    ### generate text
     _text, _file = generated_text(_topic)
     return [_text, gr.update(value=_file)]
 
@@ -64,8 +57,6 @@ _description = """
 # Assistant
 """
 with gr.Blocks(title=_description) as demo:
-    dh_history = gr.State([])
-    dh_user_question = gr.State("")
     gr.Markdown(_description)
 
     with gr.Tab(label = "写作助手"):
@@ -86,9 +77,9 @@ with gr.Blocks(title=_description) as demo:
             [wa_topic],
             [wa_txt, download_box]
         )
-        wa_start_btn.click(
+        demo.load(
             read_logs,
-            [wa_topic],
+            [],
             [wa_steps],
             every=1
         )
