@@ -6,7 +6,6 @@ from council.runners import Budget
 from council.controllers import ControllerBase, ExecutionUnit
 
 import logging
-from string import Template
 from typing import List, Tuple
 from .prompt import _prompt
 

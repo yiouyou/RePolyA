@@ -19,4 +19,5 @@ def get_project_root():
 
 PROJECT_ROOT = get_project_root()
 WORKSPACE_ROOT = PROJECT_ROOT / 'workspace'
+LOG_ROOT = PROJECT_ROOT / 'logs'
 

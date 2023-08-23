@@ -2,23 +2,6 @@ import itertools
 import threading
 import time
 
-import logging
-# import os
-# _log_path = './logs/wa.log'
-# if os.path.exists(_log_path):
-#     os.remove(_log_path)
-logging.basicConfig(
-    # format="\n[%(name)s:%(funcName)s:]\n%(message)s",
-    format="\n[%(funcName)s:]\n%(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S%z",
-    encoding='utf-8',
-    filename='./logs/wa.log',
-    filemode="a",
-)
-logging.getLogger("council").setLevel(logging.INFO)
-# logging.getLogger("council").setLevel(logging.DEBUG)
-logger = logging.getLogger("council")
-
 from council.runners import Budget, Parallel
 from council.contexts import AgentContext, ChatHistory
 from council.agents import Agent
@@ -29,7 +12,7 @@ from council.llm.openai_llm import OpenAILLM
 from .skills import SectionWriterSkill, OutlineWriterSkill, GoogleAggregatorSkill, CustomGoogleSearchSkill, CustomGoogleNewsSkill, LLMRetrievalSkill
 from .controller import WritingAssistantController
 from .evaluator import BasicEvaluatorWithSource
-from .const import WORKSPACE_ROOT
+from .const import WORKSPACE_ROOT, LOG_ROOT
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -104,6 +87,23 @@ agent = Agent(controller, [outline_chain, writer_chain], evaluator)
 
 
 def generated_text(_topic):
+    ##### log
+    _topic20 = _topic.replace(' ', '_')[:20]
+    _fn = "wa_" + _topic20 + ".log"
+    _log_path = LOG_ROOT / _fn
+    import logging
+    logging.basicConfig(
+        # format="\n[%(name)s:%(funcName)s:]\n%(message)s",
+        format="\n[%(funcName)s:]\n%(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S%z",
+        encoding='utf-8',
+        filename=_log_path,
+        filemode="a",
+    )
+    logging.getLogger("council").setLevel(logging.INFO)
+    # logging.getLogger("council").setLevel(logging.DEBUG)
+    logger = logging.getLogger("council")
+    ##### agent
     _text = "test"
     # s = Spinner()
     # s.start()
@@ -113,7 +113,7 @@ def generated_text(_topic):
     _text = result.messages[-1].message.message
     _text = _text.replace("```", "")
     # print(f"\n```markdown\n{_text}\n```\n")
-    _fn = _topic.replace(' ', '_')[:20] + ".md"
+    _fn = _topic20 + ".md"
     _file = WORKSPACE_ROOT / _fn
     with open(_file, 'w', encoding='utf-8') as wf:
         wf.write(_text)
@@ -130,8 +130,28 @@ def main():
         else:
             if user_input == '':
                 user_input = "Tell me about the history of box manufacturing."
-            _txt = generated_text(user_input)
-            print(f"\n```markdown\n{_txt}\n```\n")
+            ##### log
+            _topic20 = user_input.replace(' ', '_')[:20]
+            _fn = "wa_" + _topic20 + ".log"
+            _log_path = LOG_ROOT / _fn
+            import logging
+            logging.basicConfig(
+                format="\n[%(name)s:%(funcName)s:]\n%(message)s",
+                # format="\n[%(funcName)s:]\n%(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S%z",
+                encoding='utf-8',
+                filename=_log_path,
+                filemode="a",
+            )
+            logging.getLogger("council").setLevel(logging.DEBUG)
+            logger = logging.getLogger("council")
+            _text = generated_text(user_input)
+            _fn = _topic20 + ".md"
+            _file = WORKSPACE_ROOT / _fn
+            with open(_file, 'w', encoding='utf-8') as wf:
+                wf.write(_text)
+            logger.info(_file)
+            print(f"\n```markdown\n{_text}\n```\n")
     print("Goodbye!")
 
 

@@ -10,7 +10,7 @@ urllib3.disable_warnings()
 import gradio as gr
 from functools import partial
 
-from council_writing_assistant import generated_text
+from council_writing_assistant import generated_text, LOG_ROOT
 
 
 class Logger:
@@ -31,9 +31,12 @@ class Logger:
 
 sys.stdout = Logger("./logs/wa.log")
 
-def read_logs():
+def read_logs(_input):
     sys.stdout.flush()
-    with open("./logs/wa.log", "r") as f:
+    _topic20 = _input.replace(' ', '_')[:20]
+    _fn = "wa_" + _topic20 + ".log"
+    _log_path = LOG_ROOT / _fn
+    with open(_log_path, "r") as f:
         return f.read()
 
 def chg_btn_color_if_input(_input):
@@ -46,12 +49,17 @@ def chg_btn_color_if_input(_input):
 ##### writing assistant
 def auto_wa(_topic):
     import os
-    _log_path = './logs/wa.log'
+    _topic20 = _topic.replace(' ', '_')[:20]
+    _fn = "wa_" + _topic20 + ".log"
+    _log_path = LOG_ROOT / _fn
+    ### sys.stdout
+    sys.stdout = Logger(_log_path)
+    ### if exists, clean
     if os.path.exists(_log_path):
         with open(_log_path, 'w', encoding='utf-8') as wf:
             wf.write('')
+    ### generate text
     _text, _file = generated_text(_topic)
-    # print(_file)
     return [_text, gr.update(value=_file)]
 
 ##### UI
@@ -81,9 +89,9 @@ with gr.Blocks(title=_description) as demo:
             [wa_topic],
             [wa_txt, download_box]
         )
-        demo.load(
+        wa_start_btn.click(
             read_logs,
-            [],
+            [wa_topic],
             [wa_steps],
             every=1
         )
