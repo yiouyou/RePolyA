@@ -2,6 +2,14 @@
 tmp*
 *_examples
 
+# paper _pdf
+paper/_pdf/*
+!paper/_pdf/.gitkeep
+
+# paper _jsonl
+paper/_jsonl/*
+!paper/_jsonl/.gitkeep
+
 # key
 key.yaml
 

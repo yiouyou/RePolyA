@@ -1,0 +1,5 @@
+doi2pdf
+scidownl
+paperscraper
+paper-qa
+
