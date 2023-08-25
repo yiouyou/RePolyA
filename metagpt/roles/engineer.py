@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+"""
+@Time    : 2023/5/11 14:43
+@Author  : alexanderwu
+@File    : engineer.py
+"""
 import asyncio
 import shutil
 from collections import OrderedDict
@@ -43,15 +47,9 @@ async def gather_ordered_k(coros, k) -> list:
 
 
 class Engineer(Role):
-    def __init__(
-        self,
-        name="Engineer",
-        profile="Engineer",
-        goal="Write elegant, readable, extensible, efficient code",
-        constraints="The code you write should conform to code standard like PEP8, be modular, easy to read and maintain",
-        n_borg=1,
-        use_code_review=False
-    ):
+    def __init__(self, name="Alex", profile="Engineer", goal="Write elegant, readable, extensible, efficient code",
+                 constraints="The code you write should conform to code standard like PEP8, be modular, easy to read and maintain",
+                 n_borg=1, use_code_review=False):
         super().__init__(name, profile, goal, constraints)
         self._init_actions([WriteCode])
         self.use_code_review = use_code_review

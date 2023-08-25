@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+@Time    : 2023/7/21 11:15
+@Author  : Leo Xiao
+@File    : anthropic_api.py
+"""
 
 import anthropic
 from anthropic import Anthropic

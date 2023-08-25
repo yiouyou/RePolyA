@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+"""
+@Time    : 2023/5/18 22:43
+@Author  : alexanderwu
+@File    : prompt.py
+"""
 from enum import Enum
 
 PREFIX = """尽你所能回答以下问题。你可以使用以下工具："""

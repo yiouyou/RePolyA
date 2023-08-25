@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+"""
+@Time    : 2023/5/11 14:43
+@Author  : alexanderwu
+@File    : qa_engineer.py
+"""
 import os
 from pathlib import Path
 
@@ -16,7 +20,7 @@ from metagpt.utils.special_tokens import FILENAME_CODE_SEP, MSG_SEP
 class QaEngineer(Role):
     def __init__(
         self,
-        name="QaEngineer",
+        name="Edward",
         profile="QaEngineer",
         goal="Write comprehensive and robust tests to ensure codes will work as expected without bugs",
         constraints="The test code you write should conform to code standard like PEP8, be modular, easy to read and maintain",

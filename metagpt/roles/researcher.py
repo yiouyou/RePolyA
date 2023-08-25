@@ -22,11 +22,11 @@ class Report(BaseModel):
 class Researcher(Role):
     def __init__(
         self,
-        name="Researcher",
-        profile="Researcher",
-        goal="Gather information and conduct research",
-        constraints="Ensure accuracy and relevance of information",
-        language="en-us",
+        name: str = "David",
+        profile: str = "Researcher",
+        goal: str = "Gather information and conduct research",
+        constraints: str = "Ensure accuracy and relevance of information",
+        language: str = "en-us",
         **kwargs,
     ):
         super().__init__(name, profile, goal, constraints, **kwargs)
@@ -84,10 +84,17 @@ class Researcher(Role):
         return msg
 
     def write_report(self, topic: str, content: str):
+        if not RESEARCH_PATH.exists():
+            RESEARCH_PATH.mkdir(parents=True)
         filepath = RESEARCH_PATH / f"{topic}.md"
         filepath.write_text(content)
 
 
 if __name__ == "__main__":
-    role = Researcher(language="en-us")
-    asyncio.run(role.run("dataiku vs. datarobot"))
+    import fire
+
+    async def main(topic: str, language="en-us"):
+        role = Researcher(topic, language=language)
+        await role.run(topic)
+
+    fire.Fire(main)

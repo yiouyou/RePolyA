@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+"""
+@Time    : 2023/5/11 14:42
+@Author  : alexanderwu
+@File    : role.py
+"""
 from __future__ import annotations
 
 from typing import Iterable, Type

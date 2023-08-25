@@ -17,18 +17,19 @@ def query2jsonl(_query):
     _qn = "_".join(_q)
     for i in QUERY_FN_DICT.keys():
         i_file = f"{i}_{_qn}.jsonl"
-        i_file = JSONL_ROOT / i_file
+        i_file = str(JSONL_ROOT / i_file)
+        print(i_file)
         QUERY_FN_DICT[i](_query, output_filepath=i_file)
 
 
 if __name__ == "__main__":
     dump2xiv()
-    # from const import JSONL_ROOT
-    # covid19 = ['COVID-19', 'SARS-CoV-2']
-    # ai = ['Artificial intelligence', 'Deep learning', 'Machine learning']
-    # mi = ['Medical imaging']
-    # _query = [covid19, ai, mi]
-    # query2jsonl(_query)
+    from const import JSONL_ROOT
+    covid19 = ['COVID-19', 'SARS-CoV-2']
+    ai = ['Artificial intelligence', 'Deep learning', 'Machine learning']
+    mi = ['Medical imaging']
+    _query = [covid19, ai, mi]
+    query2jsonl(_query)
 else:
     from .const import JSONL_ROOT
 

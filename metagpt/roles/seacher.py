@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+"""
+@Time    : 2023/5/23 17:25
+@Author  : alexanderwu
+@File    : seacher.py
+"""
 from metagpt.actions import ActionOutput, SearchAndSummarize
 from metagpt.logs import logger
 from metagpt.roles import Role
@@ -9,15 +13,8 @@ from metagpt.tools import SearchEngineType
 
 
 class Searcher(Role):
-    def __init__(
-        self,
-        name='Searcher',
-        profile='Smart Assistant',
-        goal='Provide search services for users',
-        constraints='Answer is rich and complete',
-        engine=SearchEngineType.SERPAPI_GOOGLE,
-        **kwargs
-    ):
+    def __init__(self, name='Alice', profile='Smart Assistant', goal='Provide search services for users',
+                 constraints='Answer is rich and complete', engine=SearchEngineType.SERPAPI_GOOGLE, **kwargs):
         super().__init__(name, profile, goal, constraints, **kwargs)
         self._init_actions([SearchAndSummarize(engine=engine)])
 

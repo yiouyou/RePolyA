@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+"""
+@Time    : 2023/5/25 17:21
+@Author  : alexanderwu
+@File    : sales.py
+"""
 from metagpt.roles import Sales
 
 # from metagpt.actions import SearchAndSummarize
@@ -21,10 +25,10 @@ DESC = """
 
 class CustomerService(Sales):
     def __init__(
-        self,
-        name="Human customer service",
-        profile="Human customer service",
-        desc=DESC,
-        store=None
+            self,
+            name="Xiaomei",
+            profile="Human customer service",
+            desc=DESC,
+            store=None
     ):
         super().__init__(name, profile, desc=desc, store=store)
