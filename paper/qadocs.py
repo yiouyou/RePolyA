@@ -6,28 +6,22 @@ from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from paperqa import Docs
 
-llm = ChatOpenAI(model='gpt-4')
 # llm_stream = ChatOpenAI(model='gpt-4', callbacks=[StreamingStdOutCallbackHandler()], streaming=True)
+llm = ChatOpenAI(model='gpt-4')
 llm_summary = ChatOpenAI(model='gpt-3.5-turbo')
 
 docs = Docs(llm=llm, summary_llm=llm_summary)
 
 def qadocs(_query, _pathlist):
-    from dotenv import load_dotenv
-    load_dotenv()
-    from langchain.chat_models import ChatOpenAI
-    from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-    from paperqa import Docs
-    llm = ChatOpenAI(model='gpt-4')
-    llm_summary = ChatOpenAI(model='gpt-3.5-turbo')
-    docs = Docs(llm=llm, summary_llm=llm_summary)
     for _file in _pathlist:
         try:
-            docs.add(_file, chunk_chars=500)
-            print(_file)
+            if _file.lower().endswith('.pdf') or _file.lower().endswith('.txt'):
+                docs.add(_file, chunk_chars=500)
+                print(_file)
         except ValueError as e:
             print('Could not read', _file, e)
     _ans = docs.query(_query)
+    ##### formatted_answer, question/answer/references, context
     return _ans
 
 
@@ -48,7 +42,17 @@ if __name__ == "__main__":
     print(_list)
     _query = "What manufacturing challenges are unique to bispecific antibodies?"
     _ans = qadocs(_query, _list)
-    print(_ans)
+    print('-'*40)
+    print(_ans.formatted_answer)
+    print('-'*40)
+    print(_ans.question)
+    print('-'*40)
+    print(_ans.answer)
+    print('-'*40)
+    print(_ans.references)
+    print('-'*40)
+    print(_ans.context)
+    print('-'*40)
 else:
     from .const import PDF_ROOT
 

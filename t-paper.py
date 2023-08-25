@@ -1,3 +1,11 @@
+# from paper import query2jsonl
+# covid19 = ['COVID-19', 'SARS-CoV-2']
+# ai = ['Artificial intelligence', 'Deep learning', 'Machine learning']
+# mi = ['Medical imaging']
+# _query = [covid19, ai, mi]
+# query2jsonl(_query)
+
+
 # from paper import querypapers
 # papers = querypapers('bispecific antibody manufacture', 10)
 # for i in sorted(papers.keys()):
@@ -10,13 +18,6 @@
 # _list = []
 # for path, data in papers.items():
 #     _list.append(path)
-
-# from paper import query2jsonl
-# covid19 = ['COVID-19', 'SARS-CoV-2']
-# ai = ['Artificial intelligence', 'Deep learning', 'Machine learning']
-# mi = ['Medical imaging']
-# _query = [covid19, ai, mi]
-# query2jsonl(_query)
 
 
 from paper import qadocs
@@ -32,5 +33,15 @@ for _fn in _files:
         _list.append(_fp)
 print(_list)
 _ans = qadocs(_query, _list)
-print(_ans)
+print('-'*40)
+print(_ans.formatted_answer)
+print('-'*40)
+print(_ans.question)
+print('-'*40)
+print(_ans.answer)
+print('-'*40)
+print(_ans.references)
+print('-'*40)
+print(_ans.context)
+print('-'*40)
 

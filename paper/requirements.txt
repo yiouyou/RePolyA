@@ -2,4 +2,6 @@ doi2pdf
 scidownl
 paperscraper
 paper-qa
-
+aiohttp
+pybtex
+pypdf
