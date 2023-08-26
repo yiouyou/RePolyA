@@ -6,18 +6,19 @@
 # query2jsonl(_query)
 
 
-from paper import querypapers
-papers = querypapers('bispecific antibody manufacture', 5)
-for i in sorted(papers.keys()):
-    print('-'*40)
-    print(i)
-    print('-'*40)
-    for j in sorted(papers[i].keys()):
-        print(f"{j}: {papers[i][j]}")
-    print("\n")
-_list = []
-for path, data in papers.items():
-    _list.append(path)
+
+# from paper import querypapers
+# papers = querypapers('bispecific antibody manufacture', 5)
+# for i in sorted(papers.keys()):
+#     print('-'*40)
+#     print(i)
+#     print('-'*40)
+#     for j in sorted(papers[i].keys()):
+#         print(f"{j}: {papers[i][j]}")
+#     print("\n")
+# _list = []
+# for path, data in papers.items():
+#     _list.append(path)
 # ----------------------------------------
 # /mnt/disks/data/RePolyA/paper/_pdf/ff1ac706f9ce58c79053c8d5707508aeef02896e.pdf
 # ----------------------------------------
@@ -41,28 +42,28 @@ for path, data in papers.items():
 
 
 
-# from paper import qadocs
-# _query = "What manufacturing challenges are unique to bispecific antibodies?"
-# _list = []
-# import os
-# _dir = './paper/_pdf'
-# # print(_dir)
-# _files = os.listdir(_dir)
-# for _fn in _files:
-#     _fp = os.path.join(_dir, _fn)
-#     if os.path.isfile(_fp):
-#         _list.append(_fp)
-# print(_list)
-# _ans = qadocs(_query, _list)
-# print('-'*40)
-# print(_ans.formatted_answer)
-# print('-'*40)
-# print(_ans.question)
-# print('-'*40)
-# print(_ans.answer)
-# print('-'*40)
-# print(_ans.references)
-# print('-'*40)
-# print(_ans.context)
-# print('-'*40)
+from paper import qadocs
+_query = "What manufacturing challenges are unique to bispecific antibodies?"
+_list = []
+import os
+_dir = './paper/_pdf'
+# print(_dir)
+_files = os.listdir(_dir)
+for _fn in _files:
+    _fp = os.path.join(_dir, _fn)
+    if os.path.isfile(_fp):
+        _list.append(_fp)
+print(_list)
+_ans = qadocs(_query, _list)
+print('-'*40)
+print(_ans.formatted_answer)
+print('-'*40)
+print(_ans.question)
+print('-'*40)
+print(_ans.answer)
+print('-'*40)
+print(_ans.references)
+print('-'*40)
+print(_ans.context)
+print('-'*40)
 
