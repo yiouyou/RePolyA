@@ -61,18 +61,17 @@ def search_topic_papers(_topic):
             print(f"{j}: {_papers[i][j]}")
         _i = {
             "title": _papers[i]['title'],
+            "bibtex": _papers[i]['bibtex'],
             "doi": _papers[i]['doi'],
-            "citationCount:": _papers[i]['citationCount:'],
+            "citationCount": _papers[i]['citationCount'],
             "year": _papers[i]['year'],
-            "file": i
+            "url": _papers[i]['url'],
+            "pdf": i
         }
         papers.append(_i)
         print("\n")
+    print(papers)
     return papers
-
-def your_answer_function(_ask):
-    # 使用虚拟的数据，返回问题的回答
-    return "Answer to the question based on papers"
 
 def search_topic(_topic):
     res = []
@@ -107,27 +106,6 @@ def fetch_selected_pdf(_checkbox, _papers):
                 if i == j['title']:
                     _fp.append(j['pdf'])
     return gr.update(value=_fp)
-
-def search_topic_papers(_topic):
-    papers = []
-    _papers = querypapers(_topic, 5)
-    for i in sorted(_papers.keys()):
-        print(f"{'-'*40}\n{i}\n{'-'*40}")
-        for j in sorted(_papers[i].keys()):
-            print(f"{j}: {_papers[i][j]}")
-        _i = {
-            "title": _papers[i]['title'],
-            "bibtex": _papers[i]['bibtex'],
-            "doi": _papers[i]['doi'],
-            "citationCount": _papers[i]['citationCount'],
-            "year": _papers[i]['year'],
-            "url": _papers[i]['url'],
-            "pdf": i
-        }
-        papers.append(_i)
-        print("\n")
-    print(papers)
-    return papers
 
 def answer_question(_ask, _pdf):
     _ans = "Answer to the question based on papers"
