@@ -1,50 +1,7 @@
-# 虚拟的论文数据
-papers = [
-    {
-        "title": "An academic search engine for scientific articles",
-        "doi": "10.1145/2983323.2983686"
-    },
-    {
-        "title": "The new generation of citation indexes",
-        "doi": "10.1016/j.libres.2005.06.005"
-    },
-    {
-        "title": "Plagiarism detection using natural language processing techniques",
-        "doi": "10.1109/ICDIM.2018.8847040"
-    }
-] # 创建一个包含三篇文献信息的列表
-
-from paper import querypapers
-def search_topic_papers(_topic):
-    papers = []
-    _papers = querypapers(_topic, 5)
-    for i in sorted(_papers.keys()):
-        print(f"{'-'*40}\n{i}\n{'-'*40}")
-        for j in sorted(_papers[i].keys()):
-            print(f"{j}: {_papers[i][j]}")
-        _i = {
-            "title": _papers[i]['title'],
-            "bibtex": _papers[i]['bibtex'],
-            "doi": _papers[i]['doi'],
-            "citationCount": _papers[i]['citationCount'],
-            "year": _papers[i]['year'],
-            "url": _papers[i]['url'],
-            "pdf": i
-        }
-        papers.append(_i)
-        print("\n")
-    print(papers)
-    return papers
-
-from paper import qadocs
-def answer_question(_ask, _pdf):
-    _ans = "Answer to the question based on papers"
-    _res = qadocs(_ask, _pdf)
-    _ans = _res.formatted_answer
-    return _ans
-
-
 import gradio as gr
+from paper import querypapers
+from paper import qadocs
+
 
 def chg_btn_color_if_input(_topic):
     if _topic:
@@ -87,11 +44,56 @@ def fetch_selected_pdf(_checkbox, _papers):
                     _fp.append(j['pdf'])
     return gr.update(value=_fp)
 
+# 虚拟的论文数据
+papers = [
+    {
+        "title": "An academic search engine for scientific articles",
+        "doi": "10.1145/2983323.2983686"
+    },
+    {
+        "title": "The new generation of citation indexes",
+        "doi": "10.1016/j.libres.2005.06.005"
+    },
+    {
+        "title": "Plagiarism detection using natural language processing techniques",
+        "doi": "10.1109/ICDIM.2018.8847040"
+    }
+] # 创建一个包含三篇文献信息的列表
 
-_description = "输入研究主题，获取相关文献，根据文献问答问题"
+def search_topic_papers(_topic):
+    papers = []
+    _papers = querypapers(_topic, 5)
+    for i in sorted(_papers.keys()):
+        print(f"{'-'*40}\n{i}\n{'-'*40}")
+        for j in sorted(_papers[i].keys()):
+            print(f"{j}: {_papers[i][j]}")
+        _i = {
+            "title": _papers[i]['title'],
+            "bibtex": _papers[i]['bibtex'],
+            "doi": _papers[i]['doi'],
+            "citationCount": _papers[i]['citationCount'],
+            "year": _papers[i]['year'],
+            "url": _papers[i]['url'],
+            "pdf": i
+        }
+        papers.append(_i)
+        print("\n")
+    print(papers)
+    return papers
+
+def answer_question(_ask, _pdf):
+    _ans = "Answer to the question based on papers"
+    _res = qadocs(_ask, _pdf)
+    _ans = _res.formatted_answer
+    return _ans
+
+
+##### UI
+_description = """
+# Assistant
+"""
 with gr.Blocks(title=_description) as demo:
     # gr.Markdown(_description)
-
     _papers = gr.State([])
     with gr.Tab(label="输入研究主题，获取相关文献，根据文献问答问题"):
         _topic = gr.Textbox(label="研究主题")
@@ -134,8 +136,6 @@ with gr.Blocks(title=_description) as demo:
             [_ask, _pdf],
             [_ans]
         )
-        
-
 
 
 if __name__ == "__main__":
