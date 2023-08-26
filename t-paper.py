@@ -7,18 +7,48 @@
 
 
 
-# from paper import querypapers
-# papers = querypapers('bispecific antibody manufacture', 5)
-# for i in sorted(papers.keys()):
-#     print('-'*40)
-#     print(i)
-#     print('-'*40)
-#     for j in sorted(papers[i].keys()):
-#         print(f"{j}: {papers[i][j]}")
-#     print("\n")
-# _list = []
-# for path, data in papers.items():
-#     _list.append(path)
+import logging
+class CustomFormatter(logging.Formatter):
+    # https://stackoverflow.com/a/56944256/2392535
+    grey = "\x1b[38;20m"
+    yellow = "\x1b[33;20m"
+    red = "\x1b[31;20m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
+    format = (
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
+    )
+    FORMATS = {
+        logging.DEBUG: grey + format + reset,
+        logging.INFO: grey + format + reset,
+        logging.WARNING: yellow + format + reset,
+        logging.ERROR: red + format + reset,
+        logging.CRITICAL: bold_red + format + reset,
+    }
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
+logger = logging.getLogger("paper-scraper")
+logger.setLevel(logging.INFO)
+ch = logging.StreamHandler()
+ch.setFormatter(CustomFormatter())
+logger.addHandler(ch)
+
+_list = []
+from paper import querypapers
+papers = querypapers('bispecific antibody manufacture', 5)
+if papers:
+    for i in sorted(papers.keys()):
+        print('-'*40)
+        print(i)
+        print('-'*40)
+        for j in sorted(papers[i].keys()):
+            print(f"{j}: {papers[i][j]}")
+        print("\n")
+    for path, data in papers.items():
+        _list.append(path)
 # ----------------------------------------
 # /mnt/disks/data/RePolyA/paper/_pdf/ff1ac706f9ce58c79053c8d5707508aeef02896e.pdf
 # ----------------------------------------
@@ -42,28 +72,28 @@
 
 
 
-from paper import qadocs
-_query = "What manufacturing challenges are unique to bispecific antibodies?"
-_list = []
-import os
-_dir = './paper/_pdf'
-# print(_dir)
-_files = os.listdir(_dir)
-for _fn in _files:
-    _fp = os.path.join(_dir, _fn)
-    if os.path.isfile(_fp):
-        _list.append(_fp)
-print(_list)
-_ans = qadocs(_query, _list)
-print('-'*40)
-print(_ans.formatted_answer)
-print('-'*40)
-print(_ans.question)
-print('-'*40)
-print(_ans.answer)
-print('-'*40)
-print(_ans.references)
-print('-'*40)
-print(_ans.context)
-print('-'*40)
+# from paper import qadocs
+# _query = "What manufacturing challenges are unique to bispecific antibodies?"
+# _list = []
+# import os
+# _dir = './paper/_pdf'
+# # print(_dir)
+# _files = os.listdir(_dir)
+# for _fn in _files:
+#     _fp = os.path.join(_dir, _fn)
+#     if os.path.isfile(_fp):
+#         _list.append(_fp)
+# print(_list)
+# _ans = qadocs(_query, _list)
+# print('-'*40)
+# print(_ans.formatted_answer)
+# print('-'*40)
+# print(_ans.question)
+# print('-'*40)
+# print(_ans.answer)
+# print('-'*40)
+# print(_ans.references)
+# print('-'*40)
+# print(_ans.context)
+# print('-'*40)
 

@@ -4,7 +4,7 @@
 from ._paper_scraper import search_papers
 
 def querypapers(_query, _limit):
-    print(_query, _limit)
+    # print(_query, _limit)
     papers = []
     try:
         papers = search_papers(_query, limit=_limit, pdir=PDF_ROOT)
