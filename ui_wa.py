@@ -1,16 +1,14 @@
 # coding=utf-8
 import sys
-
 # from dotenv import load_dotenv
 # load_dotenv()
-
 import urllib3
 urllib3.disable_warnings()
-
 import gradio as gr
 from functools import partial
-
 from council_writing_assistant import generated_text, LOG_ROOT
+from paper import querypapers
+from paper import qadocs
 
 
 def chg_btn_color_if_input(_topic):
@@ -18,6 +16,13 @@ def chg_btn_color_if_input(_topic):
         return gr.update(variant="primary")
     else:
         return gr.update(variant="secondary")
+
+##### writing assistant
+def auto_wa(_topic):
+    with open(_log_path, 'w', encoding='utf-8') as wf:
+        wf.write('')
+    _text, _file = generated_text(_topic)
+    return [_text, gr.update(value=_file)]
 
 class Logger:
     def __init__(self, filename):
@@ -45,12 +50,91 @@ def read_logs():
         _log = f.read()
     return _log
 
-##### writing assistant
-def auto_wa(_topic):
-    with open(_log_path, 'w', encoding='utf-8') as wf:
-        wf.write('')
-    _text, _file = generated_text(_topic)
-    return [_text, gr.update(value=_file)]
+
+##### search/fetch/ask
+def search_topic_papers(_topic):
+    papers = []
+    _papers = querypapers(_topic, 5)
+    for i in sorted(_papers.keys()):
+        print(f"{'-'*40}\n{i}\n{'-'*40}")
+        for j in sorted(_papers[i].keys()):
+            print(f"{j}: {_papers[i][j]}")
+        _i = {
+            "title": _papers[i]['title'],
+            "doi": _papers[i]['doi'],
+            "citationCount:": _papers[i]['citationCount:'],
+            "year": _papers[i]['year'],
+            "file": i
+        }
+        papers.append(_i)
+        print("\n")
+    return papers
+
+def your_answer_function(_ask):
+    # 使用虚拟的数据，返回问题的回答
+    return "Answer to the question based on papers"
+
+def search_topic(_topic):
+    res = []
+    papers = []
+    if not _topic:
+        raise gr.Error("请先输入'研究主题'")
+    else:
+        papers = search_topic_papers(_topic)
+        for i in papers:
+            title = i['title']
+            res.append(title)
+    return [gr.update(choices=res), papers]
+
+def show_last_meta(_checkbox, _papers):
+    _titles = [_checkbox[-1]]
+    # print(_titles)
+    _meta = []
+    for i in _titles:
+        for j in _papers:
+            if i == j['title']:
+                _meta.append(f"\ncitationCount: {j['citationCount']}\nurl: {j['url']}\nbibtex: {j['bibtex']}\n")
+                break
+    return "".join(_meta)
+
+def fetch_selected_pdf(_checkbox, _papers):
+    _fp = []
+    if _checkbox is None:
+        raise gr.Error("请先选取'相关文献'")
+    else:
+        for i in _checkbox:
+            for j in _papers:
+                if i == j['title']:
+                    _fp.append(j['pdf'])
+    return gr.update(value=_fp)
+
+def search_topic_papers(_topic):
+    papers = []
+    _papers = querypapers(_topic, 5)
+    for i in sorted(_papers.keys()):
+        print(f"{'-'*40}\n{i}\n{'-'*40}")
+        for j in sorted(_papers[i].keys()):
+            print(f"{j}: {_papers[i][j]}")
+        _i = {
+            "title": _papers[i]['title'],
+            "bibtex": _papers[i]['bibtex'],
+            "doi": _papers[i]['doi'],
+            "citationCount": _papers[i]['citationCount'],
+            "year": _papers[i]['year'],
+            "url": _papers[i]['url'],
+            "pdf": i
+        }
+        papers.append(_i)
+        print("\n")
+    print(papers)
+    return papers
+
+def answer_question(_ask, _pdf):
+    _ans = "Answer to the question based on papers"
+    _res = qadocs(_ask, _pdf)
+    _ans = _res.formatted_answer
+    return _ans
+
 
 ##### UI
 _description = """
@@ -82,6 +166,49 @@ with gr.Blocks(title=_description) as demo:
             [],
             [wa_steps],
             every=1
+        )
+
+    _papers = gr.State([])
+    with gr.Tab(label="输入研究主题，获取相关文献，根据文献问答问题"):
+        _topic = gr.Textbox(label="研究主题")
+        _btn_search = gr.Button("搜索")
+        with gr.Row(equal_height=True):
+            _papers_tile = gr.CheckboxGroup(label="相关文献")
+            _papers_meta = gr.Textbox(label="文献信息")
+        _btn_select = gr.Button("获取PDF")
+        _pdf = gr.File(label="已获取", file_count="single", type="file", file_types=['.pdf'], interactive=False)
+        _ask = gr.Textbox(label="问题")
+        _btn_ask = gr.Button("提问")
+        _ans = gr.Textbox(label="回答")
+        _topic.change(
+            chg_btn_color_if_input,
+            [_topic],
+            [_btn_search]
+        )
+        _btn_search.click(
+            search_topic,
+            [_topic],
+            [_papers_tile, _papers]
+        )
+        _papers_tile.select(
+            show_last_meta,
+            [_papers_tile, _papers],
+            [_papers_meta]
+        )
+        _btn_select.click(
+            fetch_selected_pdf,
+            [_papers_tile, _papers],
+            [_pdf]
+        )
+        _ask.change(
+            chg_btn_color_if_input,
+            [_ask],
+            [_btn_ask]
+        )
+        _btn_ask.click(
+            answer_question,
+            [_ask, _pdf],
+            [_ans]
         )
 
 
