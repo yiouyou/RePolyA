@@ -93,7 +93,8 @@ _description = """
 # Assistant
 """
 with gr.Blocks(title=_description) as demo:
-    # gr.Markdown(_description)
+    gr.Markdown(_description)
+
     _papers = gr.State([])
     with gr.Tab(label="输入研究主题，获取相关文献，根据文献问答问题"):
         _topic = gr.Textbox(label="研究主题")
