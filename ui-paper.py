@@ -1,9 +1,6 @@
 import gradio as gr
-from paper import querypapers
-from paper import qadocs
-# import logging
-# logger = logging.getLogger("paper")
-# logger.setLevel(logging.ERROR)
+from repolya.paper import querypapers
+from repolya.paper import qadocs
 
 
 def chg_btn_color_if_input(_topic):

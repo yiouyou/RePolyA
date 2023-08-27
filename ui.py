@@ -1,14 +1,12 @@
-# coding=utf-8
 import sys
-# from dotenv import load_dotenv
-# load_dotenv()
 import urllib3
 urllib3.disable_warnings()
 import gradio as gr
 from functools import partial
-from council_writing_assistant import generated_text, LOG_ROOT
-from paper import querypapers
-from paper import qadocs
+from repolya.writer import generated_text
+from repolya.paper import querypapers
+from repolya.paper import qadocs
+from repolya._const import LOG_ROOT
 
 
 def chg_btn_color_if_input(_topic):
@@ -113,12 +111,12 @@ class Logger:
         self.log.flush()
     def isatty(self):
         return False
-_log_path = LOG_ROOT / 'wa.log'
-sys.stdout = Logger(_log_path)
+_log_path = LOG_ROOT / 'writer.log'
+# sys.stdout = Logger(_log_path)
 
 
 def read_logs():
-    sys.stdout.flush()
+    # sys.stdout.flush()
     ### read log
     with open(_log_path, "r") as f:
         _log = f.read()

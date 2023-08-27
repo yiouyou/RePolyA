@@ -6,7 +6,8 @@ from council.prompt import PromptBuilder
 from council.llm import LLMBase, LLMMessage, OpenAILLM
 from typing import List
 
-from .prompt import _prompt
+from repolya.writer.prompt import _prompt
+from repolya._log import logger_writer
 
 
 class OutlineWriterSkill(SkillBase):

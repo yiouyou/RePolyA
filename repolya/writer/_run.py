@@ -9,13 +9,16 @@ from council.chains import Chain
 from council.llm.openai_llm_configuration import OpenAILLMConfiguration
 from council.llm.openai_llm import OpenAILLM
 
-from .skills import SectionWriterSkill, OutlineWriterSkill, GoogleAggregatorSkill, CustomGoogleSearchSkill, CustomGoogleNewsSkill, LLMRetrievalSkill
-from .controller import WritingAssistantController
-from .evaluator import BasicEvaluatorWithSource
-from .const import WORKSPACE_ROOT, LOG_ROOT
+from repolya.writer.skills import SectionWriterSkill, OutlineWriterSkill, GoogleAggregatorSkill, CustomGoogleSearchSkill, CustomGoogleNewsSkill, LLMRetrievalSkill
+from repolya.writer.controller import WritingAssistantController
+from repolya.writer.evaluator import BasicEvaluatorWithSource
+
+from repolya._const import WORKSPACE_ROOT
+from repolya._log import logger_writer
 
 from dotenv import load_dotenv
 load_dotenv()
+
 openai_llm = OpenAILLM(config=OpenAILLMConfiguration.from_env())
 
 
@@ -87,21 +90,6 @@ agent = Agent(controller, [outline_chain, writer_chain], evaluator)
 
 
 def generated_text(_topic):
-    ##### log
-    _log_path = LOG_ROOT / 'wa.log'
-    import logging
-    logging.basicConfig(
-        # format="\n[%(name)s:%(funcName)s:]\n%(message)s",
-        format="\n[%(funcName)s:]\n%(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S%z",
-        encoding='utf-8',
-        filename=_log_path,
-        filemode="a",
-    )
-    logging.getLogger("council").setLevel(logging.INFO)
-    # logging.getLogger("council").setLevel(logging.DEBUG)
-    logger = logging.getLogger("council")
-    ##### agent
     _text = "test"
     # s = Spinner()
     # s.start()
@@ -117,7 +105,7 @@ def generated_text(_topic):
     _file = WORKSPACE_ROOT / _mdfn
     with open(_file, 'w', encoding='utf-8') as wf:
         wf.write(_text)
-    logger.info(_file)
+    logger_writer.info(_file)
     return _text, _file
 
 
@@ -130,19 +118,6 @@ def main():
         else:
             if user_input == '':
                 user_input = "Tell me about the history of box manufacturing."
-            ##### log
-            _log_path = LOG_ROOT / 'wa.log'
-            import logging
-            logging.basicConfig(
-                format="\n[%(name)s:%(funcName)s:]\n%(message)s",
-                # format="\n[%(funcName)s:]\n%(message)s",
-                datefmt="%Y-%m-%d %H:%M:%S%z",
-                encoding='utf-8',
-                filename=_log_path,
-                filemode="a",
-            )
-            logging.getLogger("council").setLevel(logging.DEBUG)
-            logger = logging.getLogger("council")
             _text = generated_text(user_input)
             ##### write md
             _topic20 = user_input.replace(' ', '_')[:20]
@@ -150,11 +125,7 @@ def main():
             _file = WORKSPACE_ROOT / _fn
             with open(_file, 'w', encoding='utf-8') as wf:
                 wf.write(_text)
-            logger.info(_file)
+            logger_writer.info(_file)
             print(f"\n```markdown\n{_text}\n```\n")
     print("Goodbye!")
-
-
-if __name__ == "__main__":
-    main()
 

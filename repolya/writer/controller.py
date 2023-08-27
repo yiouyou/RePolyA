@@ -5,12 +5,11 @@ from council.utils import Option
 from council.runners import Budget
 from council.controllers import ControllerBase, ExecutionUnit
 
-import logging
 from typing import List, Tuple
-from .prompt import _prompt
 
+from repolya.writer.prompt import _prompt
+from repolya._log import logger_writer
 
-logger = logging.getLogger("council")
 
 class WritingAssistantController(ControllerBase):
     """
@@ -66,7 +65,7 @@ class WritingAssistantController(ControllerBase):
         ]
         llm_result = self._llm.post_chat_request(messages=messages)
         response = llm_result.first_choice
-        logger.debug(f"controller get_plan response: {response}")
+        logger_writer.debug(f"controller get_plan response: {response}")
         parsed = response.splitlines()
         parsed = [p for p in parsed if len(p) > 0]
         parsed = [self.parse_line(line, chains) for line in parsed]
@@ -101,7 +100,7 @@ class WritingAssistantController(ControllerBase):
             chain = next(filter(lambda item: item.name == name, chains))
             result = Option.some((chain, int(score), instruction))
         except Exception as e:
-            logger.error(f"Controller parsing error: {e}.\n{line}")
+            logger_writer.error(f"Controller parsing error: {e}.\n{line}")
         finally:
             return result
         
@@ -114,7 +113,7 @@ class WritingAssistantController(ControllerBase):
         current_iteration_results = []
         for scored_result in all_eval_results:
             message = scored_result.message
-            logger.debug(f"message: {message}")
+            logger_writer.debug(f"message: {message}")
             if message.data['iteration'] == self._iteration:
                 current_iteration_results.append(message)
         ## If multiple outlines or articles were generated in the last iteration, 
@@ -177,9 +176,9 @@ class WritingAssistantController(ControllerBase):
         ]
         llm_result = self._llm.post_chat_request(messages=messages)
         response = llm_result.first_choice
-        logger.debug(f"outline: {self._outline}")
-        logger.debug(f"article: {self._article}")
-        logger.debug(f"controller editing decision: {response}")
+        logger_writer.debug(f"outline: {self._outline}")
+        logger_writer.debug(f"article: {self._article}")
+        logger_writer.debug(f"controller editing decision: {response}")
         if "KEEP EDITING" in response:
             return []
         else:

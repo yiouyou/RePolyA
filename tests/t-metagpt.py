@@ -1,5 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+import os
+_RePolyA = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+import sys
+_metagpt = os.path.join(_RePolyA, 'repolya')
+sys.path.append(_metagpt)
+
 import asyncio
 import platform
 import fire

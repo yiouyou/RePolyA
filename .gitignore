@@ -9,12 +9,12 @@ tags*
 .aider*
 
 # paper _pdf
-paper/_pdf/*
-!paper/_pdf/.gitkeep
+repolya/paper/_pdf/*
+!repolya/paper/_pdf/.gitkeep
 
 # paper _jsonl
-paper/_jsonl/*
-!paper/_jsonl/.gitkeep
+repolya/paper/_jsonl/*
+!repolya/paper/_jsonl/.gitkeep
 
 # key
 key.yaml
@@ -26,12 +26,12 @@ key.yaml
 *.mmd
 
 # logs
-logs/*
-!logs/.gitkeep
+repolya/logs/*
+!repolya/logs/.gitkeep
 
 # workspace
-workspace/*
-!workspace/.gitkeep
+repolya/workspace/*
+!repolya/workspace/.gitkeep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -7,6 +7,7 @@ from council.runners.budget import Budget
 from council.evaluators.evaluator_base import EvaluatorBase
 
 from typing import List
+from repolya._log import logger_writer
 
 
 class BasicEvaluatorWithSource(EvaluatorBase):
