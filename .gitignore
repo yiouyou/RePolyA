@@ -3,7 +3,7 @@ tmp*
 *_examples
 
 # ctags
-tags
+tags*
 
 # aider
 .aider*
