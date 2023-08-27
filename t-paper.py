@@ -1,3 +1,6 @@
+# bispecific antibody manufacture
+# What manufacturing challenges are unique to bispecific antibodies?
+
 # from paper import query2jsonl
 # covid19 = ['COVID-19', 'SARS-CoV-2']
 # ai = ['Artificial intelligence', 'Deep learning', 'Machine learning']
@@ -7,34 +10,34 @@
 
 
 
-import logging
-class CustomFormatter(logging.Formatter):
-    # https://stackoverflow.com/a/56944256/2392535
-    grey = "\x1b[38;20m"
-    yellow = "\x1b[33;20m"
-    red = "\x1b[31;20m"
-    bold_red = "\x1b[31;1m"
-    reset = "\x1b[0m"
-    format = (
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
-    )
-    FORMATS = {
-        logging.DEBUG: grey + format + reset,
-        logging.INFO: grey + format + reset,
-        logging.WARNING: yellow + format + reset,
-        logging.ERROR: red + format + reset,
-        logging.CRITICAL: bold_red + format + reset,
-    }
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
-        return formatter.format(record)
+# import logging
+# class CustomFormatter(logging.Formatter):
+#     # https://stackoverflow.com/a/56944256/2392535
+#     grey = "\x1b[38;20m"
+#     yellow = "\x1b[33;20m"
+#     red = "\x1b[31;20m"
+#     bold_red = "\x1b[31;1m"
+#     reset = "\x1b[0m"
+#     format = (
+#         "%(asctime)s - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
+#     )
+#     FORMATS = {
+#         logging.DEBUG: grey + format + reset,
+#         logging.INFO: grey + format + reset,
+#         logging.WARNING: yellow + format + reset,
+#         logging.ERROR: red + format + reset,
+#         logging.CRITICAL: bold_red + format + reset,
+#     }
+#     def format(self, record):
+#         log_fmt = self.FORMATS.get(record.levelno)
+#         formatter = logging.Formatter(log_fmt)
+#         return formatter.format(record)
 
-logger = logging.getLogger("paper-scraper")
-logger.setLevel(logging.INFO)
-ch = logging.StreamHandler()
-ch.setFormatter(CustomFormatter())
-logger.addHandler(ch)
+# logger = logging.getLogger("paper-scraper")
+# logger.setLevel(logging.INFO)
+# ch = logging.StreamHandler()
+# ch.setFormatter(CustomFormatter())
+# logger.addHandler(ch)
 
 _list = []
 from paper import querypapers
