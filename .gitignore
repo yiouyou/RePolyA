@@ -2,6 +2,12 @@
 tmp*
 *_examples
 
+# ctags
+tags
+
+# aider
+.aider*
+
 # paper _pdf
 paper/_pdf/*
 !paper/_pdf/.gitkeep

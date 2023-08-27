@@ -1,3 +1,4 @@
+aidier-chat
 anthropic
 arxiv
 asyncio
