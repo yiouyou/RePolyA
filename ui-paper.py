@@ -13,9 +13,9 @@ def chg_btn_color_if_input(_topic):
         return gr.update(variant="secondary")
 
 
-def search_topic_papers(_topic):
+def search_topic_papers(_topic, _N):
     papers = []
-    _papers = querypapers(_topic, 10)
+    _papers = querypapers(_topic, _N)
     # print("search_topic_papers", _papers)
     if _papers:
         for i in sorted(_papers.keys()):
@@ -36,13 +36,13 @@ def search_topic_papers(_topic):
     return papers
 
 
-def search_topic(_topic):
+def search_topic(_topic, _N):
     _res = []
     _papers = []
     if not _topic:
         raise gr.Error("请先输入'研究主题'")
     else:
-        _papers = search_topic_papers(_topic)
+        _papers = search_topic_papers(_topic, _N)
         for i in _papers:
             title = i['title']
             doi = i['doi']
@@ -100,7 +100,8 @@ def answer_question(_ask, _pdf):
     _ans = "Answer to the question based on papers"
     _res = qadocs(_ask, _pdf)
     _ans = _res.formatted_answer
-    return _ans
+    _context = _res.context
+    return _ans, _context
 
 
 ##### UI
@@ -112,8 +113,10 @@ with gr.Blocks(title=_description) as demo:
     _papers = gr.State([])
     _PDFs = gr.State([])
 
-    with gr.Tab(label="输入研究主题，获取相关文献，根据文献问答问题"):
-        _topic = gr.Textbox(label="研究主题")
+    with gr.Tab(label="研究主题/相关文献/据文答题"):
+        with gr.Row():
+            _topic = gr.Textbox(label="研究主题")
+            _N = gr.Slider(5, 10, value=5, step=1, label="大约数目", info="")
         search_btn = gr.Button("1.搜索")
         with gr.Row(equal_height=True):
             _papers_tile = gr.CheckboxGroup(label="相关文献")
@@ -123,6 +126,7 @@ with gr.Blocks(title=_description) as demo:
         _ask = gr.Textbox(label="问题")
         ask_btn = gr.Button("3.提问")
         _ans = gr.Textbox(label="回答")
+        _context = gr.Textbox(label="上下文")
         _topic.change(
             chg_btn_color_if_input,
             [_topic],
@@ -130,7 +134,7 @@ with gr.Blocks(title=_description) as demo:
         )
         search_btn.click(
             search_topic,
-            [_topic],
+            [_topic, _N],
             [_papers_tile, _papers]
         )
         _papers_tile.select(
@@ -151,7 +155,7 @@ with gr.Blocks(title=_description) as demo:
         ask_btn.click(
             answer_question,
             [_ask, _PDFs],
-            [_ans]
+            [_ans, _context]
         )
 
 
