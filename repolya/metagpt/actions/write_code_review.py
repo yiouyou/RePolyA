@@ -6,10 +6,10 @@
 @File    : write_code_review.py
 """
 
-from metagpt.actions.action import Action
-from metagpt.logs import logger
-from metagpt.schema import Message
-from metagpt.utils.common import CodeParser
+from repolya.metagpt.actions.action import Action
+from repolya._log import logger_metagpt
+from repolya.metagpt.schema import Message
+from repolya.metagpt.utils.common import CodeParser
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 PROMPT_TEMPLATE = """
@@ -74,7 +74,7 @@ class WriteCodeReview(Action):
     async def run(self, context, code, filename):
         format_example = FORMAT_EXAMPLE.format(filename=filename)
         prompt = PROMPT_TEMPLATE.format(context=context, code=code, filename=filename, format_example=format_example)
-        logger.info(f'Code review {filename}..')
+        logger_metagpt.info(f'Code review {filename}..')
         code = await self.write_code(prompt)
         # code_rsp = await self._aask_v1(prompt, "code_rsp", OUTPUT_MAPPING)
         # self._save(context, filename, code)

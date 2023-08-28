@@ -4,12 +4,12 @@ import asyncio
 
 from pydantic import BaseModel
 
-from metagpt.actions import CollectLinks, ConductResearch, WebBrowseAndSummarize
-from metagpt.actions.research import get_research_system_text
-from metagpt.const import RESEARCH_PATH
-from metagpt.logs import logger
-from metagpt.roles import Role
-from metagpt.schema import Message
+from repolya.metagpt.actions import CollectLinks, ConductResearch, WebBrowseAndSummarize
+from repolya.metagpt.actions.research import get_research_system_text
+from repolya._const import RESEARCH_PATH
+from repolya._log import logger_metagpt
+from repolya.metagpt.roles import Role
+from repolya.metagpt.schema import Message
 
 
 class Report(BaseModel):
@@ -33,7 +33,7 @@ class Researcher(Role):
         self._init_actions([CollectLinks(name), WebBrowseAndSummarize(name), ConductResearch(name)])
         self.language = language
         if language not in ("en-us", "zh-cn"):
-            logger.warning(f"The language `{language}` has not been tested, it may not work.")
+            logger_metagpt.warning(f"The language `{language}` has not been tested, it may not work.")
 
     async def _think(self) -> None:
         if self._rc.todo is None:
@@ -46,7 +46,7 @@ class Researcher(Role):
             self._rc.todo = None
 
     async def _act(self) -> Message:
-        logger.info(f"{self._setting}: ready to {self._rc.todo}")
+        logger_metagpt.info(f"{self._setting}: ready to {self._rc.todo}")
         todo = self._rc.todo
         msg = self._rc.memory.get(k=1)[0]
         if isinstance(msg.instruct_content, Report):

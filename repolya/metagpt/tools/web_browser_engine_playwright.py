@@ -8,9 +8,9 @@ from typing import Literal
 
 from playwright.async_api import async_playwright
 
-from metagpt.config import CONFIG
-from metagpt.logs import logger
-from metagpt.utils.parse_html import WebPage
+from repolya.metagpt.config import CONFIG
+from repolya._log import logger_metagpt
+from repolya.metagpt.utils.parse_html import WebPage
 
 
 class PlaywrightWrapper:
@@ -86,7 +86,7 @@ class PlaywrightWrapper:
                 parts = executable_path.parts
                 available_paths = list(Path(*parts[:-3]).glob(f"{self.browser_type}-*"))
                 if available_paths:
-                    logger.warning(
+                    logger_metagpt.warning(
                         "It seems that your OS is not officially supported by Playwright. "
                         "Try to set executable_path to the fallback build version."
                     )
@@ -119,12 +119,12 @@ async def _install_browsers(*browsers, **kwargs) -> None:
             **kwargs,
         )
 
-        await asyncio.gather(_log_stream(process.stdout, logger.info), _log_stream(process.stderr, logger.warning))
+        await asyncio.gather(_log_stream(process.stdout, logger_metagpt.info), _log_stream(process.stderr, logger_metagpt.warning))
 
         if await process.wait() == 0:
-            logger.info("Install browser for playwright successfully.")
+            logger_metagpt.info("Install browser for playwright successfully.")
         else:
-            logger.warning("Fail to install browser for playwright.")
+            logger_metagpt.warning("Fail to install browser for playwright.")
         _install_cache.update(browsers)
 
 

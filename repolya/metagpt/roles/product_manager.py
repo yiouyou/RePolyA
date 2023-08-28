@@ -5,8 +5,8 @@
 @Author  : alexanderwu
 @File    : product_manager.py
 """
-from metagpt.actions import BossRequirement, WritePRD
-from metagpt.roles import Role
+from repolya.metagpt.actions import BossRequirement, WritePRD
+from repolya.metagpt.roles import Role
 
 
 class ProductManager(Role):

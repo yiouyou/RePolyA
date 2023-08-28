@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional, Tuple
 import aiohttp
 from pydantic import BaseModel, Field, validator
 
-from metagpt.config import CONFIG
+from repolya.metagpt.config import CONFIG
 
 
 class SerpAPIWrapper(BaseModel):
@@ -79,7 +79,7 @@ class SerpAPIWrapper(BaseModel):
     @staticmethod
     def _process_response(res: dict, as_string: bool) -> str:
         """Process response from SerpAPI."""
-        # logger.debug(res)
+        # logger_metagpt.debug(res)
         focus = ["title", "snippet", "link"]
         get_focused = lambda x: {i: j for i, j in x.items() if i in focus}
 

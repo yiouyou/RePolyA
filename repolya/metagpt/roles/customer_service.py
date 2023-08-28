@@ -5,10 +5,10 @@
 @Author  : alexanderwu
 @File    : sales.py
 """
-from metagpt.roles import Sales
+from repolya.metagpt.roles import Sales
 
-# from metagpt.actions import SearchAndSummarize
-# from metagpt.tools import SearchEngineType
+# from repolya.metagpt.actions import SearchAndSummarize
+# from repolya.metagpt.tools import SearchEngineType
 
 
 DESC = """

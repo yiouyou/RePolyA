@@ -7,9 +7,9 @@
 """
 from typing import List, Tuple
 
-from metagpt.actions import Action, ActionOutput
-from metagpt.actions.search_and_summarize import SearchAndSummarize
-from metagpt.logs import logger
+from repolya.metagpt.actions import Action, ActionOutput
+from repolya.metagpt.actions.search_and_summarize import SearchAndSummarize
+from repolya._log import logger_metagpt
 
 PROMPT_TEMPLATE = """
 # Context
@@ -136,11 +136,11 @@ class WritePRD(Action):
         rsp = ""
         info = f"### Search Results\n{sas.result}\n\n### Search Summary\n{rsp}"
         if sas.result:
-            logger.info(sas.result)
-            logger.info(rsp)
+            logger_metagpt.info(sas.result)
+            logger_metagpt.info(rsp)
 
         prompt = PROMPT_TEMPLATE.format(requirements=requirements, search_information=info,
                                         format_example=FORMAT_EXAMPLE)
-        logger.debug(prompt)
+        logger_metagpt.debug(prompt)
         prd = await self._aask_v1(prompt, "prd", OUTPUT_MAPPING)
         return prd

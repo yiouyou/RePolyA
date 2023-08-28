@@ -5,7 +5,7 @@
 @Author  : alexanderwu
 @File    : add_requirement.py
 """
-from metagpt.actions import Action
+from repolya.metagpt.actions import Action
 
 
 class BossRequirement(Action):

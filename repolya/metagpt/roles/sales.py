@@ -5,9 +5,9 @@
 @Author  : alexanderwu
 @File    : sales.py
 """
-from metagpt.actions import SearchAndSummarize
-from metagpt.roles import Role
-from metagpt.tools import SearchEngineType
+from repolya.metagpt.actions import SearchAndSummarize
+from repolya.metagpt.roles import Role
+from repolya.metagpt.tools import SearchEngineType
 
 
 class Sales(Role):

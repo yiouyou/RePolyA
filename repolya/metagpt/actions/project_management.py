@@ -7,9 +7,9 @@
 """
 from typing import List, Tuple
 
-from metagpt.actions.action import Action
-from metagpt.const import WORKSPACE_ROOT
-from metagpt.utils.common import CodeParser
+from repolya.metagpt.actions.action import Action
+from repolya._const import WORKSPACE_ROOT
+from repolya.metagpt.utils.common import CodeParser
 
 PROMPT_TEMPLATE = '''
 # Context

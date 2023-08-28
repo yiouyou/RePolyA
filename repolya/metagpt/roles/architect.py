@@ -6,8 +6,8 @@
 @File    : architect.py
 """
 
-from metagpt.actions import WriteDesign, WritePRD
-from metagpt.roles import Role
+from repolya.metagpt.actions import WriteDesign, WritePRD
+from repolya.metagpt.roles import Role
 
 
 class Architect(Role):

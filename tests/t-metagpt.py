@@ -8,8 +8,8 @@ import asyncio
 import platform
 import fire
 
-from metagpt.roles import Architect, Engineer, ProductManager, ProjectManager, QaEngineer
-from metagpt.software_company import SoftwareCompany
+from repolya.metagpt.roles import Architect, Engineer, ProductManager, ProjectManager, QaEngineer
+from repolya.metagpt.software_company import SoftwareCompany
 
 
 async def startup(idea: str, investment: float = 3.0, n_round: int = 5,

@@ -10,13 +10,13 @@ import shutil
 from collections import OrderedDict
 from pathlib import Path
 
-from metagpt.const import WORKSPACE_ROOT
-from metagpt.logs import logger
-from metagpt.roles import Role
-from metagpt.actions import WriteCode, WriteCodeReview, WriteTasks, WriteDesign
-from metagpt.schema import Message
-from metagpt.utils.common import CodeParser
-from metagpt.utils.special_tokens import MSG_SEP, FILENAME_CODE_SEP
+from repolya._const import WORKSPACE_ROOT
+from repolya._log import logger_metagpt
+from repolya.metagpt.roles import Role
+from repolya.metagpt.actions import WriteCode, WriteCodeReview, WriteTasks, WriteDesign
+from repolya.metagpt.schema import Message
+from repolya.metagpt.utils.common import CodeParser
+from repolya.metagpt.utils.special_tokens import MSG_SEP, FILENAME_CODE_SEP
 
 
 async def gather_ordered_k(coros, k) -> list:
@@ -117,14 +117,14 @@ class Engineer(Role):
         rsps = await gather_ordered_k(todo_coros, self.n_borg)
         for todo, code_rsp in zip(self.todos, rsps):
             _ = self.parse_code(code_rsp)
-            logger.info(todo)
-            logger.info(code_rsp)
+            logger_metagpt.info(todo)
+            logger_metagpt.info(code_rsp)
             # self.write_file(todo, code)
             msg = Message(content=code_rsp, role=self.profile, cause_by=type(self._rc.todo))
             self._rc.memory.add(msg)
             del self.todos[0]
 
-        logger.info(f'Done {self.get_workspace()} generating.')
+        logger_metagpt.info(f'Done {self.get_workspace()} generating.')
         msg = Message(content="all done.", role=self.profile, cause_by=type(self._rc.todo))
         return msg
 
@@ -135,8 +135,8 @@ class Engineer(Role):
                 context=self._rc.history,
                 filename=todo
             )
-            # logger.info(todo)
-            # logger.info(code_rsp)
+            # logger_metagpt.info(todo)
+            # logger_metagpt.info(code_rsp)
             # code = self.parse_code(code_rsp)
             file_path = self.write_file(todo, code)
             msg = Message(content=code, role=self.profile, cause_by=type(self._rc.todo))
@@ -145,7 +145,7 @@ class Engineer(Role):
             code_msg = todo + FILENAME_CODE_SEP + str(file_path)
             code_msg_all.append(code_msg)
 
-        logger.info(f'Done {self.get_workspace()} generating.')
+        logger_metagpt.info(f'Done {self.get_workspace()} generating.')
         msg = Message(
             content=MSG_SEP.join(code_msg_all),
             role=self.profile,
@@ -184,7 +184,7 @@ class Engineer(Role):
                     )
                     code = rewrite_code
                 except Exception as e:
-                    logger.error("code review failed!", e)
+                    logger_metagpt.error("code review failed!", e)
                     pass
             file_path = self.write_file(todo, code)
             msg = Message(content=code, role=self.profile, cause_by=WriteCode)
@@ -193,7 +193,7 @@ class Engineer(Role):
             code_msg = todo + FILENAME_CODE_SEP + str(file_path)
             code_msg_all.append(code_msg)
 
-        logger.info(f'Done {self.get_workspace()} generating.')
+        logger_metagpt.info(f'Done {self.get_workspace()} generating.')
         msg = Message(
             content=MSG_SEP.join(code_msg_all),
             role=self.profile,

@@ -10,7 +10,7 @@
 ```python
 from typing import Optional
 from abc import ABC
-from metagpt.llm import LLM # 大语言模型，类似GPT
+from repolya.metagpt.llm import LLM # 大语言模型，类似GPT
 
 class Action(ABC):
     def __init__(self, name='', context=None, llm: LLM = LLM()):

@@ -11,8 +11,8 @@ from urllib.parse import urlparse
 import httplib2
 from pydantic import BaseModel, validator
 
-from metagpt.config import CONFIG
-from metagpt.logs import logger
+from repolya.metagpt.config import CONFIG
+from repolya._log import logger_metagpt
 
 try:
     from googleapiclient.discovery import build
@@ -106,7 +106,7 @@ class GoogleAPIWrapper(BaseModel):
 
         except HttpError as e:
             # Handle errors in the API call
-            logger.exception(f"fail to search {query} for {e}")
+            logger_metagpt.exception(f"fail to search {query} for {e}")
             search_results = []
 
         focus = focus or ["snippet", "link", "title"]

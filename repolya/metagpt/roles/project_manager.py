@@ -5,8 +5,8 @@
 @Author  : alexanderwu
 @File    : project_manager.py
 """
-from metagpt.actions import WriteDesign, WriteTasks
-from metagpt.roles import Role
+from repolya.metagpt.actions import WriteDesign, WriteTasks
+from repolya.metagpt.roles import Role
 
 
 class ProjectManager(Role):

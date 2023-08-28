@@ -6,7 +6,7 @@
 @File    : __init__.py
 """
 
-from metagpt.provider.openai_api import OpenAIGPTAPI
+from repolya.metagpt.provider.openai_api import OpenAIGPTAPI
 
 
 __all__ = ["OpenAIGPTAPI"]

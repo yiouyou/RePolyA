@@ -6,8 +6,8 @@ import copy
 import pickle
 from typing import Dict, List, Tuple
 
-from metagpt.actions.action_output import ActionOutput
-from metagpt.schema import Message
+from repolya.metagpt.actions.action_output import ActionOutput
+from repolya.metagpt.schema import Message
 
 
 def actionoutout_schema_to_mapping(schema: Dict) -> Dict:

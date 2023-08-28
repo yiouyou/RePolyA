@@ -8,8 +8,8 @@
 from abc import abstractmethod
 from typing import Optional
 
-from metagpt.logs import logger
-from metagpt.provider.base_chatbot import BaseChatbot
+from repolya._log import logger_metagpt
+from repolya.metagpt.provider.base_chatbot import BaseChatbot
 
 
 class BaseGPTAPI(BaseChatbot):
@@ -42,8 +42,8 @@ class BaseGPTAPI(BaseChatbot):
         else:
             message = [self._default_system_msg(), self._user_msg(msg)]
         rsp = await self.acompletion_text(message, stream=True)
-        logger.debug(message)
-        # logger.debug(rsp)
+        logger_metagpt.debug(message)
+        # logger_metagpt.debug(rsp)
         return rsp
 
     def _extract_assistant_rsp(self, context):

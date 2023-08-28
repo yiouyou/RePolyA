@@ -10,8 +10,8 @@ from __future__ import annotations
 import importlib
 from typing import Callable, Coroutine, Literal, overload
 
-from metagpt.config import CONFIG
-from metagpt.tools import SearchEngineType
+from repolya.metagpt.config import CONFIG
+from repolya.metagpt.tools import SearchEngineType
 
 
 class SearchEngine:
@@ -32,16 +32,16 @@ class SearchEngine:
     ):
         engine = engine or CONFIG.search_engine
         if engine == SearchEngineType.SERPAPI_GOOGLE:
-            module = "metagpt.tools.search_engine_serpapi"
+            module = "repolya.metagpt.tools.search_engine_serpapi"
             run_func = importlib.import_module(module).SerpAPIWrapper().run            
         elif engine == SearchEngineType.SERPER_GOOGLE:
-            module = "metagpt.tools.search_engine_serper"
+            module = "repolya.metagpt.tools.search_engine_serper"
             run_func = importlib.import_module(module).SerperWrapper().run
         elif engine == SearchEngineType.DIRECT_GOOGLE:
-            module = "metagpt.tools.search_engine_googleapi"
+            module = "repolya.metagpt.tools.search_engine_googleapi"
             run_func = importlib.import_module(module).GoogleAPIWrapper().run
         elif engine == SearchEngineType.DUCK_DUCK_GO:
-            module = "metagpt.tools.search_engine_ddg"
+            module = "repolya.metagpt.tools.search_engine_ddg"
             run_func = importlib.import_module(module).DDGAPIWrapper().run
         elif engine == SearchEngineType.CUSTOM_ENGINE:
             pass  # run_func = run_func

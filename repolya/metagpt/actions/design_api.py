@@ -9,11 +9,11 @@ import shutil
 from pathlib import Path
 from typing import List
 
-from metagpt.actions import Action, ActionOutput
-from metagpt.const import WORKSPACE_ROOT
-from metagpt.logs import logger
-from metagpt.utils.common import CodeParser
-from metagpt.utils.mermaid import mermaid_to_file
+from repolya.metagpt.actions import Action, ActionOutput
+from repolya._const import WORKSPACE_ROOT
+from repolya._log import logger_metagpt
+from repolya.metagpt.utils.common import CodeParser
+from repolya.metagpt.utils.mermaid import mermaid_to_file
 
 PROMPT_TEMPLATE = """
 # Context
@@ -107,7 +107,7 @@ class WriteDesign(Action):
         prd_file = docs_path / 'prd.md'
         quadrant_chart = CodeParser.parse_code(block="Competitive Quadrant Chart", text=prd)
         mermaid_to_file(quadrant_chart, resources_path / 'competitive_analysis')
-        logger.info(f"Saving PRD to {prd_file}")
+        logger_metagpt.info(f"Saving PRD to {prd_file}")
         prd_file.write_text(prd)
 
     def _save_system_design(self, docs_path, resources_path, content):
@@ -116,7 +116,7 @@ class WriteDesign(Action):
         mermaid_to_file(data_api_design, resources_path / 'data_api_design')
         mermaid_to_file(seq_flow, resources_path / 'seq_flow')
         system_design_file = docs_path / 'system_design.md'
-        logger.info(f"Saving System Designs to {system_design_file}")
+        logger_metagpt.info(f"Saving System Designs to {system_design_file}")
         system_design_file.write_text(content)
 
     def _save(self, context, system_design):

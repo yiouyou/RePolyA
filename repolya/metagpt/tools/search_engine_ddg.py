@@ -15,7 +15,7 @@ except ImportError:
         "You can install it by running the command: `pip install -e.[search-ddg]`"
     )
 
-from metagpt.config import CONFIG
+from repolya.metagpt.config import CONFIG
 
 
 class DDGAPIWrapper:

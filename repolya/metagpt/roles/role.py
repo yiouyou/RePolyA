@@ -11,13 +11,13 @@ from typing import Iterable, Type
 
 from pydantic import BaseModel, Field
 
-# from metagpt.environment import Environment
-from metagpt.config import CONFIG
-from metagpt.actions import Action, ActionOutput
-from metagpt.llm import LLM
-from metagpt.logs import logger
-from metagpt.memory import Memory, LongTermMemory
-from metagpt.schema import Message
+# from repolya.metagpt.environment import Environment
+from repolya.metagpt.config import CONFIG
+from repolya.metagpt.actions import Action, ActionOutput
+from repolya.metagpt.llm import LLM
+from repolya._log import logger_metagpt
+from repolya.metagpt.memory import Memory, LongTermMemory
+from repolya.metagpt.schema import Message
 
 PREFIX_TEMPLATE = """You are a {profile}, named {name}, your goal is {goal}, and the constraint is {constraints}. """
 
@@ -125,7 +125,7 @@ class Role:
     def _set_state(self, state):
         """Update the current state."""
         self._rc.state = state
-        logger.debug(self._actions)
+        logger_metagpt.debug(self._actions)
         self._rc.todo = self._actions[self._rc.state]
 
     def set_env(self, env: 'Environment'):
@@ -153,9 +153,9 @@ class Role:
         prompt += STATE_TEMPLATE.format(history=self._rc.history, states="\n".join(self._states),
                                         n_states=len(self._states) - 1)
         next_state = await self._llm.aask(prompt)
-        logger.debug(f"{prompt=}")
+        logger_metagpt.debug(f"{prompt=}")
         if not next_state.isdigit() or int(next_state) not in range(len(self._states)):
-            logger.warning(f'Invalid answer of state, {next_state=}')
+            logger_metagpt.warning(f'Invalid answer of state, {next_state=}')
             next_state = "0"
         self._set_state(int(next_state))
 
@@ -164,16 +164,16 @@ class Role:
         # prompt += ROLE_TEMPLATE.format(name=self.profile, state=self.states[self.state], result=response,
         #                                history=self.history)
 
-        logger.info(f"{self._setting}: ready to {self._rc.todo}")
+        logger_metagpt.info(f"{self._setting}: ready to {self._rc.todo}")
         response = await self._rc.todo.run(self._rc.important_memory)
-        # logger.info(response)
+        # logger_metagpt.info(response)
         if isinstance(response, ActionOutput):
             msg = Message(content=response.content, instruct_content=response.instruct_content,
                           role=self.profile, cause_by=type(self._rc.todo))
         else:
             msg = Message(content=response, role=self.profile, cause_by=type(self._rc.todo))
         self._rc.memory.add(msg)
-        # logger.debug(f"{response}")
+        # logger_metagpt.debug(f"{response}")
 
         return msg
 
@@ -192,7 +192,7 @@ class Role:
 
         news_text = [f"{i.role}: {i.content[:20]}..." for i in self._rc.news]
         if news_text:
-            logger.debug(f'{self._setting} observed: {news_text}')
+            logger_metagpt.debug(f'{self._setting} observed: {news_text}')
         return len(self._rc.news)
 
     def _publish_message(self, msg):
@@ -205,7 +205,7 @@ class Role:
     async def _react(self) -> Message:
         """先想，然后再做"""
         await self._think()
-        logger.debug(f"{self._setting}: {self._rc.state=}, will do {self._rc.todo}")
+        logger_metagpt.debug(f"{self._setting}: {self._rc.state=}, will do {self._rc.todo}")
         return await self._act()
 
     def recv(self, message: Message) -> None:
@@ -218,7 +218,7 @@ class Role:
 
     async def handle(self, message: Message) -> Message:
         """接收信息，并用行动回复"""
-        # logger.debug(f"{self.name=}, {self.profile=}, {message.role=}")
+        # logger_metagpt.debug(f"{self.name=}, {self.profile=}, {message.role=}")
         self.recv(message)
 
         return await self._react()
@@ -234,7 +234,7 @@ class Role:
                 self.recv(Message("\n".join(message)))
         elif not await self._observe():
             # 如果没有任何新信息，挂起等待
-            logger.debug(f"{self._setting}: no news. waiting.")
+            logger_metagpt.debug(f"{self._setting}: no news. waiting.")
             return
 
         rsp = await self._react()

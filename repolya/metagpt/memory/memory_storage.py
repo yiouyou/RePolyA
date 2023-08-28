@@ -7,11 +7,11 @@ from pathlib import Path
 
 from langchain.vectorstores.faiss import FAISS
 
-from metagpt.const import DATA_PATH, MEM_TTL
-from metagpt.logs import logger
-from metagpt.schema import Message
-from metagpt.utils.serialize import serialize_message, deserialize_message
-from metagpt.document_store.faiss_store import FaissStore
+from repolya._const import DATA_PATH, MEM_TTL
+from repolya._log import logger_metagpt
+from repolya.metagpt.schema import Message
+from repolya.metagpt.utils.serialize import serialize_message, deserialize_message
+from repolya.metagpt.document_store.faiss_store import FaissStore
 
 
 class MemoryStorage(FaissStore):
@@ -51,7 +51,7 @@ class MemoryStorage(FaissStore):
 
     def _get_index_and_store_fname(self):
         if not self.role_mem_path:
-            logger.error(f'You should call {self.__class__.__name__}.recover_memory fist when using LongTermMemory')
+            logger_metagpt.error(f'You should call {self.__class__.__name__}.recover_memory fist when using LongTermMemory')
             return None, None
         index_fpath = Path(self.role_mem_path / f'{self.role_id}.index')
         storage_fpath = Path(self.role_mem_path / f'{self.role_id}.pkl')
@@ -59,7 +59,7 @@ class MemoryStorage(FaissStore):
 
     def persist(self):
         super(MemoryStorage, self).persist()
-        logger.debug(f'Agent {self.role_id} persist memory into local')
+        logger_metagpt.debug(f'Agent {self.role_id} persist memory into local')
 
     def add(self, message: Message) -> bool:
         """ add message into memory storage"""
@@ -72,7 +72,7 @@ class MemoryStorage(FaissStore):
         else:
             self.store.add_texts(texts=docs, metadatas=metadatas)
         self.persist()
-        logger.info(f"Agent {self.role_id}'s memory_storage add a message")
+        logger_metagpt.info(f"Agent {self.role_id}'s memory_storage add a message")
 
     def search(self, message: Message, k=4) -> List[Message]:
         """search for dissimilar messages"""

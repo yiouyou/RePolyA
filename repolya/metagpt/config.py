@@ -8,10 +8,10 @@ import os
 import openai
 import yaml
 
-from metagpt.const import PROJECT_ROOT
-from metagpt.logs import logger
-from metagpt.tools import SearchEngineType, WebBrowserEngineType
-from metagpt.utils.singleton import Singleton
+from repolya.metagpt.const import PROJECT_ROOT
+from repolya._log import logger_metagpt
+from repolya.metagpt.tools import SearchEngineType, WebBrowserEngineType
+from repolya.metagpt.utils.singleton import Singleton
 
 
 class NotConfiguredException(Exception):
@@ -35,13 +35,13 @@ class Config(metaclass=Singleton):
     """
 
     _instance = None
-    key_yaml_file = PROJECT_ROOT / "config/key.yaml"
-    default_yaml_file = PROJECT_ROOT / "config/config.yaml"
+    key_yaml_file = PROJECT_ROOT / "metagpt/_config/key.yaml"
+    default_yaml_file = PROJECT_ROOT / "metagpt/_config/config.yaml"
 
     def __init__(self, yaml_file=default_yaml_file):
         self._configs = {}
         self._init_with_config_files_and_env(self._configs, yaml_file)
-        logger.info("Config loading done.")
+        logger_metagpt.info("Config loading done.")
         self.global_proxy = self._get("GLOBAL_PROXY")
         self.openai_api_key = self._get("OPENAI_API_KEY")
         self.anthropic_api_key = self._get("Anthropic_API_KEY")
@@ -73,7 +73,7 @@ class Config(metaclass=Singleton):
 
         self.long_term_memory = self._get("LONG_TERM_MEMORY", False)
         if self.long_term_memory:
-            logger.warning("LONG_TERM_MEMORY is True")
+            logger_metagpt.warning("LONG_TERM_MEMORY is True")
         self.max_budget = self._get("MAX_BUDGET", 10.0)
         self.total_cost = 0.0
 

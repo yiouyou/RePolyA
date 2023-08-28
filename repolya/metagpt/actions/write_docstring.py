@@ -4,7 +4,7 @@ This script provides a tool to automatically generate docstrings for Python code
 docstrings for the given code and system text.
 
 Usage:
-    python3 -m metagpt.actions.write_docstring <filename> [--overwrite] [--style=<docstring_style>]
+    python3 -m repolya.metagpt.actions.write_docstring <filename> [--overwrite] [--style=<docstring_style>]
 
 Arguments:
     filename           The path to the Python file for which you want to generate docstrings.
@@ -16,7 +16,7 @@ Options:
                                 Default: 'google'
 
 Example:
-    python3 -m metagpt.actions.write_docstring startup.py --overwrite False --style=numpy
+    python3 -m repolya.metagpt.actions.write_docstring startup.py --overwrite False --style=numpy
 
 This script uses the 'fire' library to create a command-line interface. It generates docstrings for the given Python code using
 the specified docstring style and adds them to the code.
@@ -24,9 +24,9 @@ the specified docstring style and adds them to the code.
 import ast
 from typing import Literal
 
-from metagpt.actions.action import Action
-from metagpt.utils.common import OutputParser
-from metagpt.utils.pycst import merge_docstring
+from repolya.metagpt.actions.action import Action
+from repolya.metagpt.utils.common import OutputParser
+from repolya.metagpt.utils.pycst import merge_docstring
 
 PYTHON_DOCSTRING_SYSTEM = '''### Requirements
 1. Add docstrings to the given code following the {style} style.

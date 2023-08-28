@@ -11,8 +11,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
-from metagpt.config import CONFIG
-from metagpt.utils.parse_html import WebPage
+from repolya.metagpt.config import CONFIG
+from repolya.metagpt.utils.parse_html import WebPage
 
 
 class SeleniumWrapper:

@@ -10,10 +10,10 @@ from typing import Optional
 
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-from metagpt.actions.action_output import ActionOutput
-from metagpt.llm import LLM
-from metagpt.utils.common import OutputParser
-from metagpt.logs import logger
+from repolya.metagpt.actions.action_output import ActionOutput
+from repolya.metagpt.llm import LLM
+from repolya.metagpt.utils.common import OutputParser
+from repolya._log import logger_metagpt
 
 class Action(ABC):
     def __init__(self, name: str = '', context=None, llm: LLM = None):
@@ -55,10 +55,10 @@ class Action(ABC):
             system_msgs = []
         system_msgs.append(self.prefix)
         content = await self.llm.aask(prompt, system_msgs)
-        logger.debug(content)
+        logger_metagpt.debug(content)
         output_class = ActionOutput.create_model_class(output_class_name, output_data_mapping)
         parsed_data = OutputParser.parse_data_with_mapping(content, output_data_mapping)
-        logger.debug(parsed_data)
+        logger_metagpt.debug(parsed_data)
         instruct_content = output_class(**parsed_data)
         return ActionOutput(content, instruct_content)
 

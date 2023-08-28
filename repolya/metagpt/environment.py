@@ -10,9 +10,9 @@ from typing import Iterable
 
 from pydantic import BaseModel, Field
 
-from metagpt.memory import Memory
-from metagpt.roles import Role
-from metagpt.schema import Message
+from repolya.metagpt.memory import Memory
+from repolya.metagpt.roles import Role
+from repolya.metagpt.schema import Message
 
 
 class Environment(BaseModel):

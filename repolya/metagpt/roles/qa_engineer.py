@@ -8,13 +8,13 @@
 import os
 from pathlib import Path
 
-from metagpt.actions import DebugError, RunCode, WriteCode, WriteDesign, WriteTest
-from metagpt.const import WORKSPACE_ROOT
-from metagpt.logs import logger
-from metagpt.roles import Role
-from metagpt.schema import Message
-from metagpt.utils.common import CodeParser, parse_recipient
-from metagpt.utils.special_tokens import FILENAME_CODE_SEP, MSG_SEP
+from repolya.metagpt.actions import DebugError, RunCode, WriteCode, WriteDesign, WriteTest
+from repolya._const import WORKSPACE_ROOT
+from repolya._log import logger_metagpt
+from repolya.metagpt.roles import Role
+from repolya.metagpt.schema import Message
+from repolya.metagpt.utils.common import CodeParser, parse_recipient
+from repolya.metagpt.utils.special_tokens import FILENAME_CODE_SEP, MSG_SEP
 
 
 class QaEngineer(Role):
@@ -68,7 +68,7 @@ class QaEngineer(Role):
                 continue  # Engineer might write some test files, skip testing a test file
             test_file_name = "test_" + file_name
             test_file_path = self.get_workspace() / "tests" / test_file_name
-            logger.info(f"Writing {test_file_name}..")
+            logger_metagpt.info(f"Writing {test_file_name}..")
             test_code = await WriteTest().run(
                 code_to_test=code_to_test,
                 test_file_name=test_file_name,
@@ -96,7 +96,7 @@ class QaEngineer(Role):
             )
             self._publish_message(msg)
 
-        logger.info(f"Done {self.get_workspace()}/tests generating.")
+        logger_metagpt.info(f"Done {self.get_workspace()}/tests generating.")
 
     async def _run_code(self, msg):
         file_info = eval(msg.content)

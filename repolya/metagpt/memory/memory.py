@@ -8,8 +8,8 @@
 from collections import defaultdict
 from typing import Iterable, Type
 
-from metagpt.actions import Action
-from metagpt.schema import Message
+from repolya.metagpt.actions import Action
+from repolya.metagpt.schema import Message
 
 
 class Memory:

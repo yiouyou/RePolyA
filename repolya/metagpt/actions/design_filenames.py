@@ -5,8 +5,8 @@
 @Author  : alexanderwu
 @File    : design_filenames.py
 """
-from metagpt.actions import Action
-from metagpt.logs import logger
+from repolya.metagpt.actions import Action
+from repolya._log import logger_metagpt
 
 PROMPT = """You are an AI developer, trying to write a program that generates code for users based on their intentions.
 When given their intentions, provide a complete and exhaustive list of file paths needed to write the program for the user.
@@ -23,6 +23,6 @@ class DesignFilenames(Action):
     async def run(self, prd):
         prompt = f"The following is the Product Requirement Document (PRD):\n\n{prd}\n\n{PROMPT}"
         design_filenames = await self._aask(prompt)
-        logger.debug(prompt)
-        logger.debug(design_filenames)
+        logger_metagpt.debug(prompt)
+        logger_metagpt.debug(design_filenames)
         return design_filenames

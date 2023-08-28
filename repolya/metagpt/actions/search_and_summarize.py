@@ -7,11 +7,11 @@
 """
 import pydantic
 
-from metagpt.actions import Action
-from metagpt.config import Config
-from metagpt.logs import logger
-from metagpt.schema import Message
-from metagpt.tools.search_engine import SearchEngine
+from repolya.metagpt.actions import Action
+from repolya.metagpt.config import Config
+from repolya._log import logger_metagpt
+from repolya.metagpt.schema import Message
+from repolya.metagpt.tools.search_engine import SearchEngine
 
 SEARCH_AND_SUMMARIZE_SYSTEM = """### Requirements
 1. Please summarize the latest dialogue based on the reference information (secondary) and dialogue history (primary). Do not include text that is irrelevant to the conversation.
@@ -115,17 +115,17 @@ class SearchAndSummarize(Action):
 
     async def run(self, context: list[Message], system_text=SEARCH_AND_SUMMARIZE_SYSTEM) -> str:
         if self.search_engine is None:
-            logger.warning("Configure one of SERPAPI_API_KEY, SERPER_API_KEY, GOOGLE_API_KEY to unlock full feature")
+            logger_metagpt.warning("Configure one of SERPAPI_API_KEY, SERPER_API_KEY, GOOGLE_API_KEY to unlock full feature")
             return ""
 
         query = context[-1].content
-        # logger.debug(query)
+        # logger_metagpt.debug(query)
         rsp = await self.search_engine.run(query)
         self.result = rsp
         if not rsp:
-            logger.error("empty rsp...")
+            logger_metagpt.error("empty rsp...")
             return ""
-        # logger.info(rsp)
+        # logger_metagpt.info(rsp)
 
         system_prompt = [system_text]
 
@@ -137,6 +137,6 @@ class SearchAndSummarize(Action):
             QUERY=str(context[-1]),
         )
         result = await self._aask(prompt, system_prompt)
-        logger.debug(prompt)
-        logger.debug(result)
+        logger_metagpt.debug(prompt)
+        logger_metagpt.debug(result)
         return result

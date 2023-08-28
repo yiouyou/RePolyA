@@ -7,9 +7,9 @@
 """
 import re
 
-from metagpt.logs import logger
-from metagpt.actions.action import Action
-from metagpt.utils.common import CodeParser
+from repolya._log import logger_metagpt
+from repolya.metagpt.actions.action import Action
+from repolya.metagpt.utils.common import CodeParser
 
 PROMPT_TEMPLATE = """
 NOTICE
@@ -40,7 +40,7 @@ class DebugError(Action):
         
         file_name = re.search("## File To Rewrite:\s*(.+\\.py)", context).group(1)
 
-        logger.info(f"Debug and rewrite {file_name}")
+        logger_metagpt.info(f"Debug and rewrite {file_name}")
 
         prompt = PROMPT_TEMPLATE.format(context=context)
         

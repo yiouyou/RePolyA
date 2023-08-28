@@ -7,13 +7,13 @@
 """
 from pydantic import BaseModel, Field
 
-from metagpt.actions import BossRequirement
-from metagpt.config import CONFIG
-from metagpt.environment import Environment
-from metagpt.logs import logger
-from metagpt.roles import Role
-from metagpt.schema import Message
-from metagpt.utils.common import NoMoneyException
+from repolya.metagpt.actions import BossRequirement
+from repolya.metagpt.config import CONFIG
+from repolya.metagpt.environment import Environment
+from repolya._log import logger_metagpt
+from repolya.metagpt.roles import Role
+from repolya.metagpt.schema import Message
+from repolya.metagpt.utils.common import NoMoneyException
 
 
 class SoftwareCompany(BaseModel):
@@ -36,7 +36,7 @@ class SoftwareCompany(BaseModel):
         """Invest company. raise NoMoneyException when exceed max_budget."""
         self.investment = investment
         CONFIG.max_budget = investment
-        logger.info(f'Investment: ${investment}.')
+        logger_metagpt.info(f'Investment: ${investment}.')
 
     def _check_balance(self):
         if CONFIG.total_cost > CONFIG.max_budget:
@@ -48,14 +48,14 @@ class SoftwareCompany(BaseModel):
         self.environment.publish_message(Message(role="BOSS", content=idea, cause_by=BossRequirement))
 
     def _save(self):
-        logger.info(self.json())
+        logger_metagpt.info(self.json())
 
     async def run(self, n_round=3):
         """Run company until target round or no money"""
         while n_round > 0:
             # self._save()
             n_round -= 1
-            logger.debug(f"{n_round=}")
+            logger_metagpt.debug(f"{n_round=}")
             self._check_balance()
             await self.environment.run()
         return self.environment.history

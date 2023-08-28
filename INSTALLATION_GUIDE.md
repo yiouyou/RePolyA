@@ -38,11 +38,41 @@ Before beginning the installation, make sure you have:
    pip install -r requirements.txt
    ```
 
-4. **Configuration** (If required)
+4. **Install Node/Chromium/Mermaid**
+
+   Node:
+   ```bash
+   curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+   sudo apt install nodejs
+   ```
+   
+   Chromium:
+   ```bash
+   sudo apt-get install chromium-browser
+   ```
+
+   Mermaid:
+   ```bash
+   npm install -g puppeteer
+   npm install @mermaid-js/mermaid-cli
+   ```
+
+   Edit ~/.bashrc
+   ```bash
+   alias mmdc='YOUR_PATH/node_modules/.bin/mmdc'
+   export PUPPETEER_EXECUTABLE_PATH=/YOUR_PATH/bin/chromium
+   ```
+
+   Test Mermaid
+   ```bash
+   mmdc -i test.mmd -o test.png
+   ```
+
+5. **Configuration** (If required)
 
    Certain modules or functionalities might need additional configuration or setup, such as setting environment variables or configuring external services. Refer to the [Configuration Guide](https://github.com/yiouyou/RePolyA/blob/main/CONFIGURATION_GUIDE.md) for more specifics.
 
-5. **Verify Installation**
+6. **Verify Installation**
 
    Run preliminary tests or launch the application to verify the setup:
 

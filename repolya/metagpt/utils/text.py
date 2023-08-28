@@ -1,6 +1,6 @@
 from typing import Generator, Sequence
 
-from metagpt.utils.token_counter import TOKEN_MAX, count_string_tokens
+from repolya.metagpt.utils.token_counter import TOKEN_MAX, count_string_tokens
 
 
 def reduce_message_length(msgs: Generator[str, None, None], model_name: str, system_text: str, reserved: int = 0,) -> str:

@@ -8,10 +8,10 @@
 import subprocess
 from pathlib import Path
 
-from metagpt.config import CONFIG
-from metagpt.const import PROJECT_ROOT
-from metagpt.logs import logger
-from metagpt.utils.common import check_cmd_exists
+from repolya.metagpt.config import CONFIG
+from repolya._const import PROJECT_ROOT
+from repolya._log import logger_metagpt
+from repolya.metagpt.utils.common import check_cmd_exists
 
 
 def mermaid_to_file(mermaid_code, output_file_without_suffix, width=2048, height=2048) -> int:
@@ -28,13 +28,13 @@ def mermaid_to_file(mermaid_code, output_file_without_suffix, width=2048, height
     tmp.write_text(mermaid_code, encoding="utf-8")
 
     if check_cmd_exists("mmdc") != 0:
-        logger.warning("RUN `npm install -g @mermaid-js/mermaid-cli` to install mmdc")
+        logger_metagpt.warning("RUN `npm install -g @mermaid-js/mermaid-cli` to install mmdc")
         return -1
 
     for suffix in ["pdf", "svg", "png"]:
         output_file = f"{output_file_without_suffix}.{suffix}"
         # Call the `mmdc` command to convert the Mermaid code to a PNG
-        logger.info(f"Generating {output_file}..")
+        logger_metagpt.info(f"Generating {output_file}..")
 
         if CONFIG.puppeteer_config:
             subprocess.run(
@@ -109,6 +109,6 @@ MMC2 = """sequenceDiagram
 
 
 if __name__ == "__main__":
-    # logger.info(print_members(print_members))
+    # logger_metagpt.info(print_members(print_members))
     mermaid_to_file(MMC1, PROJECT_ROOT / "tmp/1.png")
     mermaid_to_file(MMC2, PROJECT_ROOT / "tmp/2.png")

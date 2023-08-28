@@ -6,6 +6,6 @@
 @File    : __init__.py
 """
 
-from metagpt.document_store.faiss_store import FaissStore
+from repolya.metagpt.document_store.faiss_store import FaissStore
 
 __all__ = ["FaissStore"]

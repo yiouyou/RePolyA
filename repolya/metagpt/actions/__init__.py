@@ -7,22 +7,22 @@
 """
 from enum import Enum
 
-from metagpt.actions.action import Action
-from metagpt.actions.action_output import ActionOutput
-from metagpt.actions.add_requirement import BossRequirement
-from metagpt.actions.debug_error import DebugError
-from metagpt.actions.design_api import WriteDesign
-from metagpt.actions.design_api_review import DesignReview
-from metagpt.actions.design_filenames import DesignFilenames
-from metagpt.actions.project_management import AssignTasks, WriteTasks
-from metagpt.actions.research import CollectLinks, WebBrowseAndSummarize, ConductResearch
-from metagpt.actions.run_code import RunCode
-from metagpt.actions.search_and_summarize import SearchAndSummarize
-from metagpt.actions.write_code import WriteCode
-from metagpt.actions.write_code_review import WriteCodeReview
-from metagpt.actions.write_prd import WritePRD
-from metagpt.actions.write_prd_review import WritePRDReview
-from metagpt.actions.write_test import WriteTest
+from repolya.metagpt.actions.action import Action
+from repolya.metagpt.actions.action_output import ActionOutput
+from repolya.metagpt.actions.add_requirement import BossRequirement
+from repolya.metagpt.actions.debug_error import DebugError
+from repolya.metagpt.actions.design_api import WriteDesign
+from repolya.metagpt.actions.design_api_review import DesignReview
+from repolya.metagpt.actions.design_filenames import DesignFilenames
+from repolya.metagpt.actions.project_management import AssignTasks, WriteTasks
+from repolya.metagpt.actions.research import CollectLinks, WebBrowseAndSummarize, ConductResearch
+from repolya.metagpt.actions.run_code import RunCode
+from repolya.metagpt.actions.search_and_summarize import SearchAndSummarize
+from repolya.metagpt.actions.write_code import WriteCode
+from repolya.metagpt.actions.write_code_review import WriteCodeReview
+from repolya.metagpt.actions.write_prd import WritePRD
+from repolya.metagpt.actions.write_prd_review import WritePRDReview
+from repolya.metagpt.actions.write_test import WriteTest
 
 
 class ActionType(Enum):

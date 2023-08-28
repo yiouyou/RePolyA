@@ -12,7 +12,7 @@ from typing import Type, TypedDict
 
 from pydantic import BaseModel
 
-from metagpt.logs import logger
+from repolya._log import logger_metagpt
 
 
 class RawMessage(TypedDict):
@@ -79,4 +79,4 @@ if __name__ == '__main__':
         AIMessage(test_content),
         Message(test_content, role='QA')
     ]
-    logger.info(msgs)
+    logger_metagpt.info(msgs)

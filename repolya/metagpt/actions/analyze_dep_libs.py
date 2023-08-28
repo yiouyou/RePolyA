@@ -6,7 +6,7 @@
 @File    : analyze_dep_libs.py
 """
 
-from metagpt.actions import Action
+from repolya.metagpt.actions import Action
 
 PROMPT = """You are an AI developer, trying to write a program that generates code for users based on their intentions.
 

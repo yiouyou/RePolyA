@@ -13,9 +13,9 @@ from typing import List
 from aiohttp import ClientSession
 from PIL import Image, PngImagePlugin
 
-from metagpt.config import Config
-from metagpt.const import WORKSPACE_ROOT
-from metagpt.logs import logger
+from repolya.metagpt.config import Config
+from repolya._const import WORKSPACE_ROOT
+from repolya._log import logger_metagpt
 
 config = Config()
 
@@ -61,7 +61,7 @@ class SDEngine:
         self.sd_t2i_url = f"{self.sd_url}{self.config.get('SD_T2I_API')}"
         # Define default payload settings for SD API
         self.payload = payload
-        logger.info(self.sd_t2i_url)
+        logger_metagpt.info(self.sd_t2i_url)
 
     def construct_payload(
         self,
@@ -77,7 +77,7 @@ class SDEngine:
         self.payload["width"] = width
         self.payload["height"] = height
         self.payload["override_settings"]["sd_model_checkpoint"] = sd_model
-        logger.info(f"call sd payload is {self.payload}")
+        logger_metagpt.info(f"call sd payload is {self.payload}")
         return self.payload
 
     def _save(self, imgs, save_name=""):
@@ -101,7 +101,7 @@ class SDEngine:
 
         rsp_json = json.loads(data)
         imgs = rsp_json["images"]
-        logger.info(f"callback rsp json is {rsp_json.keys()}")
+        logger_metagpt.info(f"callback rsp json is {rsp_json.keys()}")
         return imgs
 
     async def run_i2i(self):
@@ -116,7 +116,7 @@ class SDEngine:
 def decode_base64_to_image(img, save_name):
     image = Image.open(io.BytesIO(base64.b64decode(img.split(",", 1)[0])))
     pnginfo = PngImagePlugin.PngInfo()
-    logger.info(save_name)
+    logger_metagpt.info(save_name)
     image.save(f"{save_name}.png", pnginfo=pnginfo)
     return pnginfo, image
 

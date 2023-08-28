@@ -13,10 +13,10 @@ import faiss
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 
-from metagpt.const import DATA_PATH
-from metagpt.document_store.base_store import LocalStore
-from metagpt.document_store.document import Document
-from metagpt.logs import logger
+from repolya._const import DATA_PATH
+from repolya.metagpt.document_store.base_store import LocalStore
+from repolya.metagpt.document_store.document import Document
+from repolya._log import logger_metagpt
 
 
 class FaissStore(LocalStore):
@@ -28,7 +28,7 @@ class FaissStore(LocalStore):
     def _load(self) -> Optional["FaissStore"]:
         index_file, store_file = self._get_index_and_store_fname()
         if not (index_file.exists() and store_file.exists()):
-            logger.info("Missing at least one of index_file/store_file, load failed and return None")
+            logger_metagpt.info("Missing at least one of index_file/store_file, load failed and return None")
             return None
         index = faiss.read_index(str(index_file))
         with open(str(store_file), "rb") as f:
@@ -52,7 +52,7 @@ class FaissStore(LocalStore):
 
     def search(self, query, expand_cols=False, sep='\n', *args, k=5, **kwargs):
         rsp = self.store.similarity_search(query, k=k)
-        logger.debug(rsp)
+        logger_metagpt.debug(rsp)
         if expand_cols:
             return str(sep.join([f"{x.page_content}: {x.metadata}" for x in rsp]))
         else:
@@ -80,6 +80,6 @@ class FaissStore(LocalStore):
 
 if __name__ == '__main__':
     faiss_store = FaissStore(DATA_PATH / 'qcs/qcs_4w.json')
-    logger.info(faiss_store.search('油皮洗面奶'))
+    logger_metagpt.info(faiss_store.search('油皮洗面奶'))
     faiss_store.add([f'油皮洗面奶-{i}' for i in range(3)])
-    logger.info(faiss_store.search('油皮洗面奶'))
+    logger_metagpt.info(faiss_store.search('油皮洗面奶'))

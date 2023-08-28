@@ -5,11 +5,11 @@
 @Author  : alexanderwu
 @File    : seacher.py
 """
-from metagpt.actions import ActionOutput, SearchAndSummarize
-from metagpt.logs import logger
-from metagpt.roles import Role
-from metagpt.schema import Message
-from metagpt.tools import SearchEngineType
+from repolya.metagpt.actions import ActionOutput, SearchAndSummarize
+from repolya._log import logger_metagpt
+from repolya.metagpt.roles import Role
+from repolya.metagpt.schema import Message
+from repolya.metagpt.tools import SearchEngineType
 
 
 class Searcher(Role):
@@ -23,9 +23,9 @@ class Searcher(Role):
         self._init_actions([action])
 
     async def _act_sp(self) -> Message:
-        logger.info(f"{self._setting}: ready to {self._rc.todo}")
+        logger_metagpt.info(f"{self._setting}: ready to {self._rc.todo}")
         response = await self._rc.todo.run(self._rc.memory.get(k=0))
-        # logger.info(response)
+        # logger_metagpt.info(response)
         if isinstance(response, ActionOutput):
             msg = Message(content=response.content, instruct_content=response.instruct_content,
                             role=self.profile, cause_by=type(self._rc.todo))

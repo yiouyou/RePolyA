@@ -7,8 +7,8 @@
 """
 from azure.cognitiveservices.speech import AudioConfig, SpeechConfig, SpeechSynthesizer
 
-from metagpt.actions.action import Action
-from metagpt.config import Config
+from repolya.metagpt.actions.action import Action
+from repolya.metagpt.config import Config
 
 
 class AzureTTS(Action):

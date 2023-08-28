@@ -12,7 +12,7 @@ import os
 import re
 from typing import List, Tuple
 
-from metagpt.logs import logger
+from repolya._log import logger_metagpt
 
 
 def check_cmd_exists(command) -> int:
@@ -185,8 +185,8 @@ class CodeParser:
         if match:
             code = match.group(1)
         else:
-            logger.error(f"{pattern} not match following text:")
-            logger.error(text)
+            logger_metagpt.error(f"{pattern} not match following text:")
+            logger_metagpt.error(text)
             raise Exception
         return code
 

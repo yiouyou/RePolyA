@@ -8,7 +8,7 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from metagpt.config import Config
+from repolya.metagpt.config import Config
 
 
 class BaseStore(ABC):

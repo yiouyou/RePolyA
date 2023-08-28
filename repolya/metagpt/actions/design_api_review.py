@@ -5,7 +5,7 @@
 @Author  : alexanderwu
 @File    : design_api_review.py
 """
-from metagpt.actions.action import Action
+from repolya.metagpt.actions.action import Action
 
 
 class DesignReview(Action):

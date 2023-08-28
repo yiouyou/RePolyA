@@ -5,8 +5,8 @@
 @Author  : alexanderwu
 @File    : write_test.py
 """
-from metagpt.actions.action import Action
-from metagpt.utils.common import CodeParser
+from repolya.metagpt.actions.action import Action
+from repolya.metagpt.utils.common import CodeParser
 
 PROMPT_TEMPLATE = """
 NOTICE

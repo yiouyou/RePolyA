@@ -10,8 +10,8 @@ import subprocess
 import traceback
 from typing import Tuple
 
-from metagpt.actions.action import Action
-from metagpt.logs import logger
+from repolya.metagpt.actions.action import Action
+from repolya._log import logger_metagpt
 
 PROMPT_TEMPLATE = """
 Role: You are a senior development and qa engineer, your role is summarize the code running result.
@@ -93,7 +93,7 @@ class RunCode(Action):
             # Wait for the process to complete, with a timeout
             stdout, stderr = process.communicate(timeout=10)
         except subprocess.TimeoutExpired:
-            logger.info("The command did not complete within the given timeout.")
+            logger_metagpt.info("The command did not complete within the given timeout.")
             process.kill()  # Kill the process if it times out
             stdout, stderr = process.communicate()
         return stdout.decode("utf-8"), stderr.decode("utf-8")
@@ -101,14 +101,14 @@ class RunCode(Action):
     async def run(
         self, code, mode="script", code_file_name="", test_code="", test_file_name="", command=[], **kwargs
     ) -> str:
-        logger.info(f"Running {' '.join(command)}")
+        logger_metagpt.info(f"Running {' '.join(command)}")
         if mode == "script":
             outs, errs = await self.run_script(command=command, **kwargs)
         elif mode == "text":
             outs, errs = await self.run_text(code=code)
 
-        logger.info(f"{outs=}")
-        logger.info(f"{errs=}")
+        logger_metagpt.info(f"{outs=}")
+        logger_metagpt.info(f"{errs=}")
 
         context = CONTEXT.format(
             code=code,

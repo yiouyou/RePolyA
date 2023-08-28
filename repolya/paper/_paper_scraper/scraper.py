@@ -64,7 +64,7 @@ class Scraper:
                     if result and (not scraper.check_pdf or check_pdf(path)):
                         scrape_result[scraper.name] = "success"
                         if logger is not None:
-                            logger.debug(
+                            logger_metagpt.debug(
                                 f"\tsucceeded - key: {paper['paperId']} scraper: {scraper.name}"
                             )
                         if self.callback is not None:
@@ -72,7 +72,7 @@ class Scraper:
                         return True
                 except Exception as e:
                     if logger is not None:
-                        logger.info(f"\tScraper {scraper.name} failed: {e}")
+                        logger_metagpt.info(f"\tScraper {scraper.name} failed: {e}")
                 scrape_result[scraper.name] = "failed"
             if self.callback is not None:
                 await self.callback(paper["title"], scrape_result)

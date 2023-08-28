@@ -5,7 +5,7 @@
 @Author  : alexanderwu
 @File    : write_prd_review.py
 """
-from metagpt.actions.action import Action
+from repolya.metagpt.actions.action import Action
 
 
 class WritePRDReview(Action):

@@ -5,9 +5,9 @@
 @Author  : alexanderwu
 @File    : manager.py
 """
-from metagpt.llm import LLM
-from metagpt.logs import logger
-from metagpt.schema import Message
+from repolya.metagpt.llm import LLM
+from repolya._log import logger_metagpt
+from repolya.metagpt.schema import Message
 
 
 class Manager:
@@ -40,7 +40,7 @@ class Manager:
         """
         # Get all roles from the environment
         roles = environment.get_roles()
-        # logger.debug(f"{roles=}, {message=}")
+        # logger_metagpt.debug(f"{roles=}, {message=}")
 
         # Build a context for the LLM to understand the situation
         # context = {
@@ -53,13 +53,13 @@ class Manager:
         # FIXME: 现在通过简单的字典决定流向，但之后还是应该有思考过程
         #The direction of flow is now determined by a simple dictionary, but there should still be a thought process afterwards
         next_role_profile = self.role_directions[message.role]
-        # logger.debug(f"{next_role_profile}")
+        # logger_metagpt.debug(f"{next_role_profile}")
         for _, role in roles.items():
             if next_role_profile == role.profile:
                 next_role = role
                 break
         else:
-            logger.error(f"No available role can handle message: {message}.")
+            logger_metagpt.error(f"No available role can handle message: {message}.")
             return
 
         # Find the chosen role and handle the message

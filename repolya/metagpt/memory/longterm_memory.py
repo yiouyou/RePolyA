@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 # @Desc   : the implement of Long-term memory
 
-from metagpt.logs import logger
-from metagpt.memory import Memory
-from metagpt.memory.memory_storage import MemoryStorage
-from metagpt.schema import Message
+from repolya._log import logger_metagpt
+from repolya.metagpt.memory import Memory
+from repolya.metagpt.memory.memory_storage import MemoryStorage
+from repolya.metagpt.schema import Message
 
 
 class LongTermMemory(Memory):
@@ -25,9 +25,9 @@ class LongTermMemory(Memory):
         messages = self.memory_storage.recover_memory(role_id)
         self.rc = rc
         if not self.memory_storage.is_initialized:
-            logger.warning(f"It may the first time to run Agent {role_id}, the long-term memory is empty")
+            logger_metagpt.warning(f"It may the first time to run Agent {role_id}, the long-term memory is empty")
         else:
-            logger.warning(
+            logger_metagpt.warning(
                 f"Agent {role_id} has existed memory storage with {len(messages)} messages " f"and has recovered them."
             )
         self.msg_from_recover = True

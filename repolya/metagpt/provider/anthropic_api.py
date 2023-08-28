@@ -9,7 +9,7 @@
 import anthropic
 from anthropic import Anthropic
 
-from metagpt.config import CONFIG
+from repolya.metagpt.config import CONFIG
 
 
 class Claude2:

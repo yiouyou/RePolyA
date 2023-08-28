@@ -1,5 +1,5 @@
 {
-    "executablePath": "/usr/bin/chromium",
+    "executablePath": "/snap/bin/chromium",
     "args": [
         "--no-sandbox"
     ]

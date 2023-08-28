@@ -8,12 +8,12 @@ from typing import Callable
 
 from pydantic import parse_obj_as
 
-from metagpt.actions import Action
-from metagpt.config import CONFIG
-from metagpt.logs import logger
-from metagpt.tools.search_engine import SearchEngine
-from metagpt.tools.web_browser_engine import WebBrowserEngine, WebBrowserEngineType
-from metagpt.utils.text import generate_prompt_chunk, reduce_message_length
+from repolya.metagpt.actions import Action
+from repolya.metagpt.config import CONFIG
+from repolya._log import logger_metagpt
+from repolya.metagpt.tools.search_engine import SearchEngine
+from repolya.metagpt.tools.web_browser_engine import WebBrowserEngine, WebBrowserEngineType
+from repolya.metagpt.utils.text import generate_prompt_chunk, reduce_message_length
 
 LANG_PROMPT = "Please respond in {language}."
 
@@ -113,7 +113,7 @@ class CollectLinks(Action):
             keywords = json.loads(keywords)
             keywords = parse_obj_as(list[str], keywords)
         except Exception as e:
-            logger.exception(f"fail to get keywords related to the research topic \"{topic}\" for {e}")
+            logger_metagpt.exception(f"fail to get keywords related to the research topic \"{topic}\" for {e}")
             keywords = [topic]
         results = await asyncio.gather(*(self.search_engine.run(i, as_string=False) for i in keywords))
 
@@ -127,13 +127,13 @@ class CollectLinks(Action):
                 if len(remove) == 0:
                     break
         prompt = reduce_message_length(gen_msg(), self.llm.model, system_text, CONFIG.max_tokens_rsp)
-        logger.debug(prompt)
+        logger_metagpt.debug(prompt)
         queries = await self._aask(prompt, [system_text])
         try:
             queries = json.loads(queries)
             queries = parse_obj_as(list[str], queries)
         except Exception as e:
-            logger.exception(f"fail to break down the research question due to {e}")
+            logger_metagpt.exception(f"fail to break down the research question due to {e}")
             queries = keywords
         ret = {}
         for query in queries:
@@ -155,13 +155,13 @@ class CollectLinks(Action):
         results = await self.search_engine.run(query, max_results=max_results, as_string=False)
         _results = "\n".join(f"{i}: {j}" for i, j in zip(range(max_results), results))
         prompt = COLLECT_AND_RANKURLS_PROMPT.format(topic=topic, query=query, results=_results)
-        logger.debug(prompt)
+        logger_metagpt.debug(prompt)
         indices = await self._aask(prompt)
         try:
             indices = json.loads(indices)
             assert all(isinstance(i, int) for i in indices)
         except Exception as e:
-            logger.exception(f"fail to rank results for {e}")
+            logger_metagpt.exception(f"fail to rank results for {e}")
             indices = list(range(max_results))
         results = [results[i] for i in indices]
         if self.rank_func:
@@ -214,7 +214,7 @@ class WebBrowseAndSummarize(Action):
             content = content.inner_text
             chunk_summaries = []
             for prompt in generate_prompt_chunk(content, prompt_template, self.llm.model, system_text, CONFIG.max_tokens_rsp):
-                logger.debug(prompt)
+                logger_metagpt.debug(prompt)
                 summary = await self._aask(prompt, [system_text])
                 if summary == "Not relevant.":
                     continue
@@ -259,7 +259,7 @@ class ConductResearch(Action):
             The generated research report.
         """
         prompt = CONDUCT_RESEARCH_PROMPT.format(topic=topic, content=content)
-        logger.debug(prompt)
+        logger_metagpt.debug(prompt)
         self.llm.auto_max_tokens = True
         return await self._aask(prompt, [system_text])
 

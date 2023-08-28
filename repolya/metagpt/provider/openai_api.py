@@ -12,11 +12,11 @@ import openai
 from openai.error import APIConnectionError
 from tenacity import retry, stop_after_attempt, after_log, wait_fixed, retry_if_exception_type
 
-from metagpt.config import CONFIG
-from metagpt.logs import logger
-from metagpt.provider.base_gpt_api import BaseGPTAPI
-from metagpt.utils.singleton import Singleton
-from metagpt.utils.token_counter import (
+from repolya.metagpt.config import CONFIG
+from repolya._log import logger_metagpt
+from repolya.metagpt.provider.base_gpt_api import BaseGPTAPI
+from repolya.metagpt.utils.singleton import Singleton
+from repolya.metagpt.utils.token_counter import (
     TOKEN_COSTS,
     count_message_tokens,
     count_string_tokens,
@@ -43,7 +43,7 @@ class RateLimiter:
 
         if elapsed_time < self.interval * num_requests:
             remaining_time = self.interval * num_requests - elapsed_time
-            logger.info(f"sleep {remaining_time}")
+            logger_metagpt.info(f"sleep {remaining_time}")
             await asyncio.sleep(remaining_time)
 
         self.last_call_time = time.time()
@@ -78,7 +78,7 @@ class CostManager(metaclass=Singleton):
         self.total_completion_tokens += completion_tokens
         cost = (prompt_tokens * TOKEN_COSTS[model]["prompt"] + completion_tokens * TOKEN_COSTS[model]["completion"]) / 1000
         self.total_cost += cost
-        logger.info(
+        logger_metagpt.info(
             f"Total running cost: ${self.total_cost:.3f} | Max budget: ${CONFIG.max_budget:.3f} | "
             f"Current cost: ${cost:.3f}, prompt_tokens: {prompt_tokens}, completion_tokens: {completion_tokens}"
         )
@@ -117,8 +117,8 @@ class CostManager(metaclass=Singleton):
 
 
 def log_and_reraise(retry_state):
-    logger.error(f"Retry attempts exhausted. Last exception: {retry_state.outcome.exception()}")
-    logger.warning("""
+    logger_metagpt.error(f"Retry attempts exhausted. Last exception: {retry_state.outcome.exception()}")
+    logger_metagpt.warning("""
 Recommend going to https://deepwisdom.feishu.cn/wiki/MsGnwQBjiif9c3koSJNcYaoSnu4#part-XdatdVlhEojeAfxaaEZcMV3ZniQ
 See FAQ 5.8
 """)
@@ -212,7 +212,7 @@ class OpenAIGPTAPI(BaseGPTAPI, RateLimiter):
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_fixed(1),
-        after=after_log(logger, logger.level('WARNING').name),
+        after=after_log(logger, logger_metagpt.level('WARNING').name),
         retry=retry_if_exception_type(APIConnectionError),
         retry_error_callback=log_and_reraise,
     )
@@ -233,7 +233,7 @@ class OpenAIGPTAPI(BaseGPTAPI, RateLimiter):
                 usage['completion_tokens'] = completion_tokens
                 return usage
             except Exception as e:
-                logger.error("usage calculation failed!", e)
+                logger_metagpt.error("usage calculation failed!", e)
         else:
             return usage
 
@@ -243,12 +243,12 @@ class OpenAIGPTAPI(BaseGPTAPI, RateLimiter):
         all_results = []
 
         for small_batch in split_batches:
-            logger.info(small_batch)
+            logger_metagpt.info(small_batch)
             await self.wait_if_needed(len(small_batch))
 
             future = [self.acompletion(prompt) for prompt in small_batch]
             results = await asyncio.gather(*future)
-            logger.info(results)
+            logger_metagpt.info(results)
             all_results.extend(results)
 
         return all_results
@@ -260,7 +260,7 @@ class OpenAIGPTAPI(BaseGPTAPI, RateLimiter):
         for idx, raw_result in enumerate(raw_results, start=1):
             result = self.get_choice_text(raw_result)
             results.append(result)
-            logger.info(f"Result of task {idx}: {result}")
+            logger_metagpt.info(f"Result of task {idx}: {result}")
         return results
 
     def _update_costs(self, usage: dict):
@@ -270,7 +270,7 @@ class OpenAIGPTAPI(BaseGPTAPI, RateLimiter):
                 completion_tokens = int(usage['completion_tokens'])
                 self._cost_manager.update_cost(prompt_tokens, completion_tokens, self.model)
             except Exception as e:
-                logger.error("updating costs failed!", e)
+                logger_metagpt.error("updating costs failed!", e)
 
     def get_costs(self) -> Costs:
         return self._cost_manager.get_costs()

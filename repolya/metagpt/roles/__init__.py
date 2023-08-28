@@ -6,15 +6,15 @@
 @File    : __init__.py
 """
 
-from metagpt.roles.role import Role
-from metagpt.roles.architect import Architect
-from metagpt.roles.project_manager import ProjectManager
-from metagpt.roles.product_manager import ProductManager
-from metagpt.roles.engineer import Engineer
-from metagpt.roles.qa_engineer import QaEngineer
-from metagpt.roles.seacher import Searcher
-from metagpt.roles.sales import Sales
-from metagpt.roles.customer_service import CustomerService
+from repolya.metagpt.roles.role import Role
+from repolya.metagpt.roles.architect import Architect
+from repolya.metagpt.roles.project_manager import ProjectManager
+from repolya.metagpt.roles.product_manager import ProductManager
+from repolya.metagpt.roles.engineer import Engineer
+from repolya.metagpt.roles.qa_engineer import QaEngineer
+from repolya.metagpt.roles.seacher import Searcher
+from repolya.metagpt.roles.sales import Sales
+from repolya.metagpt.roles.customer_service import CustomerService
 
 
 __all__ = [
