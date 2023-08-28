@@ -1,6 +1,7 @@
-from .headers import get_header
-from .utils import ThrottledClientSession, check_pdf
+from repolya.paper._paper_scraper.headers import get_header
+from repolya.paper._paper_scraper.utils import ThrottledClientSession, check_pdf
 from dataclasses import dataclass
+from repolya._log import logger_paper
 
 
 @dataclass
@@ -53,6 +54,8 @@ class Scraper:
             path (str): The path to save the paper.
             i (int): An index to shift call order to load balance.
         """
+        if logger is None:
+            logger = logger_paper
         # want highest priority first
         scrape_result = {s.name: "none" for s in self.scrapers}
         for scrapers in self.sorted_scrapers[::-1]:
@@ -64,7 +67,7 @@ class Scraper:
                     if result and (not scraper.check_pdf or check_pdf(path)):
                         scrape_result[scraper.name] = "success"
                         if logger is not None:
-                            logger_metagpt.debug(
+                            logger.debug(
                                 f"\tsucceeded - key: {paper['paperId']} scraper: {scraper.name}"
                             )
                         if self.callback is not None:
@@ -72,7 +75,7 @@ class Scraper:
                         return True
                 except Exception as e:
                     if logger is not None:
-                        logger_metagpt.info(f"\tScraper {scraper.name} failed: {e}")
+                        logger.info(f"\tScraper {scraper.name} failed: {e}")
                 scrape_result[scraper.name] = "failed"
             if self.callback is not None:
                 await self.callback(paper["title"], scrape_result)
