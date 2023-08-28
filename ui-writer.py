@@ -111,8 +111,8 @@ if __name__ == "__main__":
         ssl_verify=False,
         # ssl_keyfile="./localhost+2-key.pem",
         # ssl_certfile="./localhost+2.pem",
-        ssl_keyfile="./ssl/key.pem",
-        ssl_certfile="./ssl/cert.pem",
+        # ssl_keyfile="./ssl/key.pem",
+        # ssl_certfile="./ssl/cert.pem",
     )
 
     # import uvicorn
