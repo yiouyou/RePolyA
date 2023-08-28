@@ -11,7 +11,7 @@ _log = {
     "paper": "paper.log",
 }
 
-for i in _log:
+for i in _log.keys():
     i_log = PROJECT_ROOT / 'logs' / _log[i]
     logger.add(i_log, filter=lambda x: x["extra"].get("folder")==i, level='DEBUG', backtrace=True, diagnose=True)
 
