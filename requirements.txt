@@ -1,4 +1,3 @@
-aider-chat
 anthropic
 arxiv
 asyncio
