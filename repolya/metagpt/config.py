@@ -8,7 +8,7 @@ import os
 import openai
 import yaml
 
-from repolya.metagpt.const import PROJECT_ROOT
+from repolya._const import PROJECT_ROOT
 from repolya._log import logger_metagpt
 from repolya.metagpt.tools import SearchEngineType, WebBrowserEngineType
 from repolya.metagpt.utils.singleton import Singleton
