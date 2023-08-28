@@ -19,7 +19,7 @@ PROJECT_ROOT = get_project_root() / 'repolya'
 
 ### metagpt
 DATA_PATH = PROJECT_ROOT / 'data'
-WORKSPACE_ROOT = PROJECT_ROOT / 'workspace'
+WORKSPACE_ROOT = PROJECT_ROOT / '_workspace'
 PROMPT_PATH = PROJECT_ROOT / 'metagpt/prompts'
 UT_PATH = PROJECT_ROOT / 'data/ut'
 SWAGGER_PATH = UT_PATH / "files/api/"
@@ -35,4 +35,4 @@ JSONL_ROOT = PROJECT_ROOT / 'paper/_jsonl'
 PDF_ROOT = PROJECT_ROOT / 'paper/_pdf'
 
 ### writing
-LOG_ROOT = PROJECT_ROOT / 'logs'
+LOG_ROOT = PROJECT_ROOT / '_log'

@@ -30,12 +30,12 @@ key.yaml
 *.mmd
 
 # logs
-repolya/logs/*
-!repolya/logs/.gitkeep
+repolya/_log/*
+!repolya/_log/.gitkeep
 
 # workspace
-repolya/workspace/*
-!repolya/workspace/.gitkeep
+repolya/_workspace/*
+!repolya/_workspace/.gitkeep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

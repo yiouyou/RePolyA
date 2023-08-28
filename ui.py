@@ -9,6 +9,9 @@ from repolya.paper import qadocs
 from repolya._const import LOG_ROOT
 
 
+_writer_log = LOG_ROOT / 'writer.log'
+
+
 def chg_btn_color_if_input(_topic):
     if _topic:
         return gr.update(variant="primary")
@@ -93,7 +96,7 @@ def answer_question(_ask, _pdf):
 
 ##### writing assistant
 def auto_wa(_topic):
-    with open(_log_path, 'w', encoding='utf-8') as wf:
+    with open(_writer_log, 'w', encoding='utf-8') as wf:
         wf.write('')
     _text, _file = generated_text(_topic)
     return [_text, gr.update(value=_file)]
@@ -111,14 +114,13 @@ class Logger:
         self.log.flush()
     def isatty(self):
         return False
-_log_path = LOG_ROOT / 'writer.log'
-# sys.stdout = Logger(_log_path)
+# sys.stdout = Logger(_writer_log)
 
 
 def read_logs():
     # sys.stdout.flush()
     ### read log
-    with open(_log_path, "r") as f:
+    with open(_writer_log, "r") as f:
         _log = f.read()
     return _log
 
