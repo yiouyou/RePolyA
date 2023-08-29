@@ -5,7 +5,7 @@ from repolya._const import LOG_ROOT
 
 logger.remove()
 
-_format = "<green>[{extra[job]}]</green> <blue>{level}</blue> <green>{time:YYYY-MM-DD HH:mm:ss}</green> <blue>{message}</blue>"
+_format = "<green>[{extra[job]}]</green> <blue>{level}</blue> <green>{time:YYYY-MM-DD HH:mm:ss}</green> <yellow>{message}</yellow>"
 logger.add(sys.stdout, level="INFO", format=_format, colorize=True)
 
 logger.add(LOG_ROOT / "paper.log", level='DEBUG', format=_format, filter=lambda x: x["extra"]["job"] == "paper", backtrace=True, diagnose=True)

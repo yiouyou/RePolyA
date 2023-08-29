@@ -1,8 +1,7 @@
 import os
 _RePolyA = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 import sys
-_metagpt = os.path.join(_RePolyA, 'repolya')
-sys.path.append(_metagpt)
+sys.path.append(_RePolyA)
 
 import asyncio
 import platform
