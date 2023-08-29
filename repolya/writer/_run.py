@@ -118,11 +118,8 @@ def main():
         else:
             if user_input == '':
                 user_input = "Tell me about the history of box manufacturing."
-            _text = generated_text(user_input)
+            _text, _file = generated_text(user_input)
             ##### write md
-            _topic20 = user_input.replace(' ', '_')[:20]
-            _fn = _topic20 + ".md"
-            _file = WORKSPACE_ROOT / _fn
             with open(_file, 'w', encoding='utf-8') as wf:
                 wf.write(_text)
             logger_writer.info(_file)
