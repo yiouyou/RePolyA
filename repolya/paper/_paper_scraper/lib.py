@@ -6,7 +6,6 @@ from repolya.paper._paper_scraper.headers import get_header
 from repolya.paper._paper_scraper.utils import ThrottledClientSession
 from repolya.paper._paper_scraper.scraper import Scraper
 import asyncio
-import re
 import sys
 from repolya.paper._paper_scraper.exceptions import DOINotFoundError
 from repolya._log import logger_paper
@@ -465,12 +464,20 @@ async def a_search_papers(
                     f"Found {data['total']} papers, analyzing {_offset} to {_offset + len(papers)}"
                 )
 
+            def parse_bibtex_an(_bibtex):
+                _txt = ""
+                _m = re.search(r'@Article\{(.*?),', _bibtex)
+                if _m:
+                    _txt = _m.group(1).strip()
+                return _txt
+
             async def process_paper(paper, i):
                 # logger.info(f"\n\n{paper}\n\n")
 # {'paperId': 'ff1ac706f9ce58c79053c8d5707508aeef02896e', 'externalIds': {'MAG': '3005994291', 'DOI': '10.1182/blood.2019003342', 'CorpusId': 211078305, 'PubMed': '32040549'}, 'url': 'https://www.semanticscholar.org/paper/ff1ac706f9ce58c79053c8d5707508aeef02896e', 'title': 'A T CELL REDIRECTING BISPECIFIC G-PROTEIN COUPLED RECEPTOR CLASS 5 MEMBER DxCD3 ANTIBODY TO TREAT MULTIPLE MYELOMA.', 'year': 2020, 'citationCount': 59, 'influentialCitationCount': 4, 'isOpenAccess': True, 'openAccessPdf': {'url': 'https://ashpublications.org/blood/article-pdf/135/15/1232/1723256/bloodbld2019003342.pdf', 'status': 'BRONZE'}, 'citationStyles': {'bibtex': '@Article{Pillarisetti2020ATC,\n author = {K. Pillarisetti and S. Edavettal and M. Mendonca and Yingzhe Li and M. Tornetta and A. Babich and Nate Majewski and Matt Husovsky and D. Reeves and Eileen Walsh and D. Chin and L. Luistro and J. Joseph and G. Chu and K. Packman and Shoba Shetty and Y. Elsayed and R. Attar and F. Gaudet},\n booktitle = {Blood},\n journal = {Blood},\n title = {A T CELL REDIRECTING BISPECIFIC G-PROTEIN COUPLED RECEPTOR CLASS 5 MEMBER DxCD3 ANTIBODY TO TREAT MULTIPLE MYELOMA.},\n year = {2020}\n}\n'}}
                 # logger.info(f"\n\n{paper.keys()}\n\n")
                 _pdf = paper["externalIds"]["DOI"].replace('/', '_')
-                path = os.path.join(pdir, f'{_pdf}.pdf')
+                _an = parse_bibtex_an(paper["citationStyles"]["bibtex"])
+                path = os.path.join(pdir, f'{_an}_{_pdf}.pdf')
                 # path = os.path.join(pdir, f'{paper["paperId"]}.pdf')
                 success = await scraper.scrape(paper, path, i=i, logger=logger)
                 if success:

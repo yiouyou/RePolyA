@@ -3,7 +3,7 @@ load_dotenv()
 
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from paperqa import Docs
+from repolya.paper._paperqa import Docs
 
 from repolya._const import PDF_ROOT
 from repolya._log import logger_paper

@@ -1,6 +1,7 @@
 import gradio as gr
 from repolya.paper import querypapers
 from repolya.paper import qadocs
+from repolya._log import logger_paper
 
 
 def chg_btn_color_if_input(_topic):
@@ -10,6 +11,7 @@ def chg_btn_color_if_input(_topic):
         return gr.update(variant="secondary")
 
 
+##### search/fetch/ask
 def search_topic_papers(_topic, _N):
     papers = []
     _papers = querypapers(_topic, _N)
@@ -47,6 +49,32 @@ def search_topic(_topic, _N):
     return [gr.update(choices=_res), _papers]
     
 
+def find_field(pattern, text):
+    _txt = ""
+    import re
+    _m = re.search(pattern, text)
+    if _m:
+        _txt = _m.group(1).strip()
+    return _txt
+
+
+def parse_bibtex_au_jo_bo(_bibtex):
+    _txt = []
+    _author = find_field(r'author\s*=\s*{(.*?)}', _bibtex)
+    _journal = find_field(r'journal\s*=\s*{(.*?)}', _bibtex)
+    _booktitle = find_field(r'booktitle\s*=\s*{(.*?)}', _bibtex)
+    journal = ""
+    if _journal and _booktitle:
+        if _journal.lower() == _booktitle.lower():
+            journal = f"Journal: {_journal}"
+        else:
+            journal = f"Journal: {_journal}, Booktitle: {_booktitle}"
+    _txt.append(journal)
+    if _author:
+        _txt.append(f"Author: {_author}")
+    return "\n\n".join(_txt)
+
+
 def show_last_meta(_checkbox, _papers):
     _titles = [_checkbox[-1]]
     # print(_titles)
@@ -55,7 +83,8 @@ def show_last_meta(_checkbox, _papers):
         for j in _papers:
             # i is 'title [doi]'
             if j['title'] in i:
-                i_meta = f"\n[citationCount]\n{j['citationCount']}\n\n[url]\n{j['url']}\n\n[bibtex]\n{j['bibtex']}\n"
+                i_txt = parse_bibtex_au_jo_bo(j['bibtex'])
+                i_meta = f"\n[citationCount]\n{j['citationCount']}\n\n[bibtex]\n{i_txt}\n"
                 _meta.append(i_meta)
                 break
     return "".join(_meta)
@@ -66,14 +95,18 @@ def fetch_selected_pdf(_checkbox, _papers):
     if _checkbox is None:
         raise gr.Error("请先选取'相关文献'")
     else:
-        for i in _checkbox:
-            for j in _papers:
-                # i is 'title [doi]'
-                if j['title'] in i:
-                    _fp.append(j['pdf'])
-    print("[PDF]")
-    from pprint import pprint
-    pprint(_fp)
+        # for i in _checkbox:
+        #     for j in _papers:
+        #         # i is 'title [doi]'
+        #         if j['title'] in i:
+        #             _fp.append(j['pdf'])
+        for i in _papers:
+            _fp.append(i['pdf'])
+    # print("[PDF]")
+    # from pprint import pprint
+    # pprint(_fp)
+    for i in _fp:
+        logger_paper.info(i)
     return gr.update(value=_fp), _fp
 
 # 虚拟的论文数据
@@ -123,7 +156,7 @@ with gr.Blocks(title=_description) as demo:
         _ask = gr.Textbox(label="问题")
         ask_btn = gr.Button("3.提问")
         _ans = gr.Textbox(label="回答")
-        _context = gr.Textbox(label="上下文")
+        _context = gr.Textbox(label="引文")
         _topic.change(
             chg_btn_color_if_input,
             [_topic],
@@ -133,6 +166,11 @@ with gr.Blocks(title=_description) as demo:
             search_topic,
             [_topic, _N],
             [_papers_tile, _papers]
+        )
+        _papers_tile.change(
+            chg_btn_color_if_input,
+            [_papers_tile],
+            [select_btn]
         )
         _papers_tile.select(
             show_last_meta,
