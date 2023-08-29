@@ -31,8 +31,9 @@ RESEARCH_PATH = DATA_PATH / "research"
 MEM_TTL = 24 * 30 * 3600
 
 ### paper
-JSONL_ROOT = PROJECT_ROOT / 'paper/_jsonl'
-PDF_ROOT = PROJECT_ROOT / 'paper/_pdf'
+JSONL_ROOT = PROJECT_ROOT / '_workspace/_jsonl'
+PDF_ROOT = PROJECT_ROOT / '_workspace/_pdf'
+DUMP_ROOT = PROJECT_ROOT / '_server_dumps'
 
 ### writing
 LOG_ROOT = PROJECT_ROOT / '_log'

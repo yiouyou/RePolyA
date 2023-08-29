@@ -46,11 +46,12 @@ if papers:
 # year: 2020
 
 
+from repolya._const import PDF_ROOT
 from repolya.paper import qadocs
 _query = "What manufacturing challenges are unique to bispecific antibodies?"
 _list = []
 import os
-_dir = os.path.join(_RePolyA, 'repolya/paper/_pdf')
+_dir = PDF_ROOT
 # print(_dir)
 _files = os.listdir(_dir)
 for _fn in _files:

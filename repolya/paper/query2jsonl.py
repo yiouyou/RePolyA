@@ -1,5 +1,5 @@
-from paperscraper.load_dumps import QUERY_FN_DICT
-from paperscraper.get_dumps import biorxiv, medrxiv, chemrxiv
+from repolya.paper._paperscraper.load_dumps import QUERY_FN_DICT
+from repolya.paper._paperscraper.get_dumps import biorxiv, medrxiv, chemrxiv
 
 from repolya._const import JSONL_ROOT
 from repolya._log import logger_paper
