@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from repolya._log import logger_chat
 
 

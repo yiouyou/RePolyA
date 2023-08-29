@@ -2,8 +2,8 @@ import sys
 import urllib3
 urllib3.disable_warnings()
 import gradio as gr
-from functools import partial
-from repolya.writer import generated_text
+# from functools import partial
+# from repolya.writer import generated_text
 from repolya.paper import querypapers
 from repolya.paper import qadocs
 from repolya.chat import chat_predict_openai
@@ -126,19 +126,19 @@ def answer_question(_ask, _pdf):
     return _ans, _context
 
 
-##### writing assistant
-def auto_wa(_topic):
-    with open(_writer_log, 'w', encoding='utf-8') as wf:
-        wf.write('')
-    _text, _file = generated_text(_topic)
-    return [_text, gr.update(value=_file)]
+# ##### writing assistant
+# def auto_wa(_topic):
+#     with open(_writer_log, 'w', encoding='utf-8') as wf:
+#         wf.write('')
+#     _text, _file = generated_text(_topic)
+#     return [_text, gr.update(value=_file)]
 
 
-def read_logs():
-    ### read log
-    with open(_writer_log, "r") as f:
-        _log = f.read()
-    return _log
+# def read_logs():
+#     ### read log
+#     with open(_writer_log, "r") as f:
+#         _log = f.read()
+#     return _log
 
 
 ##### UI
@@ -210,30 +210,30 @@ with gr.Blocks(title=_description) as demo:
             [_ans, _context]
         )
 
-    with gr.Tab(label = "写作助手"):
-        with gr.Row(equal_height=True):
-            wa_topic = gr.Textbox(label="主题", placeholder="Topic", lines=8, max_lines=8, interactive=True, visible=True)
-            download_box = gr.File(label="下载", file_count="single", type="file", file_types=['.md'], interactive=False)
-            # wa_file = gr.File(label="Generated Files", file_count="multiple", type="file", interactive=False, visible=True)
-        wa_start_btn = gr.Button("开始", variant="secondary", visible=True)
-        wa_txt = gr.Textbox(label="Markdown", placeholder="...", lines=10, max_lines=10, interactive=False, visible=True)
-        wa_steps = gr.Textbox(label="log", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
-        wa_topic.change(
-            chg_btn_color_if_input,
-            [wa_topic],
-            [wa_start_btn]
-        )
-        wa_start_btn.click(
-            auto_wa,
-            [wa_topic],
-            [wa_txt, download_box]
-        )
-        wa_start_btn.click(
-            read_logs,
-            [],
-            [wa_steps],
-            every=1
-        )
+    # with gr.Tab(label = "写作助手"):
+    #     with gr.Row(equal_height=True):
+    #         wa_topic = gr.Textbox(label="主题", placeholder="Topic", lines=8, max_lines=8, interactive=True, visible=True)
+    #         download_box = gr.File(label="下载", file_count="single", type="file", file_types=['.md'], interactive=False)
+    #         # wa_file = gr.File(label="Generated Files", file_count="multiple", type="file", interactive=False, visible=True)
+    #     wa_start_btn = gr.Button("开始", variant="secondary", visible=True)
+    #     wa_txt = gr.Textbox(label="Markdown", placeholder="...", lines=10, max_lines=10, interactive=False, visible=True)
+    #     wa_steps = gr.Textbox(label="log", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
+    #     wa_topic.change(
+    #         chg_btn_color_if_input,
+    #         [wa_topic],
+    #         [wa_start_btn]
+    #     )
+    #     wa_start_btn.click(
+    #         auto_wa,
+    #         [wa_topic],
+    #         [wa_txt, download_box]
+    #     )
+    #     wa_start_btn.click(
+    #         read_logs,
+    #         [],
+    #         [wa_steps],
+    #         every=1
+    #     )
 
 
 # from fastapi import FastAPI, Response

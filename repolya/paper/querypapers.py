@@ -8,7 +8,7 @@ def querypapers(_query, _limit):
     # print(_query, _limit)
     papers = []
     try:
-        papers = search_papers(_query, limit=_limit, pdir=PDF_ROOT)
+        papers = search_papers(_query, limit=_limit, pdir=PDF_ROOT, logger=logger_paper)
     except Exception as e:
         # print(e)
         logger_paper.exception(e)

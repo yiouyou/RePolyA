@@ -4,11 +4,8 @@ urllib3.disable_warnings()
 import gradio as gr
 from functools import partial
 from repolya.writer import generated_text
-from repolya.paper import querypapers
-from repolya.paper import qadocs
+from repolya._log import logger_writer
 from repolya._const import LOG_ROOT
-
-
 _writer_log = LOG_ROOT / 'writer.log'
 
 
@@ -26,18 +23,18 @@ def auto_wa(_topic):
     return [_text, gr.update(value=_file)]
 
 
-class Logger:
-    def __init__(self, filename):
-        self.terminal = sys.stdout
-        self.log = open(filename, "w")
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)
-    def flush(self):
-        self.terminal.flush()
-        self.log.flush()
-    def isatty(self):
-        return False
+# class Logger:
+#     def __init__(self, filename):
+#         self.terminal = sys.stdout
+#         self.log = open(filename, "w")
+#     def write(self, message):
+#         self.terminal.write(message)
+#         self.log.write(message)
+#     def flush(self):
+#         self.terminal.flush()
+#         self.log.flush()
+#     def isatty(self):
+#         return False
 # sys.stdout = Logger(_writer_log)
 
 
@@ -74,12 +71,18 @@ with gr.Blocks(title=_description) as demo:
             [wa_topic],
             [wa_txt, download_box]
         )
-        demo.load(
+        wa_start_btn.click(
             read_logs,
             [],
             [wa_steps],
             every=1
         )
+        # demo.load(
+        #     read_logs,
+        #     [],
+        #     [wa_steps],
+        #     every=1
+        # )
 
 
 # from fastapi import FastAPI, Response
