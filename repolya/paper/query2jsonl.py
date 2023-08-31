@@ -22,6 +22,6 @@ def query2jsonl(_query):
         i_file = f"{i}_{_qn}.jsonl"
         i_file = str(JSONL_ROOT / i_file)
         # print(i_file)
-        logger_paper.info(i_file)
+        logger_paper.debug(i_file)
         QUERY_FN_DICT[i](_query, output_filepath=i_file)
 

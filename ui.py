@@ -44,6 +44,7 @@ def search_topic_papers(_topic, _N):
 
 
 def search_topic(_topic, _N):
+    logger_paper.info(f"topic: '{_topic}'")
     _res = []
     _papers = []
     if not _topic:
@@ -54,6 +55,7 @@ def search_topic(_topic, _N):
             title = i['title']
             doi = i['doi']
             _res.append(f"{title} [{doi}]")
+            logger_paper.info(f"{title} [{doi}]")
     return [gr.update(choices=_res), _papers]
     
 
@@ -110,19 +112,17 @@ def fetch_selected_pdf(_checkbox, _papers):
         #             _fp.append(j['pdf'])
         for i in _papers:
             _fp.append(i['pdf'])
-    # print("[PDF]")
-    # from pprint import pprint
-    # pprint(_fp)
-    for i in _fp:
-        logger_paper.info(i)
     return gr.update(value=_fp), _fp
 
 
 def answer_question(_ask, _pdf):
+    logger_paper.info(f"ask: '{_ask}'")
     _ans = "Answer to the question based on papers"
     _res = qadocs(_ask, _pdf)
     _ans = _res.formatted_answer
     _context = _res.context
+    logger_paper.info(f"formatted_answer: '{_ans}'")
+    logger_paper.info(f"context: '{_context}'")
     return _ans, _context
 
 

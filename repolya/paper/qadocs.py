@@ -17,16 +17,21 @@ docs = Docs(llm=llm, summary_llm=llm_summary)
 
 @logger_paper.catch
 def qadocs(_query, _pathlist):
+    logger_paper.debug(f"query: '{_query}'")
     for _file in _pathlist:
         try:
             if _file.lower().endswith('.pdf') or _file.lower().endswith('.txt'):
                 docs.add(_file, chunk_chars=500)
                 # print(_file)
-                logger_paper.info(_file)
+                logger_paper.debug(_file)
         except ValueError as e:
             # print('Could not read', _file, e)
-            logger_paper.info('Could not read', _file, e)
+            logger_paper.debug('Could not read', _file, e)
     _ans = docs.query(_query)
+    logger_paper.debug(f"question: '{_ans.question}'")
+    logger_paper.debug(f"answer: '{_ans.answer}'")
+    logger_paper.debug(f"references: '{_ans.references}'")
+    logger_paper.debug(f"context: '{_ans.context}'")
     ##### formatted_answer, question/answer/references, context
     return _ans
 

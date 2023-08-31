@@ -8,7 +8,7 @@ summary_prompt = PromptTemplate(
     "Focus on specific details, including numbers, equations, or specific quotes. "
     'Reply "Not applicable" if text is irrelevant. '
     "Use {summary_length}. At the end of your response, provide a score from 1-10 on a newline "
-    "indicating relevance to question. Do not explain your score. "
+    "indicating relevance to question, like 'Score: 8/10'. Do not explain your score. "
     "\n\n"
     "{text}\n\n"
     "Excerpt from {citation}\n"
