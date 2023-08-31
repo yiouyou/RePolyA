@@ -20,7 +20,6 @@ Before beginning the installation, make sure you have:
    git clone https://github.com/yiouyou/RePolyA.git
    cd RePolyA
    ```
-
 2. **Setting Up a Virtual Environment**
 
    It's advisable to use a virtual environment to manage dependencies and avoid potential conflicts:
@@ -29,7 +28,6 @@ Before beginning the installation, make sure you have:
    python -m venv venv
    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
    ```
-
 3. **Install Dependencies**
 
    With the virtual environment activated, you can install the required packages:
@@ -37,41 +35,43 @@ Before beginning the installation, make sure you have:
    ```bash
    pip install -r requirements.txt
    ```
-
 4. **Install Node/Chromium/Mermaid**
 
    Node:
+
    ```bash
    curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
    sudo apt install nodejs
    ```
-   
+
    Chromium:
+
    ```bash
    sudo apt-get install chromium-browser
    ```
 
    Mermaid:
+
    ```bash
-   npm install -g puppeteer
+   npm install puppeteer
    npm install @mermaid-js/mermaid-cli
    ```
 
    Edit ~/.bashrc
+
    ```bash
    alias mmdc='YOUR_PATH/node_modules/.bin/mmdc'
    export PUPPETEER_EXECUTABLE_PATH=/YOUR_PATH/bin/chromium
    ```
 
    Test Mermaid
+
    ```bash
    mmdc -i test.mmd -o test.png
    ```
-
 5. **Configuration** (If required)
 
    Certain modules or functionalities might need additional configuration or setup, such as setting environment variables or configuring external services. Refer to the [Configuration Guide](https://github.com/yiouyou/RePolyA/blob/main/CONFIGURATION_GUIDE.md) for more specifics.
-
 6. **Verify Installation**
 
    Run preliminary tests or launch the application to verify the setup:
