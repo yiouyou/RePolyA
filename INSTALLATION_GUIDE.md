@@ -60,8 +60,8 @@ Before beginning the installation, make sure you have:
    Edit ~/.bashrc
 
    ```bash
-   alias mmdc='YOUR_PATH/node_modules/.bin/mmdc'
-   export PUPPETEER_EXECUTABLE_PATH=/YOUR_PATH/bin/chromium
+   alias mmdc='~/node_modules/.bin/mmdc'
+   export PUPPETEER_EXECUTABLE_PATH=/snap/bin/chromium
    ```
 
    Test Mermaid
