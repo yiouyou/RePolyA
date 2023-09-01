@@ -38,3 +38,9 @@ DUMP_ROOT = PROJECT_ROOT / '_server_dumps'
 ### writing
 LOG_ROOT = PROJECT_ROOT / '_log'
 
+### coder
+DEFAULT_WORKER_NUM = 1
+TIMEOUT_SECONDS = 30
+MAX_RETRY = 2
+OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions"
+
