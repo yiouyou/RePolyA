@@ -292,7 +292,7 @@ def request_gpt_model_multi_threads_with_very_awesome_ui_and_high_efficiency(
         if all(worker_done):
             executor.shutdown()
             break
-    logger_coder.debug(f"多线程操作已经开始，完成情况: \n\n{stat_str}")
+    logger_coder.info(f"多线程操作已经开始，完成情况: \n\n{stat_str}")
     # 异步任务结束
     gpt_response_collection = []
     for inputs_show_user, f in zip(inputs_show_user_array, futures):

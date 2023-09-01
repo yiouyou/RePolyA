@@ -98,9 +98,10 @@ def parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot):
         gpt_response_collection = gpt_response_collection[batchsize*2:]
     ############################## <END> ##################################
     history_to_return.extend(report_part_2)
-    res = write_results_to_file(project_folder, history_to_return)
+    res, wfn = write_results_to_file(project_folder, history_to_return)
     chatbot.append(("完成了吗？", res))
     # logger_coder.debug(f"{chatbot}")
+    return wfn
 
 
 @logger_coder.catch
@@ -117,7 +118,8 @@ def parse_source_python(txt, llm_kwargs, chatbot):
     if len(file_manifest) == 0:
         logger_coder.error(f"找不到任何python文件: {txt}")
         return
-    parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    wfn = parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    return wfn
 
 
 @logger_coder.catch
@@ -137,7 +139,8 @@ def parse_source_c(txt, llm_kwargs, chatbot):
     if len(file_manifest) == 0:
         logger_coder.error(f"找不到任何c文件: {txt}")
         return
-    parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    wfn = parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    return wfn
 
 
 @logger_coder.catch
@@ -157,7 +160,8 @@ def parse_source_java(txt, llm_kwargs, chatbot):
     if len(file_manifest) == 0:
         logger_coder.error(f"找不到任何java文件: {txt}")
         return
-    parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    wfn = parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    return wfn
 
 
 @logger_coder.catch
@@ -184,7 +188,8 @@ def parse_source_js(txt, llm_kwargs, chatbot):
     if len(file_manifest) == 0:
         logger_coder.error(f"找不到任何js相关文件: {txt}")
         return
-    parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    wfn = parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    return wfn
 
 
 @logger_coder.catch
@@ -204,7 +209,8 @@ def parse_source_golang(txt, llm_kwargs, chatbot):
     if len(file_manifest) == 0:
         logger_coder.error(f"找不到任何golang文件: {txt}")
         return
-    parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    wfn = parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    return wfn
 
 
 @logger_coder.catch
@@ -223,7 +229,8 @@ def parse_source_rust(txt, llm_kwargs, chatbot):
     if len(file_manifest) == 0:
         logger_coder.error(f"找不到任何rust文件: {txt}")
         return
-    parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    wfn = parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    return wfn
 
 
 @logger_coder.catch
@@ -243,7 +250,8 @@ def parse_source_lua(txt, llm_kwargs, chatbot):
     if len(file_manifest) == 0:
         logger_coder.error(f"找不到任何lua文件: {txt}")
         return
-    parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    wfn = parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    return wfn
 
 
 @logger_coder.catch
@@ -261,5 +269,6 @@ def parse_source_csharp(txt, llm_kwargs, chatbot):
     if len(file_manifest) == 0:
         logger_coder.error(f"找不到任何CSharp文件: {txt}")
         return
-    parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    wfn = parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot)
+    return wfn
 

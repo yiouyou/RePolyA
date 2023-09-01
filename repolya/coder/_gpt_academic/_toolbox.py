@@ -41,10 +41,11 @@ def write_results_to_file(project_folder, history, file_name=None):
                 # remove everything that cannot be handled by utf8
                 f.write(content.encode('utf-8', 'ignore').decode())
             f.write('\n\n')
-    res = '以上材料已经被写入:\t' + os.path.abspath(_fp)
-    logger_coder.debug(f"{res}")
-    print(os.path.abspath(_fp))
-    return res
+    wfn = os.path.abspath(_fp)
+    res = '以上材料已经被写入:\t' + wfn
+    logger_coder.info(f"{res}")
+    print(wfn)
+    return res, wfn
 
 
 def get_reduce_token_percent(text):

@@ -111,7 +111,7 @@ def generate_payload(inputs, llm_kwargs, history, system_prompt, stream):
     try:
         _str = f"{llm_kwargs['llm_model']} : {conversation_cnt} : {inputs[:100]} .........."
         # print(_str)
-        logger_coder.debug(_str)
+        logger_coder.info(_str)
     except:
         _str = '输入中可能存在乱码。'
         # print(_str)
