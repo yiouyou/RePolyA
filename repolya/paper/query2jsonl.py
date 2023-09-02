@@ -1,5 +1,6 @@
 from repolya.paper._paperscraper.load_dumps import QUERY_FN_DICT
 from repolya.paper._paperscraper.get_dumps import biorxiv, medrxiv, chemrxiv
+from repolya.paper._paperscraper.utils import get_filename_from_query
 
 from repolya._const import JSONL_ROOT
 from repolya._log import logger_paper
@@ -17,10 +18,9 @@ def dump2xiv():
 @logger_paper.catch
 def query2jsonl(_query):
     _q = sum(_query, [])
-    _qn = "_".join(_q)
+    _qn = get_filename_from_query(_query)
     for i in QUERY_FN_DICT.keys():
-        i_file = f"{i}_{_qn}.jsonl"
-        i_file = str(JSONL_ROOT / i_file)
+        i_file = str(JSONL_ROOT / f"{i}_{_qn}")
         # print(i_file)
         logger_paper.debug(i_file)
         QUERY_FN_DICT[i](_query, output_filepath=i_file)

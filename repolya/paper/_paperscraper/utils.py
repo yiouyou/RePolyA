@@ -62,7 +62,13 @@ def load_jsonl(filepath: str) -> List[Dict[str, str]]:
     Returns:
         List[Dict[str, str]]: A list of dictionaries, one per paper.
     """
-
-    with open(filepath, "r") as f:
-        data = [json.loads(line) for line in f.readlines()]
+    data = []
+    with open(filepath, "r", encoding='utf-8') as f:
+        lines = f.readlines()
+        _len = len(lines)
+        logger_paper.info(f"{filepath}: line {_len}")
+        for li in lines:
+            if li.strip():
+                data.append(json.loads(li))
+        # data = [json.loads(line) for line in f.readlines()]
     return data
