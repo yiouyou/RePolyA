@@ -8,12 +8,12 @@ import pkg_resources
 
 from repolya.paper._paperscraper.get_dumps.utils.chemrxiv import ChemrxivAPI, download_full, parse_dump
 
-from repolya._const import DUMP_ROOT
+from repolya._const import SERVER_DUMP_ROOT
 from repolya._log import logger_paper
 
 
 today = datetime.today().strftime("%Y-%m-%d")
-save_folder = DUMP_ROOT
+save_folder = SERVER_DUMP_ROOT
 save_path = os.path.join(save_folder, f"chemrxiv_{today}.jsonl")
 
 

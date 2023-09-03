@@ -1,6 +1,7 @@
 *~$*
 tmp*
 *_examples*
+*cache
 
 # gradio tmp
 gradio/
@@ -35,14 +36,35 @@ repolya/_server_dumps/*
 # _workspace
 repolya/_workspace/*
 !repolya/_workspace/.gitkeep
-# _workspace/_pdf
-!repolya/_workspace/_pdf
-repolya/_workspace/_pdf/*
-!repolya/_workspace/_pdf/.gitkeep
-# _workspace/_jsonl
-!repolya/_workspace/_jsonl
-repolya/_workspace/_jsonl/*
-!repolya/_workspace/_jsonl/.gitkeep
+# _workspace/_chat
+!repolya/_workspace/_chat
+repolya/_workspace/_chat/*
+!repolya/_workspace/_chat/.gitkeep
+# _workspace/_coder
+!repolya/_workspace/_coder
+repolya/_workspace/_coder/*
+!repolya/_workspace/_coder/.gitkeep
+# _workspace/_metagpt
+!repolya/_workspace/_metagpt
+repolya/_workspace/_metagpt/*
+!repolya/_workspace/_metagpt/.gitkeep
+# _workspace/_paper
+!repolya/_workspace/_paper
+repolya/_workspace/_paper/*
+!repolya/_workspace/_paper/.gitkeep
+# _workspace/_writer
+!repolya/_workspace/_writer
+repolya/_workspace/_writer/*
+!repolya/_workspace/_writer/.gitkeep
+
+# _workspace/_paper/_pdf
+!repolya/_workspace/_paper/_pdf
+repolya/_workspace/_paper/_pdf/*
+!repolya/_workspace/_paper/_pdf/.gitkeep
+# _workspace/_paper/_jsonl
+!repolya/_workspace/_paper/_jsonl
+repolya/_workspace/_paper/_jsonl/*
+!repolya/_workspace/_paper/_jsonl/.gitkeep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

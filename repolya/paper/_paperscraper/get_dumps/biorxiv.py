@@ -9,12 +9,12 @@ from tqdm import tqdm
 
 from repolya.paper._paperscraper.xrxiv.xrxiv_api import BioRxivApi
 
-from repolya._const import DUMP_ROOT
+from repolya._const import SERVER_DUMP_ROOT
 
 
 today = datetime.today().strftime("%Y-%m-%d")
 save_path = os.path.join(
-    DUMP_ROOT,
+    SERVER_DUMP_ROOT,
     f"biorxiv_{today}.jsonl",
 )
 
