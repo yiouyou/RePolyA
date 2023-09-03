@@ -5,17 +5,18 @@ sys.path.append(_RePolyA)
 
 from repolya.paper._paperqa.contrib import ZoteroDB
 from repolya.paper._paperqa import Docs
-from repolya._const import WORKSPACE_ROOT
+from repolya._const import PDF_ROOT
 
-_pdf = WORKSPACE_ROOT / '_pdf'
+_storage = PDF_ROOT / 'zotero'
 
 library_id = os.getenv("ZOTERO_USER_ID")
-print(library_id)
+print(f"zotero ID: {library_id}")
+
 docs = Docs()
 zotero = ZoteroDB(
   library_id=library_id,
   library_type="user",
-  storage=_pdf
+  storage=_storage
 )
 
 _z = zotero.iterate(limit=20)
