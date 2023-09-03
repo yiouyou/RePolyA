@@ -170,7 +170,7 @@ def chatgpt_noui(inputs, llm_kwargs, history=[], sys_prompt="", observe_window=N
             chunk = next(stream_response).decode() # 失败了，重试一次？再失败就没办法了。
         if len(chunk)==0: continue
         if not chunk.startswith('data:'): 
-            error_msg = get_full_error(chunk.encode('utf8'), stream_response).decode()
+            error_msg = get_full_error(chunk.encode('utf-8'), stream_response).decode()
             if "reduce the length" in error_msg:
                 raise ConnectionAbortedError("OpenAI拒绝了请求:" + error_msg)
             else:
@@ -197,10 +197,6 @@ def chatgpt_noui(inputs, llm_kwargs, history=[], sys_prompt="", observe_window=N
     if json_data['finish_reason'] == 'length':
         raise ConnectionAbortedError("正常结束，但显示Token不足，导致输出不完整，请削减单次输入的文本量。")
     return result
-
-# model_info["gpt-3.5-turbo"]["fn_without_ui"] = chatgpt_noui
-# model_info["gpt-3.5-turbo-16k"]["fn_without_ui"] = chatgpt_noui
-# model_info["gpt-4"]["fn_without_ui"] = chatgpt_noui
 
 
 colors = ['#FF00FF', '#00FFFF', '#FF0000', '#990099', '#009999', '#990044']
@@ -250,7 +246,7 @@ def predict_no_ui_long_connection(inputs, llm_kwargs, history, sys_prompt, obser
         # futures = []
         # for i in range(n_model):
         #     model = models[i]
-        #     method = model_info[model]["fn_without_ui"]
+        #     method = chatgpt_noui # model_info[model]["fn_without_ui"]
         #     llm_kwargs_feedin = copy.deepcopy(llm_kwargs)
         #     llm_kwargs_feedin['llm_model'] = model
         #     future = executor.submit(LLM_CATCH_EXCEPTION(method), inputs, llm_kwargs_feedin, history, sys_prompt, window_mutex[i], console_slience)

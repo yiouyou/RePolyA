@@ -22,12 +22,13 @@ def write_results_to_file(project_folder, history, file_name=None):
     """
     logger_coder.debug(history)
     import os
+    _pf = os.path.basename(project_folder)
     if file_name is None:
-        file_name = 'Code_Digest_' + gen_time_str() + '.md'
+        file_name = 'Code_Digest_' + _pf + '_' + gen_time_str() + '.md'
     _fp = WORKSPACE_ROOT / file_name
-    with open(_fp, 'w', encoding='utf8') as f:
+    with open(_fp, 'w', encoding='utf-8') as f:
         f.write('# Code Digest Report\n')
-        f.write(f"## '{os.path.basename(project_folder)}'工程代码分析\n")
+        f.write(f"## '{_pf}' code analysis\n")
         for i, content in enumerate(history):
             try:    
                 if type(content) != str: content = str(content)
@@ -38,11 +39,11 @@ def write_results_to_file(project_folder, history, file_name=None):
             try:
                 f.write(content)
             except:
-                # remove everything that cannot be handled by utf8
+                # remove everything that cannot be handled by utf-8
                 f.write(content.encode('utf-8', 'ignore').decode())
             f.write('\n\n')
     wfn = os.path.abspath(_fp)
-    res = '以上材料已经被写入:\t' + wfn
+    res = 'Written to:\t' + wfn
     logger_coder.info(f"{res}")
     print(wfn)
     return res, wfn
@@ -63,5 +64,5 @@ def get_reduce_token_percent(text):
         assert ratio > 0 and ratio < 1
         return ratio, str(int(current_tokens-max_limit))
     except:
-        return 0.5, '不详'
+        return 0.5, 'unknown'
 

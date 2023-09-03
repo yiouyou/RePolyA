@@ -6,6 +6,7 @@ from repolya._log import logger_coder
 
 
 def parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot):
+    out_CN = False
     summary_batch_isolation = True
     inputs_array = []
     inputs_show_user_array = []
@@ -19,13 +20,18 @@ def parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot):
         with open(fp, 'r', encoding='utf-8', errors='replace') as f:
             file_content = f.read()
         _rel_path = os.path.relpath(fp, project_folder)
-        i_say = f'请概述下面的程序文件: {_rel_path}，文件代码是 ```{file_content}```'
-        i_say_show_user = f'[{index}/{len(file_manifest)}] 请概述下面的程序文件: {_rel_path}'
+        if out_CN:
+            i_say = f'请概述下面的程序文件: {_rel_path}，文件代码是 ```{file_content}```'            
+            i_say_show_user = f'[{index}/{len(file_manifest)}] 请概述下面的程序文件: {_rel_path}'
+            sys_prompt_array.append("你是一个程序架构分析师，正在分析一个源代码项目。你的回答必须简单明了。")
+        else:
+            i_say = f'Please outline the following program file: {_rel_path}, the file code is ```{file_content}```'
+            i_say_show_user = f'[{index}/{len(file_manifest)}] Please outline the following program file: {_rel_path}'
+            sys_prompt_array.append("You are a program architecture analyst analyzing a source code project. Your answer must be straightforward.")
         # 装载请求内容
         inputs_array.append(i_say)
         inputs_show_user_array.append(i_say_show_user)
         history_array.append([])
-        sys_prompt_array.append("你是一个程序架构分析师，正在分析一个源代码项目。你的回答必须简单明了。")
     # print(inputs_show_user_array)
     # 文件读取完成，对每一个源代码文件，生成一个请求线程，发送到chatgpt进行分析
     gpt_response_collection = request_gpt_model_multi_threads_with_very_awesome_ui_and_high_efficiency(
@@ -67,9 +73,15 @@ def parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot):
             focus = current_iteration_focus
         else:
             focus = previous_iteration_files_string
-        i_say = f'用一张Markdown表格简要描述以下文件的功能：{focus}。根据以上分析，用一句话概括程序的整体功能。'
+        if out_CN:
+            i_say = f'用一张Markdown表格简要描述以下文件的功能：{focus}。根据以上分析，用一句话概括程序的整体功能。'
+        else:
+            i_say = f'use a Markdown table to briefly describe the function of the following file: {focus}. Based on the above analysis, summarize the overall function of the program in one sentence. '
         if last_iteration_result != "":
-            sys_prompt_additional = "已知某些代码的局部作用是:" + last_iteration_result + "\n请继续分析其他源代码，从而更全面地理解项目的整体功能。"
+            if out_CN:
+                sys_prompt_additional = "已知某些代码的局部作用是:" + last_iteration_result + "\n请继续分析其他源代码，从而更全面地理解项目的整体功能。"
+            else:
+                sys_prompt_additional = "The local function of some code is known to be:" + last_iteration_result + "\nPlease continue to analyze other source codes to understand the overall function of the project more fully."
         else:
             sys_prompt_additional = ""
         inputs_show_user = f'根据以上分析，对程序的整体功能和构架重新做出概括，由于输入长度限制，可能需要分组处理，本组文件为 {current_iteration_focus} + 已经汇总的文件组。'
@@ -77,21 +89,28 @@ def parse_source_new(file_manifest, project_folder, llm_kwargs, chatbot):
         this_iteration_history.append(last_iteration_result)
         # 裁剪input
         inputs, this_iteration_history_feed = input_clipping(inputs=i_say, history=this_iteration_history, max_token_limit=2560)
+        if out_CN:
+            sys_prompt="你是一个程序架构分析师，正在分析一个项目的源代码。" + sys_prompt_additional
+        else:
+            sys_prompt="You are a program architect analyzing the source code of a project." + sys_prompt_additional
         result = request_gpt_model_in_new_thread_with_ui_alive(
             inputs=inputs,
             inputs_show_user=inputs_show_user,
             llm_kwargs=llm_kwargs,
             chatbot=chatbot,
             history=this_iteration_history_feed,   # 迭代之前的分析
-            sys_prompt="你是一个程序架构分析师，正在分析一个项目的源代码。" + sys_prompt_additional)
-        summary = "请用一句话概括这些文件的整体功能"
+            sys_prompt=sys_prompt)
+        if out_CN:
+            summary = "请用一句话概括这些文件的整体功能"
+        else:
+            summary = "Please summarize the overall function of these files in one sentence"
         summary_result = request_gpt_model_in_new_thread_with_ui_alive(
             inputs=summary, 
             inputs_show_user=summary, 
             llm_kwargs=llm_kwargs, 
             chatbot=chatbot,
             history=[i_say, result],   # 迭代之前的分析
-            sys_prompt="你是一个程序架构分析师，正在分析一个项目的源代码。" + sys_prompt_additional)
+            sys_prompt=sys_prompt)
         report_part_2.extend([i_say, result])
         last_iteration_result = summary_result
         file_manifest = file_manifest[batchsize:]
@@ -110,7 +129,7 @@ def parse_source_python(txt, llm_kwargs, chatbot):
         project_folder = txt
     else:
         if txt == "":
-            txt = '空空如也的输入栏'
+            txt = 'empty input field'
         logger_coder.error(f"找不到本地项目或无权访问: {txt}")
         return
     file_manifest = [f for f in glob.glob(f'{project_folder}/**/*.py', recursive=True)]
@@ -128,7 +147,7 @@ def parse_source_c(txt, llm_kwargs, chatbot):
         project_folder = txt
     else:
         if txt == "":
-            txt = '空空如也的输入栏'
+            txt = 'empty input field'
         logger_coder.error(f"找不到本地项目或无权访问: {txt}")
         return
     file_manifest = [f for f in glob.glob(f'{project_folder}/**/*.h', recursive=True)]  + \
@@ -149,7 +168,7 @@ def parse_source_java(txt, llm_kwargs, chatbot):
         project_folder = txt
     else:
         if txt == "":
-            txt = '空空如也的输入栏'
+            txt = 'empty input field'
         logger_coder.error(f"找不到本地项目或无权访问: {txt}")
         return
     file_manifest = [f for f in glob.glob(f'{project_folder}/**/*.java', recursive=True)] + \
@@ -170,7 +189,7 @@ def parse_source_js(txt, llm_kwargs, chatbot):
         project_folder = txt
     else:
         if txt == "":
-            txt = '空空如也的输入栏'
+            txt = 'empty input field'
         logger_coder.error(f"找不到本地项目或无权访问: {txt}")
         return
     file_manifest = [f for f in glob.glob(f'{project_folder}/**/*.ts', recursive=True)] + \
@@ -198,7 +217,7 @@ def parse_source_golang(txt, llm_kwargs, chatbot):
         project_folder = txt
     else:
         if txt == "":
-            txt = '空空如也的输入栏'
+            txt = 'empty input field'
         logger_coder.error(f"找不到本地项目或无权访问: {txt}")
         return
     file_manifest = [f for f in glob.glob(f'{project_folder}/**/*.go', recursive=True)] + \
@@ -219,7 +238,7 @@ def parse_source_rust(txt, llm_kwargs, chatbot):
         project_folder = txt
     else:
         if txt == "":
-            txt = '空空如也的输入栏'
+            txt = 'empty input field'
         logger_coder.error(f"找不到本地项目或无权访问: {txt}")
         return
     file_manifest = [f for f in glob.glob(f'{project_folder}/**/*.rs', recursive=True)] + \
@@ -239,7 +258,7 @@ def parse_source_lua(txt, llm_kwargs, chatbot):
         project_folder = txt
     else:
         if txt == "":
-            txt = '空空如也的输入栏'
+            txt = 'empty input field'
         logger_coder.error(f"找不到本地项目或无权访问: {txt}")
         return
     file_manifest = [f for f in glob.glob(f'{project_folder}/**/*.lua', recursive=True)] + \
@@ -260,7 +279,7 @@ def parse_source_csharp(txt, llm_kwargs, chatbot):
         project_folder = txt
     else:
         if txt == "":
-            txt = '空空如也的输入栏'
+            txt = 'empty input field'
         logger_coder.error(f"找不到本地项目或无权访问: {txt}")
         return
     file_manifest = [f for f in glob.glob(f'{project_folder}/**/*.cs', recursive=True)] + \
