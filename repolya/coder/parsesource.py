@@ -9,13 +9,11 @@ from repolya.coder._gpt_academic.crazy_functions.parse_source import parse_sourc
 from repolya._log import logger_coder
 
 import os
-from dotenv import load_dotenv
-load_dotenv()
 
 
 llm_kwargs = {
-    'api_key': os.environ.get("OPENAI_API_KEY"),
-    'llm_model': os.environ.get("OPENAI_LLM_MODEL"),
+    'api_key': os.getenv("OPENAI_API_KEY"),
+    'llm_model': os.getenv("OPENAI_LLM_MODEL"),
     "temperature": 0,
     "top_p": 1.0
 }

@@ -8,7 +8,7 @@ from repolya.paper._paperscraper.postprocessing import aggregate_paper
 from repolya.paper._paperscraper.utils import get_filename_from_query, load_jsonl
 from repolya.paper._paperscraper.plotting import plot_comparison
 
-from repolya.paper import query2jsonl
+from repolya.paper.query2jsonl import query2jsonl
 from repolya._const import JSONL_ROOT, WORKSPACE_ROOT
 
 

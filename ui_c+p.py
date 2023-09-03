@@ -4,8 +4,8 @@ urllib3.disable_warnings()
 import gradio as gr
 # from functools import partial
 # from repolya.writer import generated_text
-from repolya.paper import querypapers
-from repolya.paper import qadocs
+from repolya.paper.querypapers import querypapers
+from repolya.paper.qadocs import qadocs
 from repolya.chat import chat_predict_openai
 from repolya._log import logger_paper
 from repolya._const import LOG_ROOT

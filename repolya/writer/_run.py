@@ -16,8 +16,6 @@ from repolya.writer.evaluator import BasicEvaluatorWithSource
 from repolya._const import WORKSPACE_ROOT
 from repolya._log import logger_writer
 
-from dotenv import load_dotenv
-load_dotenv()
 
 openai_llm = OpenAILLM(config=OpenAILLMConfiguration.from_env())
 

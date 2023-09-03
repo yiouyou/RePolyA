@@ -12,7 +12,13 @@ def doi2paper(_doi, _out):
     except Exception as e:
         # print(e)
         logger_paper.exception(e)
-        return False
+        try:
+            scihub_download(_doi, paper_type='doi', out=_out)
+            return True
+        except Exception as e:
+            # print(e)
+            logger_paper.exception(e)
+            return False
 
 
 def title2paper(_name, _out):
@@ -23,7 +29,13 @@ def title2paper(_name, _out):
     except Exception as e:
         # print(e)
         logger_paper.exception(e)
-        return False
+        try:
+            scihub_download(_name, paper_type='title', out=_out)
+            return True
+        except Exception as e:
+            # print(e)
+            logger_paper.exception(e)
+            return False
 
 
 def url2paper(_url, _out):

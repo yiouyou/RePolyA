@@ -12,6 +12,8 @@ except ImportError:
 from repolya.paper._paperqa.paths import PAPERQA_DIR
 from repolya.paper._paperqa.types import StrPath
 from repolya.paper._paperqa.utils import count_pdf_pages
+from repolya.paper.download import doi2paper
+from repolya.paper.download import title2paper
 
 from repolya._log import logger_paper
 
@@ -110,34 +112,67 @@ class ZoteroDB(zotero.Zotero):
             library_type=library_type, library_id=library_id, api_key=api_key, **kwargs
         )
 
+    # def get_pdf(self, item: dict) -> Union[Path, None]:
+    #     """Gets a filename for a given Zotero key for a PDF.
+
+    #     If the PDF is not found locally, the PDF will be downloaded to a local file at the correct key.
+    #     If no PDF exists for the file, None is returned.
+
+    #     Parameters
+    #     ----------
+    #     item : dict
+    #         An item from `pyzotero`. Should have a `key` field, and also have an entry
+    #         `links->attachment->attachmentType == application/pdf`.
+    #     """
+    #     if type(item) != dict:
+    #         raise TypeError("Pass the full item of the paper. The item must be a dict.")
+
+    #     pdf_key = _extract_pdf_key(item)
+
+    #     if pdf_key is None:
+    #         return None
+
+    #     pdf_path: Path = Path(self.storage / (pdf_key + ".pdf"))  # type: ignore
+
+    #     if not pdf_path.exists():
+    #         pdf_path.parent.mkdir(parents=True, exist_ok=True)
+    #         self.logger.info(f"|  Downloading PDF for: {_get_citation_key(item)}")
+    #         self.dump(pdf_key, pdf_path)
+
+    #     return pdf_path
+
     def get_pdf(self, item: dict) -> Union[Path, None]:
-        """Gets a filename for a given Zotero key for a PDF.
-
-        If the PDF is not found locally, the PDF will be downloaded to a local file at the correct key.
-        If no PDF exists for the file, None is returned.
-
-        Parameters
-        ----------
-        item : dict
-            An item from `pyzotero`. Should have a `key` field, and also have an entry
-            `links->attachment->attachmentType == application/pdf`.
-        """
         if type(item) != dict:
-            raise TypeError("Pass the full item of the paper. The item must be a dict.")
-
-        pdf_key = _extract_pdf_key(item)
-
-        if pdf_key is None:
-            return None
-
-        pdf_path: Path = Path(self.storage / (pdf_key + ".pdf"))  # type: ignore
-
+            raise TypeError("Pass the full item of the paper. The item must be a dict.") 
+        pdf_fn = _get_citation_key(item) + ".pdf"
+        pdf_path = self.storage / pdf_fn
+        _got = False
         if not pdf_path.exists():
-            pdf_path.parent.mkdir(parents=True, exist_ok=True)
-            self.logger.info(f"|  Downloading PDF for: {_get_citation_key(item)}")
-            self.dump(pdf_key, pdf_path)
-
-        return pdf_path
+            print(f"\nDownloading PDF: {pdf_fn}")
+            self.logger.info(f"Downloading PDF: {pdf_fn}")
+            if 'title' in item['data']:
+                _title = item['data']['title']
+                # *** analysis - PubMed
+                if " | " in _title:
+                    _title = _title.split(" | ")[0]
+                # *** analysis | Nature Communications
+                if " - " in _title:
+                    _title = _title.split(" - ")[0]
+                print(f"> get '{_title}'")
+                _got = title2paper(_title, pdf_fn)
+                if not _got:
+                    if 'DOI' in item['data']:
+                        _doi = item['data']['DOI']
+                        print(f"> get '{_doi}'")
+                        _got = doi2paper(_doi, pdf_fn)
+        else:
+            print(f"\nDownloaded PDF: {pdf_fn}")
+            self.logger.info(f"Downloaded PDF: {pdf_fn}")
+            _got = True
+        if _got:
+            return pdf_path
+        else:
+            return None
 
     def iterate(
         self,

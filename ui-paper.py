@@ -1,6 +1,6 @@
 import gradio as gr
-from repolya.paper import querypapers
-from repolya.paper import qadocs
+from repolya.paper.querypapers import querypapers
+from repolya.paper.qadocs import qadocs
 from repolya._log import logger_paper
 
 

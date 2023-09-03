@@ -1,7 +1,4 @@
-from .download import doi2paper
-from .download import title2paper
-from .download import url2paper
-from .download import pmid2paper
-from .query2jsonl import query2jsonl
-from .querypapers import querypapers
-from .qadocs import qadocs
+import os
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'), override=True, verbose=True)
+

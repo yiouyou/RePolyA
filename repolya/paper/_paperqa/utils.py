@@ -5,8 +5,10 @@ import string
 from typing import BinaryIO, List
 
 import pypdf
+from langchain.base_language import BaseLanguageModel
 
 from repolya.paper._paperqa.types import StrPath
+from repolya._log import logger_paper
 
 
 def name_in_text(name: str, text: str) -> bool:
@@ -61,9 +63,14 @@ def strings_similarity(s1: str, s2: str) -> float:
 
 
 def count_pdf_pages(file_path: StrPath) -> int:
-    with open(file_path, "rb") as pdf_file:
-        pdf_reader = pypdf.PdfReader(pdf_file)
+    num_pages = 0
+    try:
+        pdf_reader = pypdf.PdfReader(file_path)
         num_pages = len(pdf_reader.pages)
+        logger_paper.info(f"{str(file_path)}\n{num_pages} pages")
+    except Exception as e:
+        print(f"Failed to read PDF: {e}")
+        logger_paper.debug(f"Failed to read PDF: {e}")
     return num_pages
 
 
@@ -89,3 +96,10 @@ def guess_is_4xx(msg: str) -> bool:
     if re.search(r"4\d\d", msg):
         return True
     return False
+
+
+def get_llm_name(llm: BaseLanguageModel) -> str:
+    try:
+        return llm.model_name  # type: ignore
+    except AttributeError:
+        return llm.model  # type: ignore

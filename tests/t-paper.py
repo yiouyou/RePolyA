@@ -6,7 +6,7 @@ sys.path.append(_RePolyA)
 # bispecific antibody manufacture
 # What manufacturing challenges are unique to bispecific antibodies?
 
-from repolya.paper import query2jsonl
+from repolya.paper.query2jsonl import query2jsonl
 covid19 = ['COVID-19', 'SARS-CoV-2']
 ai = ['Artificial intelligence', 'Deep learning', 'Machine learning']
 mi = ['Medical imaging']
@@ -14,7 +14,7 @@ _query = [covid19, ai, mi]
 query2jsonl(_query)
 
 
-from repolya.paper import querypapers
+from repolya.paper.querypapers import querypapers
 papers = querypapers('bispecific antibody manufacture', 5)
 if papers:
     for i in sorted(papers.keys()):
@@ -47,10 +47,10 @@ if papers:
 
 
 from repolya._const import PDF_ROOT
-from repolya.paper import qadocs
+from repolya.paper.qadocs import qadocs
+
 _query = "What manufacturing challenges are unique to bispecific antibodies?"
 _list = []
-import os
 _dir = PDF_ROOT
 # print(_dir)
 _files = os.listdir(_dir)
