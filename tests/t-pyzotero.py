@@ -9,15 +9,22 @@ from pyzotero import zotero
 import repolya.paper
 
 
-library_id = os.getenv("ZOTERO_USER_ID")
-library_type = 'user'
 api_key = os.getenv("ZOTERO_API_KEY")
 
-zot = zotero.Zotero(library_id, library_type, api_key)
-items = zot.top(limit=20)
+library_id = os.getenv("ZOTERO_USER_ID")
+group_id = os.getenv("ZOTERO_GROUP_ID")
 
+zot_lib = zotero.Zotero(library_id, 'user', api_key)
+items_lib = zot_lib.top(limit=20)
 # we've retrieved the latest five top-level items in our library
 # we can print each item's item type and ID
-for item in items:
-    print('Item: %s | Key: %s' % (item['data']['itemType'], item['data']['key']))
+for item in items_lib:
+    print('LIB Item: %s | Key: %s' % (item['data']['itemType'], item['data']['key']))
+
+zot_grp = zotero.Zotero(group_id, 'group', api_key)
+items_grp = zot_grp.top(limit=20)
+# we've retrieved the latest five top-level items in our library
+# we can print each item's item type and ID
+for item in items_grp:
+    print('GRP Item: %s | Key: %s' % (item['data']['itemType'], item['data']['key']))
 
