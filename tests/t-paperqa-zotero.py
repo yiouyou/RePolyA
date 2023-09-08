@@ -5,9 +5,9 @@ sys.path.append(_RePolyA)
 
 from repolya.paper._paperqa.contrib import ZoteroDB
 from repolya.paper._paperqa import Docs
-from repolya._const import PDF_ROOT
+from repolya._const import PAPER_PDF
 
-_storage = PDF_ROOT / 'zotero'
+_storage = PAPER_PDF / 'zotero'
 
 library_id = os.getenv("ZOTERO_USER_ID")
 print(f"zotero ID: {library_id}")

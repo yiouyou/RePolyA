@@ -9,7 +9,7 @@ from repolya.paper._paperscraper.utils import get_filename_from_query, load_json
 from repolya.paper._paperscraper.plotting import plot_comparison
 
 from repolya.paper.query2jsonl import query2jsonl
-from repolya._const import JSONL_ROOT, WORKSPACE_ROOT
+from repolya._const import PAPER_JSONL, WORKSPACE_ROOT
 
 
 # Define search terms and their synonyms
@@ -37,7 +37,7 @@ for _query in queries:
     print(_qn)
     data_dict[_qn] = dict()
     for i in QUERY_FN_DICT.keys():
-        i_file = str(JSONL_ROOT / f"{i}_{_qn}")
+        i_file = str(PAPER_JSONL / f"{i}_{_qn}")
         data = load_jsonl(i_file)
         data_dict[_qn][i], filtered = aggregate_paper(
             data=data,

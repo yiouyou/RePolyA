@@ -8,7 +8,7 @@ from repolya.paper._paperscraper.arxiv import get_and_dump_arxiv_papers
 from repolya.paper._paperscraper.pubmed import get_and_dump_pubmed_papers
 from repolya.paper._paperscraper.xrxiv.xrxiv_query import XRXivQuery
 
-from repolya._const import SERVER_DUMP_ROOT
+from repolya._const import PAPER_SERVER_DUMP
 from repolya._log import logger_paper
 
 
@@ -18,7 +18,7 @@ QUERY_FN_DICT = {
     "pubmed": get_and_dump_pubmed_papers,
 }
 # For biorxiv, chemrxiv and medrxiv search for local dumps
-dump_root = SERVER_DUMP_ROOT
+dump_root = PAPER_SERVER_DUMP
 
 for db in ["biorxiv", "chemrxiv", "medrxiv"]:
     dump_paths = glob.glob(os.path.join(dump_root, db + "*"))

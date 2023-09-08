@@ -18,26 +18,30 @@ def get_project_root():
 PROJECT_ROOT = get_project_root() / 'repolya'
 LOG_ROOT = PROJECT_ROOT / '_log'
 
-### chat
+##### chat
 WORKSPACE_CHAT = PROJECT_ROOT / '_workspace' / '_chat'
 LOG_CHAT = LOG_ROOT / "chat.log"
 
-### paper
+
+##### paper
 WORKSPACE_PAPER = PROJECT_ROOT / '_workspace' / '_paper'
 LOG_PAPER = LOG_ROOT / "paper.log"
+###
+PAPER_JSONL = WORKSPACE_PAPER / '_jsonl'
+PAPER_PDF = WORKSPACE_PAPER / '_pdf'
+PAPER_SERVER_DUMP = PROJECT_ROOT / '_server_dump'
+PAPER_PDFIMGS = WORKSPACE_PAPER / '_pdf_imgs'
 
-JSONL_ROOT = WORKSPACE_PAPER / '_jsonl'
-PDF_ROOT = WORKSPACE_PAPER / '_pdf'
-SERVER_DUMP_ROOT = PROJECT_ROOT / '_server_dumps'
 
-### writer
+##### writer
 WORKSPACE_WRITER = PROJECT_ROOT / '_workspace' / '_writer'
 LOG_WRITER = LOG_ROOT / "writer.log"
 
-### metagpt
+
+##### metagpt
 WORKSPACE_METAGPT = PROJECT_ROOT / '_workspace' / '_metagpt'
 LOG_METAGPT = LOG_ROOT / "metagpt.log"
-
+###
 TMP = PROJECT_ROOT / 'tmp'
 DATA_PATH = PROJECT_ROOT / 'data'
 WORKSPACE_ROOT = WORKSPACE_METAGPT
@@ -50,10 +54,11 @@ PROMPT_PATH = PROJECT_ROOT / 'metagpt '/ 'prompts'
 YAPI_URL = "http://yapi.deepwisdomai.com/"
 MEM_TTL = 24 * 30 * 3600
 
-### coder
+
+##### coder
 WORKSPACE_CODER = PROJECT_ROOT / '_workspace' / '_coder'
 LOG_CODER = LOG_ROOT / "coder.log"
-
+###
 DEFAULT_WORKER_NUM = 1
 TIMEOUT_SECONDS = 30
 MAX_RETRY = 2

@@ -9,11 +9,11 @@ from tqdm import tqdm
 
 from repolya.paper._paperscraper.xrxiv.xrxiv_api import MedRxivApi
 
-from repolya._const import SERVER_DUMP_ROOT
+from repolya._const import PAPER_SERVER_DUMP
 
 
 today = datetime.today().strftime("%Y-%m-%d")
-save_folder = SERVER_DUMP_ROOT
+save_folder = PAPER_SERVER_DUMP
 save_path = os.path.join(save_folder, f"medrxiv_{today}.jsonl")
 
 
