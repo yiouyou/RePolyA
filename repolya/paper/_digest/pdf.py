@@ -66,12 +66,16 @@ def get_text_from_pdf(_fp):
     out_dir = PAPER_PDFIMGS / _fn
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
+    _out_txt = f"{_fn}.txt"
     _out = []
     for page_index in range(len(_pdf)):
         # Get the page itself
         page = _pdf[page_index]
         page_text = page.get_text()
         _out.append(page_text)
+    with open(os.path.join(out_dir, _out_txt), 'w') as wf:
+        wf.write("\n".join(_out))
+    logger_paper.info(f"{_out_txt}")
     return _out
 
 
@@ -83,10 +87,10 @@ def pdf_to_md(_fp):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     _out_md = f"{_fn}.md"
-    logger_paper.info(f"{_out_md}")
     # Load PDF file
     doc = aw.Document(str(_fp))
     # Save PDF as markdown
-    doc.save(_out_md)
+    doc.save(os.path.join(out_dir, _out_md))
+    logger_paper.info(f"{_out_md}")
     return _out_md
 
