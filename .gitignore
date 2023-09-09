@@ -61,10 +61,10 @@ repolya/_workspace/_writer/*
 !repolya/_workspace/_paper/_pdf
 repolya/_workspace/_paper/_pdf/*
 !repolya/_workspace/_paper/_pdf/.gitkeep
-# _workspace/_paper/_pdf_imgs
-!repolya/_workspace/_paper/_pdf_imgs
-repolya/_workspace/_paper/_pdf_imgs/*
-!repolya/_workspace/_paper/_pdf_imgs/.gitkeep
+# _workspace/_paper/_pdf_digest
+!repolya/_workspace/_paper/_pdf_digest
+repolya/_workspace/_paper/_pdf_digest/*
+!repolya/_workspace/_paper/_pdf_digest/.gitkeep
 # _workspace/_paper/_jsonl
 !repolya/_workspace/_paper/_jsonl
 repolya/_workspace/_paper/_jsonl/*

@@ -30,7 +30,7 @@ LOG_PAPER = LOG_ROOT / "paper.log"
 PAPER_JSONL = WORKSPACE_PAPER / '_jsonl'
 PAPER_PDF = WORKSPACE_PAPER / '_pdf'
 PAPER_SERVER_DUMP = PROJECT_ROOT / '_server_dump'
-PAPER_PDFIMGS = WORKSPACE_PAPER / '_pdf_imgs'
+PAPER_DIGEST = WORKSPACE_PAPER / '_pdf_digest'
 
 
 ##### writer

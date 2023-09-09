@@ -1,4 +1,4 @@
-from repolya._const import PAPER_PDFIMGS
+from repolya._const import PAPER_DIGEST
 from repolya._log import logger_paper
 
 import fitz
@@ -17,7 +17,7 @@ def get_imgs_from_pdf(_fp):
     logger_paper.info(f"{_f}")
     _fn, _ext = os.path.splitext(_f)
     _pdf = fitz.open(_fp)
-    out_dir = PAPER_PDFIMGS / _fn
+    out_dir = PAPER_DIGEST / _fn
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     _out = []
@@ -63,7 +63,7 @@ def get_text_from_pdf(_fp):
     logger_paper.info(f"{_f}")
     _fn, _ext = os.path.splitext(_f)
     _pdf = fitz.open(_fp)
-    out_dir = PAPER_PDFIMGS / _fn
+    out_dir = PAPER_DIGEST / _fn
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     _out_txt = f"{_fn}.txt"
@@ -74,23 +74,24 @@ def get_text_from_pdf(_fp):
         page_text = page.get_text()
         _out.append(page_text)
     with open(os.path.join(out_dir, _out_txt), 'w') as wf:
-        wf.write("\n".join(_out))
+        wf.write("".join(_out))
     logger_paper.info(f"{_out_txt}")
     return _out
 
 
-def pdf_to_md(_fp):
-    _f = os.path.basename(_fp)
-    logger_paper.info(f"{_f}")
-    _fn, _ext = os.path.splitext(_f)
-    out_dir = PAPER_PDFIMGS / _fn
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-    _out_md = f"{_fn}.md"
-    # Load PDF file
-    doc = aw.Document(str(_fp))
-    # Save PDF as markdown
-    doc.save(os.path.join(out_dir, _out_md))
-    logger_paper.info(f"{_out_md}")
-    return _out_md
+##### 转换后行文顺序有问题
+# def pdf_to_md(_fp):
+#     _f = os.path.basename(_fp)
+#     logger_paper.info(f"{_f}")
+#     _fn, _ext = os.path.splitext(_f)
+#     out_dir = PAPER_DIGEST / _fn
+#     if not os.path.exists(out_dir):
+#         os.makedirs(out_dir)
+#     _out_md = f"{_fn}.md"
+#     # Load PDF file
+#     doc = aw.Document(str(_fp))
+#     # Save PDF as markdown
+#     doc.save(os.path.join(out_dir, _out_md))
+#     logger_paper.info(f"{_out_md}")
+#     return _out_md
 
