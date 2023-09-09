@@ -136,18 +136,19 @@ Please answer the following question:
         # _steps += f"\n\n{'=' * 100}docs\n" + _pretty_docs
         _steps += f"\n\n{'=' * 60} reordered_docs\n" + _pretty_reordered_docs
         logger_paper.info(f"{_ans}")
-        logger_paper.info(f"{_steps}")
+        logger_paper.info(f"{_token_cost}")
+        logger_paper.debug(f"{_steps}")
     return [_ans, _steps]
 
 
 ##### ST retriever
 def get_faiss_ST(_db_name):
     ### all-MiniLM-L12-v2
-    _db_name_all = f"{_db_name}_all"
+    _db_name_all = os.path.join(_db_name, 'all-MiniLM-L12-v2')
     _embedding_all = HuggingFaceEmbeddings(model_name="all-MiniLM-L12-v2")
     _db_all = FAISS.load_local(_db_name_all, _embedding_all)
     ### multi-qa-mpnet-base-dot-v1
-    _db_name_multiqa = f"{_db_name}_multiqa"
+    _db_name_multiqa = os.path.join(_db_name, 'multi-qa-mpnet-base-dot-v1')
     _embedding_multiqa = HuggingFaceEmbeddings(model_name="multi-qa-mpnet-base-dot-v1")
     _db_multiqa = FAISS.load_local(_db_name_multiqa, _embedding_multiqa)
     return _db_all, _db_multiqa
@@ -208,7 +209,7 @@ Original question: {question}""",
 
 def qa_faiss_ST_multi_query(_query, _db_name):
     _ans, _steps = "", ""
-    llm = OpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
+    llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
     with get_openai_callback() as cb:
         _retriever = get_faiss_ST_multi_query_retriever(_db_name)
         _run_manager = CallbackManagerForRetrieverRun.get_noop_manager()
@@ -220,7 +221,7 @@ def qa_faiss_ST_multi_query(_query, _db_name):
         #####
         _qa_chain = RetrievalQAWithSourcesChain.from_chain_type(
             llm,
-            chain_type="stuff",
+            chain_type="map_reduce", # stuff, map_reduce, refine, map_rerank
             retriever=_retriever
         )
         _ans = _qa_chain(
@@ -233,6 +234,7 @@ def qa_faiss_ST_multi_query(_query, _db_name):
         _steps = f"{_token_cost}\n\n"+ "\n".join(_generated_queries)
         _steps += f"\n\n{'=' * 60} docs\n" + _pretty_docs
         logger_paper.info(f"{_ans}")
-        logger_paper.info(f"{_steps}")
+        logger_paper.info(f"{_token_cost}")
+        logger_paper.debug(f"{_steps}")
     return [_ans, _steps]
 

@@ -30,9 +30,15 @@ def split_docs_recursive(_docs):
         chunk_size = text_chunk_size,
         chunk_overlap = text_chunk_overlap,
         length_function = len,
+        add_start_index = True,
         is_separator_regex = False,
     )
     splited_docs = text_splitter.split_documents(_docs)
+    for i in splited_docs:
+        _m = i.metadata
+        _pdf = _m['file_path'].split('/')[-1]
+        _page = _m['page']
+        i.metadata['source'] = f"{_pdf}, p{_page}"
     return splited_docs
 
 
@@ -40,17 +46,20 @@ def split_docs_recursive(_docs):
 def embedding_to_faiss_ST(_docs, _db_name):
     ### all-mpnet-base-v2/all-MiniLM-L6-v2/all-MiniLM-L12-v2
     ### all-MiniLM-L12-v2
-    _db_name_all = f"{_db_name}_all"
+    _db_name_all = os.path.join(_db_name, 'all-MiniLM-L12-v2')
     _embedding_all = HuggingFaceEmbeddings(model_name="all-MiniLM-L12-v2")
     _db_all = FAISS.from_documents(_docs, _embedding_all)
-    _db_all.save_local(_db_name_all)
+    if not os.path.exists(_db_name_all):
+        _db_all.save_local(_db_name_all)
+        logger_paper.info("/".join(_db_name_all.split("/")[-2:]))
     ### multi-qa-mpnet-base-dot-v1
-    _db_name_multiqa = f"{_db_name}_multiqa"
+    _db_name_multiqa = os.path.join(_db_name, 'multi-qa-mpnet-base-dot-v1')
     _embedding_multiqa = HuggingFaceEmbeddings(model_name="multi-qa-mpnet-base-dot-v1")
     _db_multiqa = FAISS.from_documents(_docs, _embedding_multiqa)
-    _db_multiqa.save_local(_db_name_multiqa)
+    if not os.path.exists(_db_name_multiqa):
+        _db_multiqa.save_local(_db_name_multiqa)
+        logger_paper.info("/".join(_db_name_multiqa.split("/")[-2:]))
     ### log
-    logger_paper.info(f"{_db_name_all}, {_db_name_multiqa}")
     logger_paper.info("[faiss save HuggingFaceEmbeddings embedding to disk]")
 
 def embedding_to_faiss_OpenAI(_docs, _db_name):

@@ -20,6 +20,7 @@ Before beginning the installation, make sure you have:
    git clone https://github.com/yiouyou/RePolyA.git
    cd RePolyA
    ```
+
 2. **Setting Up a Virtual Environment**
 
    It's advisable to use a virtual environment to manage dependencies and avoid potential conflicts:
@@ -28,13 +29,17 @@ Before beginning the installation, make sure you have:
    python -m venv venv
    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
    ```
+
 3. **Install Dependencies**
 
    With the virtual environment activated, you can install the required packages:
 
    ```bash
    pip install -r requirements.txt
+   pip install torch==2.0.1+cpu torchvision==0.15.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
+   pip install -r repolya/paper/requirements.txt
    ```
+
 4. **Install Node/Chromium/Mermaid**
 
    Node:
@@ -69,10 +74,21 @@ Before beginning the installation, make sure you have:
    ```bash
    mmdc -i test.mmd -o test.png
    ```
-5. **Configuration** (If required)
+
+5. **Set Up SSL**
+
+   ```
+   mkdir ssl
+   cd ssl
+   openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 365 -nodes
+   > ssl/key.pem, ssl/cert.pem
+   ```
+
+6. **Configuration** (If required)
 
    Certain modules or functionalities might need additional configuration or setup, such as setting environment variables or configuring external services. Refer to the [Configuration Guide](https://github.com/yiouyou/RePolyA/blob/main/CONFIGURATION_GUIDE.md) for more specifics.
-6. **Verify Installation**
+
+7. **Verify Installation**
 
    Run preliminary tests or launch the application to verify the setup:
 
