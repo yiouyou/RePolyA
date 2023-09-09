@@ -80,6 +80,7 @@ def get_text_from_pdf(_fp):
 
 
 ##### 转换后行文顺序有问题
+##### pip install aspose-words
 # def pdf_to_md(_fp):
 #     _f = os.path.basename(_fp)
 #     logger_paper.info(f"{_f}")
