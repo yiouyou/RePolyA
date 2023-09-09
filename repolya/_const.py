@@ -27,10 +27,10 @@ LOG_CHAT = LOG_ROOT / "chat.log"
 WORKSPACE_PAPER = PROJECT_ROOT / '_workspace' / '_paper'
 LOG_PAPER = LOG_ROOT / "paper.log"
 ###
-PAPER_JSONL = WORKSPACE_PAPER / '_jsonl'
 PAPER_PDF = WORKSPACE_PAPER / '_pdf'
-PAPER_SERVER_DUMP = PROJECT_ROOT / '_server_dump'
 PAPER_DIGEST = WORKSPACE_PAPER / '_pdf_digest'
+PAPER_JSONL = WORKSPACE_PAPER / '_jsonl'
+PAPER_SERVER_DUMP = PROJECT_ROOT / '_server_dump'
 
 
 ##### writer
