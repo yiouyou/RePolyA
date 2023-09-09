@@ -5,6 +5,7 @@ import fitz
 import os
 import io
 from PIL import Image
+import aspose.words as aw
 
 
 min_width = 120
@@ -19,6 +20,7 @@ def get_imgs_from_pdf(_fp):
     out_dir = PAPER_PDFIMGS / _fn
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
+    _out = []
     # Iterate over PDF pages
     for page_index in range(len(_pdf)):
         # Get the page itself
@@ -45,10 +47,46 @@ def get_imgs_from_pdf(_fp):
             image = Image.open(io.BytesIO(img_bytes))
             # Check if the image meets the minimum dimensions and save it
             if image.width >= min_width and image.height >= min_height:
+                out_img = os.path.join(out_dir, img_name)
                 image.save(
-                    open(os.path.join(out_dir, img_name), "wb"),
+                    open(out_img, "wb"),
                     format=img_ext
                 )
+                _out.append(out_img)
             else:
                 logger_paper.info(f"[-] Skipping image {img_index} on page {page_index} due to its small size.")
+    return _out
+
+
+def get_text_from_pdf(_fp):
+    _f = os.path.basename(_fp)
+    logger_paper.info(f"{_f}")
+    _fn, _ext = os.path.splitext(_f)
+    _pdf = fitz.open(_fp)
+    out_dir = PAPER_PDFIMGS / _fn
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    _out = []
+    for page_index in range(len(_pdf)):
+        # Get the page itself
+        page = _pdf[page_index]
+        page_text = page.get_text()
+        _out.append(page_text)
+    return _out
+
+
+def pdf_to_md(_fp):
+    _f = os.path.basename(_fp)
+    logger_paper.info(f"{_f}")
+    _fn, _ext = os.path.splitext(_f)
+    out_dir = PAPER_PDFIMGS / _fn
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    _out_md = f"{_fn}.md"
+    logger_paper.info(f"{_out_md}")
+    # Load PDF file
+    doc = aw.Document(str(_fp))
+    # Save PDF as markdown
+    doc.save(_out_md)
+    return _out_md
 
