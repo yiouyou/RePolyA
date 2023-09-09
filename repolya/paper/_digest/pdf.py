@@ -1,24 +1,16 @@
 from repolya._const import PAPER_DIGEST
 from repolya._log import logger_paper
+from repolya.paper._digest.vdb_generate import pdf_to_faiss_OpenAI
+from repolya.paper._digest.vdb_query import qa_faiss_OpenAI_multi_query
 
 import fitz
 from PIL import Image
 import os
 import io
-import re
-
-from langchain.document_loaders import PyMuPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.embeddings.openai import OpenAIEmbeddings
 
 
 img_min_width = 120
 img_min_height = 120
-
-text_chunk_size = 3000, #1000,
-text_chunk_overlap = 300, #200,
 
 def get_out_dir(_fp):
     _f = os.path.basename(_fp)
@@ -29,7 +21,7 @@ def get_out_dir(_fp):
         os.makedirs(_out_dir)
     return _out_dir, _fn
 
-
+##### imgs
 def get_imgs_from_pdf(_fp):
     _pdf = fitz.open(_fp)
     _out_dir, _fn = get_out_dir(_fp)
@@ -71,6 +63,7 @@ def get_imgs_from_pdf(_fp):
     return _out
 
 
+##### text
 def get_text_from_pdf(_fp):
     _pdf = fitz.open(_fp)
     _out_dir, _fn = get_out_dir(_fp)
@@ -87,73 +80,26 @@ def get_text_from_pdf(_fp):
     return _out
 
 
-def get_docs_from_pdf(_fp):
-    _f = os.path.basename(_fp)
-    loader = PyMuPDFLoader(str(_fp))
-    docs = loader.load()
-    logger_paper.info(f"load {len(docs)} pages")
-    return docs
-
-
-def split_docs_recursive(_docs):
-    ##### default list is ["\n\n", "\n", " ", ""]
-    text_splitter = RecursiveCharacterTextSplitter(
-        # Set a really small chunk size, just to show.
-        chunk_size = text_chunk_size,
-        chunk_overlap = text_chunk_overlap,
-        length_function = len,
-        is_separator_regex = False,
-    )
-    splited_docs = text_splitter.split_documents(_docs)
-    return splited_docs
-
-
-def embedding_to_faiss_ST(_docs, _db_name):
-    _embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L12-v2") # all-mpnet-base-v2/all-MiniLM-L6-v2/all-MiniLM-L12-v2
-    _db = FAISS.from_documents(_docs, _embeddings)
-    _db.save_local(_db_name)
-    logger_paper.info(_db_name)
-    logger_paper.info("[faiss save HuggingFaceEmbeddings embedding to disk]")
-
-
-def embedding_to_faiss_OpenAI(_docs, _db_name):
-    _embeddings = OpenAIEmbeddings()
-    _db = FAISS.from_documents(_docs, _embeddings)
-    _db.save_local(_db_name)
-    logger_paper.info("/".join(_db_name.split("/")[-2:]))
-    logger_paper.info("[faiss save OpenAI embedding to disk]")
-
-
-def clean_txt(_txt):
-    _1 = re.sub(r"\n+", "\n", _txt)
-    _2 = re.sub(r"\t+\n", "\n", _1)
-    _3 = re.sub(r" +\n", "\n", _2)
-    _clean_txt = re.sub(r"\n+", "\n", _3)
-    return _clean_txt
-
-
-def pdf_to_faiss_vdb(_fp, _db_name):
-    docs = get_docs_from_pdf(_fp)
-    if len(docs) > 0:
-        for doc in docs:
-            doc.page_content = clean_txt(doc.page_content)
-            # print(doc.metadata)
-        logger_paper.info(f"docs: {len(docs)}")
-        splited_docs = split_docs_recursive(docs)
-        logger_paper.info(f"splited_docs: {len(splited_docs)}")
-        embedding_to_faiss_OpenAI(splited_docs, _db_name)
-        # embedding_to_faiss_ST(splited_docs, _db_name)
-    else:
-        logger_paper.info("NO docs")
-
-
+##### generate faiss
 def pdf_to_faiss(_fp):
     _out_dir, _fn = get_out_dir(_fp)
-    _db_name = str(_out_dir / 'faiss')
+    _db_name = str(_out_dir / 'faiss_openai')
     if not os.path.exists(_db_name):
-        pdf_to_faiss_vdb(_fp, _db_name)
+        pdf_to_faiss_OpenAI(_fp, _db_name)
     else:
         logger_paper.info(f"found {_db_name}")
+
+
+##### multi query faiss
+def multi_query_pdf(_fp, _query):
+    _out_dir, _fn = get_out_dir(_fp)
+    _db_name = str(_out_dir / 'faiss_openai')
+    if os.path.exists(_db_name):
+        qa_faiss_OpenAI_multi_query(_query, _db_name)
+    else:
+        logger_paper.info(f"no faiss_openai yet")
+        pdf_to_faiss(_fp)
+        qa_faiss_OpenAI_multi_query(_query, _db_name)
 
 
 ##### 转换后行文顺序有问题
