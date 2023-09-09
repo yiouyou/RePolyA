@@ -14,8 +14,11 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.embeddings.openai import OpenAIEmbeddings
 
 
-min_width = 120
-min_height = 120
+img_min_width = 120
+img_min_height = 120
+
+text_chunk_size = 3000, #1000,
+text_chunk_overlap = 300, #200,
 
 def get_out_dir(_fp):
     _f = os.path.basename(_fp)
@@ -56,7 +59,7 @@ def get_imgs_from_pdf(_fp):
             # Load it to PIL
             image = Image.open(io.BytesIO(img_bytes))
             # Check if the image meets the minimum dimensions and save it
-            if image.width >= min_width and image.height >= min_height:
+            if image.width >= img_min_width and image.height >= img_min_height:
                 out_img = os.path.join(_out_dir, img_name)
                 image.save(
                     open(out_img, "wb"),
@@ -96,8 +99,8 @@ def split_docs_recursive(_docs):
     ##### default list is ["\n\n", "\n", " ", ""]
     text_splitter = RecursiveCharacterTextSplitter(
         # Set a really small chunk size, just to show.
-        chunk_size = 4000, #1000,
-        chunk_overlap = 200, #200,
+        chunk_size = text_chunk_size,
+        chunk_overlap = text_chunk_overlap,
         length_function = len,
         is_separator_regex = False,
     )
