@@ -7,6 +7,6 @@ def digest_pdf(_fp):
     get_text_from_pdf(_fp)
     pdf_to_faiss(_fp)
 
-def qa_pdf(_fp, _query):
-    multi_query_pdf(_fp, _query)
+def qa_pdf(_fp, _query, _chain_type):
+    multi_query_pdf(_fp, _query, _chain_type, True)
     

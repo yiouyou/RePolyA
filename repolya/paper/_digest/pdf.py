@@ -104,20 +104,22 @@ def pdf_to_faiss(_fp):
 
 
 ##### multi query faiss
-def multi_query_pdf(_fp, _query):
+def multi_query_pdf(_fp, _query, _chain_type, _if_lotr):
     _out_dir, _fn = get_out_dir(_fp)
-    ### openai
-    _db_name_openai = str(_out_dir / 'faiss_openai')
-    if os.path.exists(_db_name_openai):
-        qa_faiss_OpenAI_multi_query(_query, _db_name_openai)
+    if _if_lotr:
+        ### sentence-transformers
+        _db_name_st = str(_out_dir / 'faiss_st')
+        if os.path.exists(_db_name_st):
+            qa_faiss_ST_multi_query(_query, _db_name_st, _chain_type)
+        else:
+            logger_paper.info(f"no faiss_st yet")
     else:
-        logger_paper.info(f"no faiss_openai yet")
-    ### sentence-transformers
-    _db_name_st = str(_out_dir / 'faiss_st')
-    if os.path.exists(_db_name_st):
-        qa_faiss_ST_multi_query(_query, _db_name_st)
-    else:
-        logger_paper.info(f"no faiss_st yet")
+        ### openai
+        _db_name_openai = str(_out_dir / 'faiss_openai')
+        if os.path.exists(_db_name_openai):
+            qa_faiss_OpenAI_multi_query(_query, _db_name_openai, _chain_type)
+        else:
+            logger_paper.info(f"no faiss_openai yet")
 
 
 ##### 转换后行文顺序有问题

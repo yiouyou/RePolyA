@@ -39,6 +39,7 @@ def split_docs_recursive(_docs):
         _pdf = _m['file_path'].split('/')[-1]
         _page = _m['page']
         i.metadata['source'] = f"{_pdf}, p{_page}"
+    # print(splited_docs)
     return splited_docs
 
 

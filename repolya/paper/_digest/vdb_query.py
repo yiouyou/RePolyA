@@ -21,6 +21,7 @@ from langchain.chains import (
     RetrievalQAWithSourcesChain,
     StuffDocumentsChain,
 )
+from langchain.chains.question_answering import load_qa_chain
 from langchain.callbacks import get_openai_callback
 from langchain.callbacks.manager import (
     AsyncCallbackManagerForRetrieverRun,
@@ -36,6 +37,8 @@ from pydantic import BaseModel, Field
 import os
 
 
+# _chain_type = "map_reduce" # stuff, map_reduce, refine, map_rerank
+
 def pretty_print_docs(docs):
     # _pretty = f"\n{'-' * 100}\n".join([f"Document {i+1}:\n\n" + d.page_content for i, d in enumerate(docs)])
     _doc = []
@@ -43,9 +46,9 @@ def pretty_print_docs(docs):
     for i, doc in enumerate(docs):
         _doc.append(f"Document {i+1}:\n\n" + str(doc.metadata) + "\n\n" + doc.page_content)
         _doc_meta.append(f"Document {i+1}:\n\n" + str(doc.metadata)+ "\n" + str(len(doc.page_content)))
-    _pretty = f"\n{'-' * 100}\n".join(_doc)
+    _pretty = f"\n{'-' * 60}\n".join(_doc)
     # print(_pretty)
-    _meta = f"\n{'-' * 100}\n".join(_doc_meta)
+    _meta = f"\n{'-' * 60}\n".join(_doc_meta)
     # print(_meta)
     return _pretty
 
@@ -78,65 +81,82 @@ the user overcome some of the limitations of the distance-based similarity searc
 Provide these alternative questions seperated by newlines.
 Original question: {question}""",
     )
-    llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
-    llm_chain = LLMChain(llm=llm, prompt=QUERY_PROMPT, output_parser=output_parser)
+    llm = ChatOpenAI(
+        model_name=os.getenv('OPENAI_LLM_MODEL'),
+        temperature=0
+    )
+    llm_chain = LLMChain(
+        llm=llm,
+        prompt=QUERY_PROMPT,
+        output_parser=output_parser
+    )
     _db = get_faiss_OpenAI(_db_name)
     _base_retriever = _db.as_retriever()
+    ##### Remove redundant results from the merged retrievers
+    _filter = EmbeddingsRedundantFilter(embeddings=OpenAIEmbeddings())
+    ##### Re-order results to avoid performance degradation
+    _reordering = LongContextReorder()
+    ##### ContextualCompressionRetriever
+    _pipeline = DocumentCompressorPipeline(transformers=[_filter, _reordering])
+    _compression_retriever_reordered = ContextualCompressionRetriever(
+        base_compressor=_pipeline,
+        base_retriever=_base_retriever
+    )
+    ##### MultiQueryRetriever
     _multi_retriever = MultiQueryRetriever(
-        retriever=_base_retriever,
+        retriever=_compression_retriever_reordered,
         llm_chain=llm_chain,
         parser_key="lines"
     )
     return _multi_retriever
 
-def qa_faiss_OpenAI_multi_query(_query, _db_name):
+def qa_faiss_OpenAI_multi_query(_query, _db_name, _chain_type):
     _ans, _steps = "", ""
     llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
     with get_openai_callback() as cb:
-        _retriever = get_faiss_OpenAI_multi_query_retriever(_db_name)
+        _multi_retriever = get_faiss_OpenAI_multi_query_retriever(_db_name)
         _run_manager = CallbackManagerForRetrieverRun.get_noop_manager()
-        _generated_queries = _retriever.generate_queries(_query, _run_manager)
-        logger_paper.info(_generated_queries)
-        ##### _docs, _reordered_docs
-        _docs = _retriever.get_relevant_documents(_query)
-        _reordering = LongContextReorder()
-        _reordered_docs = _reordering.transform_documents(_docs)
+        _generated_queries = _multi_retriever.generate_queries(_query, _run_manager)
+        logger_paper.info(f"Q: {_query}")
+        for i in _generated_queries:
+            logger_paper.info(i)
+        ##### _docs
+        _docs = _multi_retriever.get_relevant_documents(_query)
         _pretty_docs = pretty_print_docs(_docs)
-        _pretty_reordered_docs = pretty_print_docs(_reordered_docs)
         #####
-        document_prompt = PromptTemplate(
-            input_variables=["page_content"], template="{page_content}"
+        # _qa_ws = RetrievalQAWithSourcesChain.from_chain_type(
+        #     llm,
+        #     chain_type=_chain_type
+        #     retriever=_multi_retriever
+        # )
+        # _ans_ws = _qa_ws(
+        #     {"question": _query},
+        #     return_only_outputs=False
+        # )
+        # _qa = RetrievalQA.from_chain_type(
+        #     llm,
+        #     chain_type=_chain_type
+        #     retriever=_multi_retriever,
+        #     return_source_documents=True
+        # )
+        # _ans = _qa(
+        #     {"query": _query}
+        # )
+        _qa = load_qa_chain(
+            llm,
+            chain_type=_chain_type
         )
-        stuff_prompt_override = """Given this text extracts:
------
-{context}
------
-Please answer the following question:
-{query}"""
-        prompt = PromptTemplate(
-            template=stuff_prompt_override, input_variables=["context", "query"]
-        )
-        llm_chain = LLMChain(
-            llm=llm,
-            prompt=prompt
-        )
-        _qa_chain = StuffDocumentsChain(
-            llm_chain=llm_chain,
-            document_prompt=document_prompt,
-            document_variable_name="context",
-        )
-        _ans = _qa_chain.run(
-            query=_query,
-            input_documents=_reordered_docs
+        _ans = _qa(
+            {"input_documents": _docs, "question": _query},
+            return_only_outputs=True
         )
         #####
         _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
         # print(_token_cost)
         _steps = f"{_token_cost}\n\n"+ "\n".join(_generated_queries)
-        # _steps += f"\n\n{'=' * 100}docs\n" + _pretty_docs
-        _steps += f"\n\n{'=' * 60} reordered_docs\n" + _pretty_reordered_docs
-        logger_paper.info(f"{_ans}")
-        logger_paper.info(f"{_token_cost}")
+        _steps += f"\n\n{'=' * 60}docs\n" + _pretty_docs
+        logger_paper.info(f"A: {_ans['output_text']}")
+        logger_paper.info(f"[{_chain_type}] {_token_cost}")
         logger_paper.debug(f"{_steps}")
     return [_ans, _steps]
 
@@ -177,7 +197,6 @@ Original question: {question}""",
     )
     llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
     llm_chain = LLMChain(llm=llm, prompt=QUERY_PROMPT, output_parser=output_parser)
-    filter_embeddings = OpenAIEmbeddings()
     ##### 
     _db_all, _db_multiqa = get_faiss_ST(_db_name)
     _retriever_all = _db_all.as_retriever(
@@ -190,7 +209,7 @@ Original question: {question}""",
     )
     _lotr = MergerRetriever(retrievers=[_retriever_all, _retriever_multiqa])
     ##### Remove redundant results from the merged retrievers
-    _filter = EmbeddingsRedundantFilter(embeddings=filter_embeddings)
+    _filter = EmbeddingsRedundantFilter(embeddings=OpenAIEmbeddings())
     ##### Re-order results to avoid performance degradation
     _reordering = LongContextReorder()
     ##### ContextualCompressionRetriever
@@ -207,34 +226,48 @@ Original question: {question}""",
     )
     return _multi_retriever
 
-def qa_faiss_ST_multi_query(_query, _db_name):
+def qa_faiss_ST_multi_query(_query, _db_name, _chain_type):
     _ans, _steps = "", ""
     llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
     with get_openai_callback() as cb:
-        _retriever = get_faiss_ST_multi_query_retriever(_db_name)
+        _multi_retriever = get_faiss_ST_multi_query_retriever(_db_name)
         _run_manager = CallbackManagerForRetrieverRun.get_noop_manager()
-        _generated_queries = _retriever.generate_queries(_query, _run_manager)
-        logger_paper.info(_generated_queries)
+        _generated_queries = _multi_retriever.generate_queries(_query, _run_manager)
+        logger_paper.info(f"Q: {_query}")
+        for i in _generated_queries:
+            logger_paper.info(i)
         ##### _docs
-        _docs = _retriever.get_relevant_documents(_query)
+        _docs = _multi_retriever.get_relevant_documents(_query)
         _pretty_docs = pretty_print_docs(_docs)
         #####
-        _qa_chain = RetrievalQAWithSourcesChain.from_chain_type(
+        _qa = load_qa_chain(
             llm,
-            chain_type="map_reduce", # stuff, map_reduce, refine, map_rerank
-            retriever=_retriever
+            chain_type=_chain_type
         )
-        _ans = _qa_chain(
-            {"question": _query},
-            return_only_outputs=False
-        )
+        try:
+            _ans = _qa(
+                {"input_documents": _docs, "question": _query},
+                return_only_outputs=True
+            )
+        except Exception as e:
+            logger_paper.debug(f"{e}")
+            _chain_type = 'refine'
+            _qa = load_qa_chain(
+                llm,
+                chain_type=_chain_type
+            )
+            logger_paper.info(f"start [refine]")
+            _ans = _qa(
+                {"input_documents": _docs, "question": _query},
+                return_only_outputs=True
+            )
         #####
         _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
         # print(_token_cost)
         _steps = f"{_token_cost}\n\n"+ "\n".join(_generated_queries)
         _steps += f"\n\n{'=' * 60} docs\n" + _pretty_docs
-        logger_paper.info(f"{_ans}")
-        logger_paper.info(f"{_token_cost}")
+        logger_paper.info(f"A: {_ans['output_text']}")
+        logger_paper.info(f"[{_chain_type}(lotr)] {_token_cost}")
         logger_paper.debug(f"{_steps}")
     return [_ans, _steps]
 
