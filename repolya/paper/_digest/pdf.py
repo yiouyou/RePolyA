@@ -112,7 +112,7 @@ def multi_query_pdf(_fp, _query):
         qa_faiss_OpenAI_multi_query(_query, _db_name_openai)
     else:
         logger_paper.info(f"no faiss_openai yet")
-    ### openai
+    ### sentence-transformers
     _db_name_st = str(_out_dir / 'faiss_st')
     if os.path.exists(_db_name_st):
         qa_faiss_ST_multi_query(_query, _db_name_st)
