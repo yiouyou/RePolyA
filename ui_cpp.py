@@ -140,9 +140,12 @@ def jd_digest_pdf(_tmp_path):
         raise gr.Error("ERROR: can only upload ONE pdf file")
     return _tmp_pdf
 
-def jd_sum_pdf_en(_tmp_pdf):
+def jd_sum_pdf_en(_tmp_pdf, _type):
     _sum_en, _sum_en_steps = "", ""
-    _sum_en, _sum_en_steps = sum_pdf(_tmp_pdf, 'refine')
+    _chain_type = "stuff"
+    if _type == "精准":
+        _chain_type = "refine"
+    _sum_en, _sum_en_steps = sum_pdf(_tmp_pdf, _chain_type)
     return _sum_en, _sum_en_steps
 
 def jd_trans_en2zh(_en):
@@ -150,9 +153,12 @@ def jd_trans_en2zh(_en):
     _zh = trans_en2zh(_en)
     return _zh
 
-def jd_qa_pdf(_tmp_pdf, _ask):
+def jd_qa_pdf(_tmp_pdf, _ask, _type):
     _ans, _steps = "", ""
-    _ans, _steps = qa_pdf(_tmp_pdf, _ask, 'refine')
+    _chain_type = "stuff"
+    if _type == "精准":
+        _chain_type = "refine"
+    _ans, _steps = qa_pdf(_tmp_pdf, _ask, _chain_type)
     return _ans, _steps
 
 
@@ -242,11 +248,18 @@ with gr.Blocks(title=_description) as demo:
 
     with gr.Tab(label="精读（总结/问答）"):
         jd_upload = gr.File(label="Upload a PDF file", file_count="multiple", type="file", interactive=True, visible=True)
+        jd_radio = gr.Radio(
+            ["快速", "精准"],
+            label="分析模式",
+            info="",
+            type="value",
+            value="快速"
+        )
         jd_tmp_pdf = gr.Textbox(label="digest", visible=False)
         jd_start_btn = gr.Button("总结全文", variant="secondary", visible=True)
-        jd_sum_en = gr.Textbox(label="Summary", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
+        jd_sum_en = gr.Textbox(label="Summary", placeholder="...", lines=15, max_lines=10, interactive=False, visible=True)
         jd_trans_btn = gr.Button("翻译", variant="secondary", visible=True)
-        jd_sum_zh = gr.Textbox(label="文章总结", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
+        jd_sum_zh = gr.Textbox(label="文章总结", placeholder="...", lines=15, max_lines=10, interactive=False, visible=True)
         with gr.Row():
             jd_ask = gr.Textbox(label="问题（英文问，英文答；中文问，中文答）")
         jd_ask_btn = gr.Button("提问")
@@ -264,7 +277,7 @@ with gr.Blocks(title=_description) as demo:
         )
         jd_start_btn.click(
             jd_sum_pdf_en,
-            [jd_tmp_pdf],
+            [jd_tmp_pdf, jd_radio],
             [jd_sum_en, jd_steps]
         )
         jd_sum_en.change(
@@ -284,7 +297,7 @@ with gr.Blocks(title=_description) as demo:
         )
         jd_ask_btn.click(
             jd_qa_pdf,
-            [jd_tmp_pdf, jd_ask],
+            [jd_tmp_pdf, jd_ask, jd_radio],
             [jd_ans, jd_steps]
         )
 
