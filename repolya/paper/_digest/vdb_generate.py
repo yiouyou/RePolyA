@@ -14,10 +14,21 @@ text_chunk_size = 3000
 text_chunk_overlap = 300
 
 ##### docs
+def clean_txt(_txt):
+    _1 = re.sub(r"\n+", "\n", _txt)
+    _2 = re.sub(r"\t+\n", "\n", _1)
+    _3 = re.sub(r" +\n", "\n", _2)
+    _clean_txt = re.sub(r"\n+", "\n", _3)
+    return _clean_txt
+
 def get_docs_from_pdf(_fp):
     _f = os.path.basename(_fp)
+    logger_paper.info(f"{_f}")
     loader = PyMuPDFLoader(str(_fp))
     docs = loader.load()
+    for doc in docs:
+        doc.page_content = clean_txt(doc.page_content)
+        # print(doc.metadata)
     logger_paper.info(f"load {len(docs)} pages")
     return docs
 
@@ -72,19 +83,9 @@ def embedding_to_faiss_OpenAI(_docs, _db_name):
 
 
 ##### faiss
-def clean_txt(_txt):
-    _1 = re.sub(r"\n+", "\n", _txt)
-    _2 = re.sub(r"\t+\n", "\n", _1)
-    _3 = re.sub(r" +\n", "\n", _2)
-    _clean_txt = re.sub(r"\n+", "\n", _3)
-    return _clean_txt
-
 def pdf_to_faiss_OpenAI(_fp, _db_name):
     docs = get_docs_from_pdf(_fp)
     if len(docs) > 0:
-        for doc in docs:
-            doc.page_content = clean_txt(doc.page_content)
-            # print(doc.metadata)
         logger_paper.info(f"docs: {len(docs)}")
         splited_docs = split_docs_recursive(docs)
         logger_paper.info(f"splited_docs: {len(splited_docs)}")
@@ -95,9 +96,6 @@ def pdf_to_faiss_OpenAI(_fp, _db_name):
 def pdf_to_faiss_ST(_fp, _db_name):
     docs = get_docs_from_pdf(_fp)
     if len(docs) > 0:
-        for doc in docs:
-            doc.page_content = clean_txt(doc.page_content)
-            # print(doc.metadata)
         logger_paper.info(f"docs: {len(docs)}")
         splited_docs = split_docs_recursive(docs)
         logger_paper.info(f"splited_docs: {len(splited_docs)}")

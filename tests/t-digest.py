@@ -4,7 +4,7 @@ import sys
 sys.path.append(_RePolyA)
 
 from repolya._const import PAPER_PDF
-from repolya.paper.digestpaper import digest_pdf, qa_pdf
+from repolya.paper.digestpaper import digest_pdf, qa_pdf, sum_pdf
 
 
 # _fp = PAPER_PDF / 'Abanades2021ABlooperFA_10.1101_2021.07.26.453747.pdf'
@@ -12,4 +12,8 @@ _fp = PAPER_PDF / 'The company landscape for artificial intelligence in large-mo
 
 # digest_pdf(_fp)
 
-qa_pdf(_fp, 'Whats the paper talking about?', 'stuff')
+# qa_pdf(_fp, 'Whats the paper talking about?', 'stuff')
+
+# sum_pdf(_fp, 'stuff')
+# sum_pdf(_fp, 'map_reduce')
+sum_pdf(_fp, 'refine')

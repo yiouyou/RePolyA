@@ -2,12 +2,29 @@ from repolya._const import PAPER_DIGEST
 from repolya._log import logger_paper
 from repolya.paper._digest.vdb_generate import (
     pdf_to_faiss_OpenAI,
-    pdf_to_faiss_ST
+    pdf_to_faiss_ST,
+    get_docs_from_pdf,
+    split_docs_recursive,
 )
 from repolya.paper._digest.vdb_query import (
     qa_faiss_OpenAI_multi_query,
-    qa_faiss_ST_multi_query
+    qa_faiss_ST_multi_query,
+    pretty_print_docs,
 )
+
+from langchain.chat_models import ChatOpenAI
+from langchain.chains.summarize import load_summarize_chain
+from langchain.document_loaders import PyMuPDFLoader
+from langchain import hub
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.chains import (
+    ReduceDocumentsChain,
+    MapReduceDocumentsChain,
+)
+from langchain.chains.llm import LLMChain
+from langchain.chains.mapreduce import MapReduceChain
+from langchain.chains.combine_documents.stuff import StuffDocumentsChain
+from langchain.callbacks import get_openai_callback
 
 import fitz
 from PIL import Image
@@ -105,21 +122,79 @@ def pdf_to_faiss(_fp):
 
 ##### multi query faiss
 def multi_query_pdf(_fp, _query, _chain_type, _if_lotr):
+    _ans, _steps = "", ""
     _out_dir, _fn = get_out_dir(_fp)
     if _if_lotr:
         ### sentence-transformers
         _db_name_st = str(_out_dir / 'faiss_st')
         if os.path.exists(_db_name_st):
-            qa_faiss_ST_multi_query(_query, _db_name_st, _chain_type)
+            _ans, _steps = qa_faiss_ST_multi_query(_query, _db_name_st, _chain_type)
         else:
             logger_paper.info(f"no faiss_st yet")
     else:
         ### openai
         _db_name_openai = str(_out_dir / 'faiss_openai')
         if os.path.exists(_db_name_openai):
-            qa_faiss_OpenAI_multi_query(_query, _db_name_openai, _chain_type)
+            _ans, _steps = qa_faiss_OpenAI_multi_query(_query, _db_name_openai, _chain_type)
         else:
             logger_paper.info(f"no faiss_openai yet")
+    return [_ans, _steps]
+
+
+##### summarize pdf
+def summarize_pdf(_fp, _chain_type):
+    _ans, _steps = "", ""
+    _docs = get_docs_from_pdf(_fp)
+    _split_docs = split_docs_recursive(_docs)
+    if _chain_type == 'stuff':
+        llm = ChatOpenAI(model_name="gpt-3.5-turbo-16k", temperature=0)
+        chain = load_summarize_chain(llm, chain_type="stuff")
+        with get_openai_callback() as cb:
+            _ans = chain.run(_docs)
+            _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
+            _steps = f"{_token_cost}\n\n" + f"{'=' * 60} docs\n" + pretty_print_docs(_docs)
+            logger_paper.info(f"[stuff] {_ans}")
+            logger_paper.info(f"[stuff] {_token_cost}")
+            logger_paper.debug(f"[stuff] {_steps}")
+    elif _chain_type == 'map_reduce':
+        llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
+        map_prompt = hub.pull("rlm/map-prompt")
+        map_chain = LLMChain(llm=llm, prompt=map_prompt)
+        reduce_prompt = hub.pull("rlm/reduce-prompt")
+        reduce_chain = LLMChain(llm=llm, prompt=reduce_prompt)
+        combine_documents_chain = StuffDocumentsChain(
+            llm_chain=reduce_chain,
+            document_variable_name="doc_summaries"
+        )
+        reduce_documents_chain = ReduceDocumentsChain(
+            combine_documents_chain=combine_documents_chain,
+            collapse_documents_chain=combine_documents_chain,
+            token_max=4000,
+        )
+        map_reduce_chain = MapReduceDocumentsChain(
+            llm_chain=map_chain,
+            reduce_documents_chain=reduce_documents_chain,
+            document_variable_name="docs",
+            return_intermediate_steps=False,
+        )
+        with get_openai_callback() as cb:
+            _ans = map_reduce_chain.run(_split_docs)
+            _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
+            _steps = f"{_token_cost}\n\n" + f"{'=' * 60} split docs\n" + pretty_print_docs(_split_docs)
+            logger_paper.info(f"[map_reduce] {_ans}")
+            logger_paper.info(f"[map_reduce] {_token_cost}")
+            logger_paper.debug(f"[map_reduce] {_steps}")
+    elif _chain_type == 'refine':
+        llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
+        chain = load_summarize_chain(llm, chain_type="refine")
+        with get_openai_callback() as cb:
+            _ans = chain.run(_split_docs)
+            _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
+            _steps = f"{_token_cost}\n\n" + f"{'=' * 60} split docs\n" + pretty_print_docs(_split_docs)
+            logger_paper.info(f"[refine] {_ans}")
+            logger_paper.info(f"[refine] {_token_cost}")
+            logger_paper.debug(f"[refine] {_steps}")
+    return [_ans, _steps]
 
 
 ##### 转换后行文顺序有问题

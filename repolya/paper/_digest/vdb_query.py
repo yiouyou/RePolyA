@@ -157,7 +157,7 @@ def qa_faiss_OpenAI_multi_query(_query, _db_name, _chain_type):
         _steps += f"\n\n{'=' * 60}docs\n" + _pretty_docs
         logger_paper.info(f"A: {_ans['output_text']}")
         logger_paper.info(f"[{_chain_type}] {_token_cost}")
-        logger_paper.debug(f"{_steps}")
+        logger_paper.debug(f"[{_chain_type}] {_steps}")
     return [_ans, _steps]
 
 
@@ -268,6 +268,6 @@ def qa_faiss_ST_multi_query(_query, _db_name, _chain_type):
         _steps += f"\n\n{'=' * 60} docs\n" + _pretty_docs
         logger_paper.info(f"A: {_ans['output_text']}")
         logger_paper.info(f"[{_chain_type}(lotr)] {_token_cost}")
-        logger_paper.debug(f"{_steps}")
+        logger_paper.debug(f"[{_chain_type}(lotr)] {_steps}")
     return [_ans, _steps]
 
