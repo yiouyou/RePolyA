@@ -158,7 +158,7 @@ def qa_faiss_OpenAI_multi_query(_query, _db_name, _chain_type):
         logger_paper.info(f"A: {_ans['output_text']}")
         logger_paper.info(f"[{_chain_type}] {_token_cost}")
         logger_paper.debug(f"[{_chain_type}] {_steps}")
-    return [_ans, _steps]
+    return [_ans['output_text'], _steps]
 
 
 ##### ST retriever
@@ -269,5 +269,5 @@ def qa_faiss_ST_multi_query(_query, _db_name, _chain_type):
         logger_paper.info(f"A: {_ans['output_text']}")
         logger_paper.info(f"[{_chain_type}(lotr)] {_token_cost}")
         logger_paper.debug(f"[{_chain_type}(lotr)] {_steps}")
-    return [_ans, _steps]
+    return [_ans['output_text'], _steps]
 

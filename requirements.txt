@@ -2,6 +2,7 @@ anthropic
 arxiv
 asyncio
 council-ai
+doctran
 duckduckgo-search
 faiss-cpu
 fastapi
@@ -13,7 +14,7 @@ loguru
 markdownify
 openai
 openpyxl
-pydantic==1.10.8
+pydantic==1.10.9
 python-dotenv
 python_docx
 setuptools
