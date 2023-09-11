@@ -316,15 +316,12 @@ with gr.Blocks(title=_description) as demo:
 
 
 # from fastapi import FastAPI, Response
-# import json
 # app = FastAPI()
-
 # @app.get("/health")
 # def index():
 #     return {"message": "active"}
-
-# app = gr.mount_gradio_app(app, demo.queue(), path="/")
-## uvicorn ui_cn_pa:app --reload
+# app = gr.mount_gradio_app(app, demo.queue(concurrency_count=1), path="/")
+# # uvicorn ui_cpp:app --host 0.0.0.0 --port 8899 --reload
 
 
 if __name__ == "__main__":
@@ -334,27 +331,31 @@ if __name__ == "__main__":
         _port = int(sys.argv[1])
     else:
         _port = 7788
-    demo.queue(concurrency_count=1).launch(
-        server_name="0.0.0.0",
-        server_port=_port,
-        share=False,
-        favicon_path="./asset/favicon_wa.png",
-        # auth = ('sz','1123'),
-        # auth_message= "欢迎回来！",
-        ssl_verify=False,
-        # ssl_keyfile="./localhost+2-key.pem",
-        # ssl_certfile="./localhost+2.pem",
-        # ssl_keyfile="./ssl/key.pem",
-        # ssl_certfile="./ssl/cert.pem",
-    )
+
+    while True:
+        try:
+            demo.queue(concurrency_count=1).launch(
+                server_name="0.0.0.0",
+                server_port=_port,
+                share=False,
+                favicon_path="./asset/favicon_wa.png",
+                # auth = ('sz','1123'),
+                # auth_message= "欢迎回来！",
+                ssl_verify=False,
+                # ssl_keyfile="./ssl/key.pem",
+                # ssl_certfile="./ssl/cert.pem",
+            )
+        except Exception as e:
+            logger_paper.error(f"{e}")
+            continue
 
     # import uvicorn
     # uvicorn.run(
     #     app,
     #     host="0.0.0.0",
-    #     port=7788,
-    #     ssl_keyfile="./localhost+2-key.pem",
-    #     ssl_certfile="./localhost+2.pem",
+    #     port=_port,
+    #     ssl_keyfile="./ssl/key.pem",
+    #     ssl_certfile="./ssl/cert.pem",
     #     reload=True,
     #     debug=True
     # )
