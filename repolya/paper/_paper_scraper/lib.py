@@ -492,6 +492,8 @@ async def a_search_papers(
                 # logger.info(f"\n\n{paper}\n\n")
 # {'paperId': 'ff1ac706f9ce58c79053c8d5707508aeef02896e', 'externalIds': {'MAG': '3005994291', 'DOI': '10.1182/blood.2019003342', 'CorpusId': 211078305, 'PubMed': '32040549'}, 'url': 'https://www.semanticscholar.org/paper/ff1ac706f9ce58c79053c8d5707508aeef02896e', 'title': 'A T CELL REDIRECTING BISPECIFIC G-PROTEIN COUPLED RECEPTOR CLASS 5 MEMBER DxCD3 ANTIBODY TO TREAT MULTIPLE MYELOMA.', 'year': 2020, 'citationCount': 59, 'influentialCitationCount': 4, 'isOpenAccess': True, 'openAccessPdf': {'url': 'https://ashpublications.org/blood/article-pdf/135/15/1232/1723256/bloodbld2019003342.pdf', 'status': 'BRONZE'}, 'citationStyles': {'bibtex': '@Article{Pillarisetti2020ATC,\n author = {K. Pillarisetti and S. Edavettal and M. Mendonca and Yingzhe Li and M. Tornetta and A. Babich and Nate Majewski and Matt Husovsky and D. Reeves and Eileen Walsh and D. Chin and L. Luistro and J. Joseph and G. Chu and K. Packman and Shoba Shetty and Y. Elsayed and R. Attar and F. Gaudet},\n booktitle = {Blood},\n journal = {Blood},\n title = {A T CELL REDIRECTING BISPECIFIC G-PROTEIN COUPLED RECEPTOR CLASS 5 MEMBER DxCD3 ANTIBODY TO TREAT MULTIPLE MYELOMA.},\n year = {2020}\n}\n'}}
                 # logger.info(f"\n\n{paper.keys()}\n\n")
+                if 'DOI' not in paper["externalIds"]:
+                    return None, None
                 _pdf = paper["externalIds"]["DOI"].replace('/', '_')
                 _an = parse_bibtex_an(paper["citationStyles"]["bibtex"])
                 path = os.path.join(pdir, f'{_an}_{_pdf}.pdf')
