@@ -208,8 +208,8 @@ with gr.Blocks(title=_description) as demo:
         fd_downloaded_pdf = gr.File(label="已获取", file_count="single", type="file", file_types=['.pdf'], interactive=False)
         fd_ask = gr.Textbox(label="问题（英文问，英文答；中文问，中文答）")
         fd_ask_btn = gr.Button("3.提问")
-        fd_ans = gr.Textbox(label="回答")
-        fd_context = gr.Textbox(label="引文")
+        fd_ans = gr.Textbox(label="回答", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
+        fd_context = gr.Textbox(label="引文", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
         fd_topic.change(
             chg_btn_color_if_input,
             [fd_topic],
