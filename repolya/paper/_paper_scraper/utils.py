@@ -3,7 +3,7 @@ import os
 import time
 from typing import Optional
 import aiohttp
-import pypdf
+# import pypdf
 
 
 class ThrottledClientSession(aiohttp.ClientSession):
@@ -107,10 +107,14 @@ class ThrottledClientSession(aiohttp.ClientSession):
 def check_pdf(path, verbose=False):
     if not os.path.exists(path):
         return False
+    # try:
+    #     pdf = pypdf.PdfReader(path)
+    # except (pypdf.errors.PyPdfError, ValueError) as e:
+    #     if verbose:
+    #         print(f"PDF at {path} is corrupt: {e}")
+    #     return False
     try:
-        pdf = pypdf.PdfReader(path)
-    except (pypdf.errors.PyPdfError, ValueError) as e:
-        if verbose:
-            print(f"PDF at {path} is corrupt: {e}")
-        return False
+        pdf = fitz.open(path)
+    except Exception as e:
+        print(f"PDF at {path} is corrupt: {e}")
     return True

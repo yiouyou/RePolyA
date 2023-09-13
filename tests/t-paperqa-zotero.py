@@ -7,7 +7,7 @@ from repolya.paper._paperqa.contrib import ZoteroDB
 from repolya.paper._paperqa import Docs
 from repolya._const import PAPER_PDF
 
-_storage = PAPER_PDF / 'zotero'
+_storage = PAPER_PDF
 
 library_id = os.getenv("ZOTERO_USER_ID")
 print(f"zotero ID: {library_id}")
@@ -50,5 +50,5 @@ while True:
     # 执行查询并获取答案
     answer = docs.query(user_query)
     # 打印答案
-    print("Answer:", answer)
+    print(answer)
 

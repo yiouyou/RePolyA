@@ -145,10 +145,12 @@ class ZoteroDB(zotero.Zotero):
         if type(item) != dict:
             raise TypeError("Pass the full item of the paper. The item must be a dict.") 
         pdf_fn = _get_citation_key(item) + ".pdf"
+        if not os.path.exists(self.storage):
+            os.makedirs(self.storage)
         pdf_path = self.storage / pdf_fn
+        print(pdf_path)
         _got = False
         if not pdf_path.exists():
-            print(f"\nDownloading PDF: {pdf_fn}")
             self.logger.info(f"Downloading PDF: {pdf_fn}")
             if 'title' in item['data']:
                 _title = item['data']['title']
@@ -158,18 +160,16 @@ class ZoteroDB(zotero.Zotero):
                 # *** analysis | Nature Communications
                 if " - " in _title:
                     _title = _title.split(" - ")[0]
-                print(f"> get '{_title}'")
                 _got = title2paper(_title, pdf_fn)
                 if not _got:
                     if 'DOI' in item['data']:
                         _doi = item['data']['DOI']
-                        print(f"> get '{_doi}'")
                         _got = doi2paper(_doi, pdf_fn)
         else:
-            print(f"\nDownloaded PDF: {pdf_fn}")
-            self.logger.info(f"Downloaded PDF: {pdf_fn}")
+            self.logger.info(f"Had PDF: {pdf_fn}")
             _got = True
         if _got:
+            logger_paper.info(f"Got {pdf_path}")
             return pdf_path
         else:
             return None

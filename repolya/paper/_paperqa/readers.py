@@ -15,8 +15,10 @@ def parse_pdf_fitz(path: Path, doc: Doc, chunk_chars: int, overlap: int) -> List
     pages: List[str] = []
     texts: List[Text] = []
     for i in range(file.page_count):
-        page = file.load_page(i)
-        split += page.get_text("text", sort=True)
+        # page = file.load_page(i)
+        page = file[i]
+        # split += page.get_text("text", sort=True)
+        split += page.get_text("text") # flags=fitz.TEXT_INHIBIT_SPACES, sort=True
         pages.append(str(i + 1))
         # split could be so long it needs to be split
         # into multiple chunks. Or it could be so short

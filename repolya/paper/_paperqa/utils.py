@@ -4,7 +4,8 @@ import re
 import string
 from typing import BinaryIO, List
 
-import pypdf
+# import pypdf
+import fitz
 from langchain.base_language import BaseLanguageModel
 
 from repolya.paper._paperqa.types import StrPath
@@ -65,12 +66,15 @@ def strings_similarity(s1: str, s2: str) -> float:
 def count_pdf_pages(file_path: StrPath) -> int:
     num_pages = 0
     try:
-        pdf_reader = pypdf.PdfReader(file_path)
-        num_pages = len(pdf_reader.pages)
+        # pdf_reader = pypdf.PdfReader(file_path)
+        # num_pages = len(pdf_reader.pages)
+        _pdf = fitz.open(file_path)
+        num_pages = len(_pdf)
         logger_paper.info(f"{str(file_path)}\n{num_pages} pages")
+        _pdf.close()
     except Exception as e:
-        print(f"Failed to read PDF: {e}")
-        logger_paper.debug(f"Failed to read PDF: {e}")
+        # print(f"Failed to read PDF: {e}")
+        logger_paper.debug(f"Failed to read PDF and count pages: {e}")
     return num_pages
 
 
