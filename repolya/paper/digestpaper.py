@@ -17,7 +17,8 @@ def digest_pdf(_fp):
     pdf_to_faiss(_fp)
 
 def qa_pdf(_fp, _query, _chain_type):
-    return multi_query_pdf(_fp, _query, _chain_type, True)
+    _if_lotr = False
+    return multi_query_pdf(_fp, _query, _chain_type, _if_lotr)
     
 
 def sum_pdf(_fp, _chain_type):

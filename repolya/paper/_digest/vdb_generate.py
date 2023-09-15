@@ -37,7 +37,7 @@ def get_docs_from_pdf(_fp):
 def split_docs_recursive(_docs):
     ##### default list is ["\n\n", "\n", " ", ""]
     text_splitter = RecursiveCharacterTextSplitter(
-        # Set a really small chunk size, just to show.
+        separators = ["\n\n", "\n", " ", ""],
         chunk_size = text_chunk_size,
         chunk_overlap = text_chunk_overlap,
         length_function = len,
