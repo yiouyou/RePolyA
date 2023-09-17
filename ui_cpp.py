@@ -32,6 +32,9 @@ def chg_btn_color_if_input(_topic):
     else:
         return gr.update(variant="secondary")
 
+def chg_btn_color_if_clear():
+    return gr.update(variant="secondary")
+
 
 ##### search/fetch/ask
 def search_topic_papers(_topic, _N):
@@ -274,6 +277,11 @@ with gr.Blocks(title=_description) as demo:
             jd_digest_pdf,
             [jd_upload],
             [jd_tmp_pdf]
+        )
+        jd_upload.clear(
+            chg_btn_color_if_clear,
+            [],
+            [jd_start_btn]
         )
         jd_tmp_pdf.change(
             chg_btn_color_if_input,
