@@ -19,6 +19,7 @@ def digest_pdf(_fp):
 
 def qa_pdf(_fp, _query, _chain_type):
     _if_lotr = False
+    ### qa_faiss_OpenAI_multi_query, not sentence-transformers (lotr)
     return multi_query_pdf(_fp, _query, _chain_type, _if_lotr)
     
 

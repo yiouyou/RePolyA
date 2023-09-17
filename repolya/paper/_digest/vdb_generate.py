@@ -31,7 +31,7 @@ def get_docs_from_pdf(_fp):
         doc.page_content = clean_txt(doc.page_content)
         # print(doc.metadata)
     logger_paper.info(f"load {len(docs)} pages")
-    return docs, len(docs)
+    return docs
 
 
 ##### split
@@ -70,8 +70,8 @@ def split_text_recursive(_text, _fp):
         _pdf = _m['file_path'].split('/')[-1]
         i.metadata['source'] = f"{_pdf}, s{_n}"
         _n += 1
-    # print(splited_docs)
-    return splited_docs
+    # print(_docs)
+    return _docs
 
 
 ##### embedding

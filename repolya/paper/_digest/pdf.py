@@ -101,7 +101,7 @@ def get_text_from_pdf(_fp):
         _out.append(page_text)
     _fp = os.path.join(_out_dir, _out_txt)
     _text = "========== page ==========\n".join(_out)
-    logger_paper.info(_text)
+    # logger_paper.info(_text)
     with open(_fp, 'w') as wf:
         wf.write(_text)
     logger_paper.info(f"[+] {_out_txt}")
@@ -117,12 +117,12 @@ def pdf_to_faiss(_fp):
         pdf_to_faiss_OpenAI(_fp, _db_name_openai)
     else:
         logger_paper.info(f"Find '{'/'.join(_db_name_openai.split('/')[-2:])}'")
-    ### sentence-transformers
-    _db_name_st = str(_out_dir / 'faiss_st')
-    if not os.path.exists(_db_name_st):
-        pdf_to_faiss_ST(_fp, _db_name_st)
-    else:
-        logger_paper.info(f"Find '{'/'.join(_db_name_st.split('/')[-2:])}'")
+    # ### sentence-transformers
+    # _db_name_st = str(_out_dir / 'faiss_st')
+    # if not os.path.exists(_db_name_st):
+    #     pdf_to_faiss_ST(_fp, _db_name_st)
+    # else:
+    #     logger_paper.info(f"Find '{'/'.join(_db_name_st.split('/')[-2:])}'")
 
 
 ##### multi query faiss
@@ -149,7 +149,8 @@ def multi_query_pdf(_fp, _query, _chain_type, _if_lotr):
 ##### summarize pdf
 def summarize_pdf(_fp, _chain_type):
     _ans, _steps = "", ""
-    _docs, _num_pages = get_docs_from_pdf(_fp)
+    _docs = get_docs_from_pdf(_fp)
+    _num_pages = len(_docs)
     _split_docs = split_docs_recursive(_docs)
     if _chain_type == 'stuff':
         if _num_pages > 20:
