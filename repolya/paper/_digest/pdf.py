@@ -101,7 +101,7 @@ def get_text_from_pdf(_fp):
         _out.append(page_text)
     _fp = os.path.join(_out_dir, _out_txt)
     _text = "========== page ==========\n".join(_out)
-    print(_text)
+    logger_paper.info(_text)
     with open(_fp, 'w') as wf:
         wf.write(_text)
     logger_paper.info(f"[+] {_out_txt}")
