@@ -35,7 +35,7 @@ def get_docs_from_pdf(_fp):
 
 
 ##### split
-def split_docs_recursive(_docs):
+def get_RecursiveCharacterTextSplitter():
     ##### default list is ["\n\n", "\n", " ", ""]
     text_splitter = RecursiveCharacterTextSplitter(
         separators = ["\n\n", "\n", " ", ""],
@@ -45,12 +45,31 @@ def split_docs_recursive(_docs):
         add_start_index = True,
         is_separator_regex = False,
     )
+    return text_splitter
+
+
+def split_docs_recursive(_docs):
+    text_splitter = get_RecursiveCharacterTextSplitter()
     splited_docs = text_splitter.split_documents(_docs)
     for i in splited_docs:
         _m = i.metadata
         _pdf = _m['file_path'].split('/')[-1]
         _page = _m['page']
         i.metadata['source'] = f"{_pdf}, p{_page}"
+    # print(splited_docs)
+    return splited_docs
+
+
+def split_text_recursive(_text, _fp):
+    text_splitter = get_RecursiveCharacterTextSplitter()
+    _docs = text_splitter.create_documents([_text])
+    _n = 0
+    for i in _docs:
+        _m = i.metadata
+        _m['file_path'] = _fp
+        _pdf = _m['file_path'].split('/')[-1]
+        i.metadata['source'] = f"{_pdf}, s{_n}"
+        _n += 1
     # print(splited_docs)
     return splited_docs
 

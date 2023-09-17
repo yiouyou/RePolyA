@@ -5,12 +5,14 @@ from repolya.paper._digest.vdb_generate import (
     pdf_to_faiss_ST,
     get_docs_from_pdf,
     split_docs_recursive,
+    split_text_recursive,
 )
 from repolya.paper._digest.vdb_query import (
     qa_faiss_OpenAI_multi_query,
     qa_faiss_ST_multi_query,
     pretty_print_docs,
 )
+from repolya.paper._digest.split_sections import clean_and_split
 
 from langchain.chat_models import ChatOpenAI
 from langchain.chains.summarize import load_summarize_chain
@@ -97,10 +99,13 @@ def get_text_from_pdf(_fp):
         page = _pdf[page_index]
         page_text = page.get_text("text") # flags=fitz.TEXT_INHIBIT_SPACES, sort=True
         _out.append(page_text)
-    with open(os.path.join(_out_dir, _out_txt), 'w') as wf:
-        wf.write("".join(_out))
+    _fp = os.path.join(_out_dir, _out_txt)
+    _text = "========== page ==========\n".join(_out)
+    print(_text)
+    with open(_fp, 'w') as wf:
+        wf.write(_text)
     logger_paper.info(f"[+] {_out_txt}")
-    return _out
+    return _out, _fp
 
 
 ##### generate faiss
@@ -156,6 +161,87 @@ def summarize_pdf(_fp, _chain_type):
                 _ans = chain.run(_docs)
                 _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
                 _steps = f"{_token_cost}\n\n" + f"{'=' * 60} docs\n" + pretty_print_docs(_docs)
+                logger_paper.info(f"[stuff] {_ans}")
+                logger_paper.info(f"[stuff] {_token_cost}")
+                logger_paper.debug(f"[stuff] {_steps}")
+    elif _chain_type == 'map_reduce':
+        llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
+        map_prompt = hub.pull("rlm/map-prompt")
+        map_chain = LLMChain(llm=llm, prompt=map_prompt)
+        reduce_prompt = hub.pull("rlm/reduce-prompt")
+        reduce_chain = LLMChain(llm=llm, prompt=reduce_prompt)
+        combine_documents_chain = StuffDocumentsChain(
+            llm_chain=reduce_chain,
+            document_variable_name="doc_summaries"
+        )
+        reduce_documents_chain = ReduceDocumentsChain(
+            combine_documents_chain=combine_documents_chain,
+            collapse_documents_chain=combine_documents_chain,
+            token_max=4000,
+        )
+        map_reduce_chain = MapReduceDocumentsChain(
+            llm_chain=map_chain,
+            reduce_documents_chain=reduce_documents_chain,
+            document_variable_name="docs",
+            return_intermediate_steps=False,
+        )
+        with get_openai_callback() as cb:
+            _ans = map_reduce_chain.run(_split_docs)
+            _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
+            _steps = f"{_token_cost}\n\n" + f"{'=' * 60} split docs\n" + pretty_print_docs(_split_docs)
+            logger_paper.info(f"[map_reduce] {_ans}")
+            logger_paper.info(f"[map_reduce] {_token_cost}")
+            logger_paper.debug(f"[map_reduce] {_steps}")
+    elif _chain_type == 'refine':
+        llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
+        chain = load_summarize_chain(llm, chain_type="refine")
+        with get_openai_callback() as cb:
+            _ans = chain.run(_split_docs)
+            _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
+            _steps = f"{_token_cost}\n\n" + f"{'=' * 60} split docs\n" + pretty_print_docs(_split_docs)
+            logger_paper.info(f"[refine] {_ans}")
+            logger_paper.info(f"[refine] {_token_cost}")
+            logger_paper.debug(f"[refine] {_steps}")
+    return [_ans, _steps]
+
+
+##### summarize pdf_text
+def get_pdf_text_for_digest(_fp):
+    _out_dir, _fn = get_out_dir(_fp)
+    _out_txt = f"{_fn}.txt"
+    _fp = os.path.join(_out_dir, _out_txt)
+    if not os.path.exists(_fp):
+        get_text_from_pdf(_fp)
+    with open(_fp, 'r') as rf:
+        _fp_text = rf.read()
+    _sections = clean_and_split(_fp_text)
+    _sec = []
+    ### del References
+    for i in _sections:
+        if i.lower() != "references":
+            if i == "_PRE":
+                _sec.append(f"{_sections[i]}")
+            else:
+                _sec.append(f"{i}\n{_sections[i]}")
+    _pdf_text = "\n".join(_sec)
+    return _pdf_text
+
+
+def summarize_pdf_text(_fp, _chain_type):
+    _ans, _steps = "", ""
+    _pdf_text = get_pdf_text_for_digest(_fp)
+    _num_text = len(_pdf_text)
+    _split_docs = split_text_recursive(_pdf_text, _fp)
+    if _chain_type == 'stuff':
+        if _num_text > 12000:
+            _ans = f"文章太长，多达{_num_text}字符，无法使用'快速'模式，请使用'精准'模式。"
+        else:
+            llm = ChatOpenAI(model_name="gpt-3.5-turbo-16k", temperature=0)
+            chain = load_summarize_chain(llm, chain_type="stuff")
+            with get_openai_callback() as cb:
+                _ans = chain.run(_split_docs)
+                _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
+                _steps = f"{_token_cost}\n\n" + f"{'=' * 60} docs\n" + pretty_print_docs(_split_docs)
                 logger_paper.info(f"[stuff] {_ans}")
                 logger_paper.info(f"[stuff] {_token_cost}")
                 logger_paper.debug(f"[stuff] {_steps}")

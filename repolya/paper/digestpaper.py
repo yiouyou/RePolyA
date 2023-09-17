@@ -5,6 +5,7 @@ from repolya.paper._digest.pdf import (
     pdf_to_faiss,
     multi_query_pdf,
     summarize_pdf,
+    summarize_pdf_text,
 )
 from repolya.paper._digest.trans import trans_to
 
@@ -22,7 +23,8 @@ def qa_pdf(_fp, _query, _chain_type):
     
 
 def sum_pdf(_fp, _chain_type):
-    return summarize_pdf(_fp, _chain_type)
+    # return summarize_pdf(_fp, _chain_type)
+    return summarize_pdf_text(_fp, _chain_type)
 
 
 def trans_en2zh(_en):
