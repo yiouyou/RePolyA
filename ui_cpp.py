@@ -20,6 +20,19 @@ from repolya._const import LOG_ROOT, PAPER_PDF
 _writer_log = LOG_ROOT / 'writer.log'
 
 
+def contains_chinese(_str):
+    for c in _str:
+        if '\u4e00' <= c <= '\u9fff':
+            return True
+    return False
+
+def chg_btn_color_if_en_input(_topic):
+    if not contains_chinese(_topic):
+        if _topic:
+            return gr.update(variant="primary")
+        else:
+            return gr.update(variant="secondary")
+
 def chg_btn_color_if_input(_topic):
     if _topic:
         return gr.update(variant="primary")
@@ -281,7 +294,7 @@ with gr.Blocks(title=_description) as demo:
             [jd_sum_en, jd_steps]
         )
         jd_sum_en.change(
-            chg_btn_color_if_input,
+            chg_btn_color_if_en_input,
             [jd_sum_en],
             [jd_trans_btn]
         )

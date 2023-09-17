@@ -23,6 +23,7 @@ def clean_txt(_txt):
 
 def get_docs_from_pdf(_fp):
     _f = os.path.basename(_fp)
+    logger_paper.info(f"{_fp}")
     logger_paper.info(f"{_f}")
     loader = PyMuPDFLoader(str(_fp))
     docs = loader.load()
@@ -30,7 +31,7 @@ def get_docs_from_pdf(_fp):
         doc.page_content = clean_txt(doc.page_content)
         # print(doc.metadata)
     logger_paper.info(f"load {len(docs)} pages")
-    return docs
+    return docs, len(docs)
 
 
 ##### split

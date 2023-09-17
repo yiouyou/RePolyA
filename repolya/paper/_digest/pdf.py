@@ -111,13 +111,13 @@ def pdf_to_faiss(_fp):
     if not os.path.exists(_db_name_openai):
         pdf_to_faiss_OpenAI(_fp, _db_name_openai)
     else:
-        logger_paper.info(f"Find {'/'.join(_db_name_openai.split('/')[-2:])}")
+        logger_paper.info(f"Find '{'/'.join(_db_name_openai.split('/')[-2:])}'")
     ### sentence-transformers
     _db_name_st = str(_out_dir / 'faiss_st')
     if not os.path.exists(_db_name_st):
         pdf_to_faiss_ST(_fp, _db_name_st)
     else:
-        logger_paper.info(f"Find {'/'.join(_db_name_st.split('/')[-2:])}")
+        logger_paper.info(f"Find '{'/'.join(_db_name_st.split('/')[-2:])}'")
 
 
 ##### multi query faiss
@@ -144,18 +144,21 @@ def multi_query_pdf(_fp, _query, _chain_type, _if_lotr):
 ##### summarize pdf
 def summarize_pdf(_fp, _chain_type):
     _ans, _steps = "", ""
-    _docs = get_docs_from_pdf(_fp)
+    _docs, _num_pages = get_docs_from_pdf(_fp)
     _split_docs = split_docs_recursive(_docs)
     if _chain_type == 'stuff':
-        llm = ChatOpenAI(model_name="gpt-3.5-turbo-16k", temperature=0)
-        chain = load_summarize_chain(llm, chain_type="stuff")
-        with get_openai_callback() as cb:
-            _ans = chain.run(_docs)
-            _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
-            _steps = f"{_token_cost}\n\n" + f"{'=' * 60} docs\n" + pretty_print_docs(_docs)
-            logger_paper.info(f"[stuff] {_ans}")
-            logger_paper.info(f"[stuff] {_token_cost}")
-            logger_paper.debug(f"[stuff] {_steps}")
+        if _num_pages > 20:
+            _ans = f"文章太长，多达{_num_pages}页，无法使用'快速'模式，请使用'精准'模式。"
+        else:
+            llm = ChatOpenAI(model_name="gpt-3.5-turbo-16k", temperature=0)
+            chain = load_summarize_chain(llm, chain_type="stuff")
+            with get_openai_callback() as cb:
+                _ans = chain.run(_docs)
+                _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
+                _steps = f"{_token_cost}\n\n" + f"{'=' * 60} docs\n" + pretty_print_docs(_docs)
+                logger_paper.info(f"[stuff] {_ans}")
+                logger_paper.info(f"[stuff] {_token_cost}")
+                logger_paper.debug(f"[stuff] {_steps}")
     elif _chain_type == 'map_reduce':
         llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
         map_prompt = hub.pull("rlm/map-prompt")
