@@ -26,13 +26,6 @@ def contains_chinese(_str):
             return True
     return False
 
-def chg_btn_color_if_en_input(_topic):
-    if not contains_chinese(_topic):
-        if _topic:
-            return gr.update(variant="primary")
-        else:
-            return gr.update(variant="secondary")
-
 def chg_btn_color_if_input(_topic):
     if _topic:
         return gr.update(variant="primary")
@@ -153,18 +146,20 @@ def jd_digest_pdf(_tmp_path):
         raise gr.Error("ERROR: can only upload ONE pdf file")
     return _tmp_pdf
 
-def jd_sum_pdf_en(_tmp_pdf, _type):
-    _sum_en, _sum_en_steps = "", ""
+def jd_sum_pdf(_tmp_pdf, _type):
+    _sum, _sum_steps = "", ""
     _chain_type = "stuff"
     if _type == "精准":
         _chain_type = "refine"
     _sum_en, _sum_en_steps = sum_pdf(_tmp_pdf, _chain_type)
-    return _sum_en, _sum_en_steps
-
-def jd_trans_en2zh(_en):
-    _zh = ""
-    _zh = trans_en2zh(_en)
-    return _zh
+    if not contains_chinese(_sum_en):
+        _sum_zh = trans_en2zh(_sum_en)
+        _sum = _sum_en +"\n"+ '-'*40 +"\n"+ _sum_zh
+        _sum_steps = _sum_en_steps
+    else:
+        _sum = _sum_en
+        _sum_steps = _sum_en_steps
+    return _sum, _sum_steps
 
 def jd_qa_pdf(_tmp_pdf, _ask, _type):
     _ans, _steps = "", ""
@@ -181,7 +176,6 @@ def jd_qa_pdf(_tmp_pdf, _ask, _type):
 #         wf.write('')
 #     _text, _file = generated_text(_topic)
 #     return [_text, gr.update(value=_file)]
-
 
 # def read_logs():
 #     ### read log
@@ -270,9 +264,7 @@ with gr.Blocks(title=_description) as demo:
         )
         jd_tmp_pdf = gr.Textbox(label="digest", visible=False)
         jd_start_btn = gr.Button("总结全文", variant="secondary", visible=True)
-        jd_sum_en = gr.Textbox(label="Summary", placeholder="...", lines=15, max_lines=10, interactive=False, visible=True)
-        jd_trans_btn = gr.Button("翻译", variant="secondary", visible=True)
-        jd_sum_zh = gr.Textbox(label="文章总结", placeholder="...", lines=15, max_lines=10, interactive=False, visible=True)
+        jd_sum = gr.Textbox(label="Summary|文章总结", placeholder="...", lines=15, max_lines=10, interactive=False, visible=True)
         with gr.Row():
             jd_ask = gr.Textbox(label="问题（英文问，英文答；中文问，中文答）")
         jd_ask_btn = gr.Button("提问")
@@ -289,19 +281,9 @@ with gr.Blocks(title=_description) as demo:
             [jd_start_btn]
         )
         jd_start_btn.click(
-            jd_sum_pdf_en,
+            jd_sum_pdf,
             [jd_tmp_pdf, jd_radio],
-            [jd_sum_en, jd_steps]
-        )
-        jd_sum_en.change(
-            chg_btn_color_if_en_input,
-            [jd_sum_en],
-            [jd_trans_btn]
-        )
-        jd_trans_btn.click(
-            jd_trans_en2zh,
-            [jd_sum_en],
-            [jd_sum_zh]
+            [jd_sum, jd_steps]
         )
         jd_ask.change(
             chg_btn_color_if_input,
