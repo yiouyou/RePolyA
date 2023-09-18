@@ -11,7 +11,7 @@ def chat_predict_openai(message, history):
         history_openai_format.append({"role": "assistant", "content":assistant})
     history_openai_format.append({"role": "user", "content": message})
     response = openai.ChatCompletion.create(
-        model='gpt-3.5-turbo',
+        model='gpt-4',
         messages= history_openai_format,         
         temperature=0,
         stream=True

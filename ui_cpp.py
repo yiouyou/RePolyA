@@ -196,7 +196,7 @@ with gr.Blocks(title=_description) as demo:
     fd_papers = gr.State([])
     fd_PDFs = gr.State([])
 
-    with gr.Tab(label = "Chat3.5"):
+    with gr.Tab(label = "Chat4"):
         gr.ChatInterface(
             fn=chat_predict_openai,
             submit_btn="提交",
