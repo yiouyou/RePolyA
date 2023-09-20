@@ -20,12 +20,6 @@ from repolya._const import LOG_ROOT, PAPER_PDF
 _writer_log = LOG_ROOT / 'writer.log'
 
 
-def contains_chinese(_str):
-    for c in _str:
-        if '\u4e00' <= c <= '\u9fff':
-            return True
-    return False
-
 def chg_btn_color_if_input(_topic):
     if _topic:
         return gr.update(variant="primary")
@@ -154,14 +148,7 @@ def jd_sum_pdf(_tmp_pdf, _type):
     _chain_type = "stuff"
     if _type == "精准":
         _chain_type = "refine"
-    _sum_en, _sum_en_steps = sum_pdf(_tmp_pdf, _chain_type)
-    if not contains_chinese(_sum_en):
-        _sum_zh = trans_en2zh(_sum_en)
-        _sum = _sum_en +"\n"+ '-'*40 +"\n"+ _sum_zh
-        _sum_steps = _sum_en_steps
-    else:
-        _sum = _sum_en
-        _sum_steps = _sum_en_steps
+    _sum, _sum_steps = sum_pdf(_tmp_pdf, _chain_type)
     return _sum, _sum_steps
 
 def jd_qa_pdf(_tmp_pdf, _ask, _type):

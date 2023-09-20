@@ -4,7 +4,6 @@ from repolya.paper._digest.pdf import (
     get_text_from_pdf,
     pdf_to_faiss,
     multi_query_pdf,
-    summarize_pdf,
     summarize_pdf_text,
 )
 from repolya.paper._digest.trans import trans_to
@@ -24,9 +23,14 @@ def qa_pdf(_fp, _query, _chain_type):
     
 
 def sum_pdf(_fp, _chain_type):
-    # return summarize_pdf(_fp, _chain_type)
     return summarize_pdf_text(_fp, _chain_type)
 
+
+def contains_chinese(_str):
+    for c in _str:
+        if '\u4e00' <= c <= '\u9fff':
+            return True
+    return False
 
 def trans_en2zh(_en):
     _zh = asyncio.run(trans_to(_en, 'chinese'))
