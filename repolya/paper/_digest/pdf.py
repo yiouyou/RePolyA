@@ -245,7 +245,7 @@ def summarize_pdf_text(_fp, _chain_type):
                 _steps = f"{_token_cost}\n\n" + f"{'=' * 60} docs\n" + pretty_print_docs(_split_docs)
                 logger_paper.info(f"[stuff] {_ans}")
                 logger_paper.info(f"[stuff] {_token_cost}")
-                logger_paper.debug(f"[stuff] {_steps}")
+                # logger_paper.debug(f"[stuff] {_steps}")
     elif _chain_type == 'map_reduce':
         llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
         map_prompt = hub.pull("rlm/map-prompt")
@@ -273,7 +273,7 @@ def summarize_pdf_text(_fp, _chain_type):
             _steps = f"{_token_cost}\n\n" + f"{'=' * 60} split docs\n" + pretty_print_docs(_split_docs)
             logger_paper.info(f"[map_reduce] {_ans}")
             logger_paper.info(f"[map_reduce] {_token_cost}")
-            logger_paper.debug(f"[map_reduce] {_steps}")
+            # logger_paper.debug(f"[map_reduce] {_steps}")
     elif _chain_type == 'refine':
         llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
         chain = load_summarize_chain(llm, chain_type="refine")
@@ -283,7 +283,7 @@ def summarize_pdf_text(_fp, _chain_type):
             _steps = f"{_token_cost}\n\n" + f"{'=' * 60} split docs\n" + pretty_print_docs(_split_docs)
             logger_paper.info(f"[refine] {_ans}")
             logger_paper.info(f"[refine] {_token_cost}")
-            logger_paper.debug(f"[refine] {_steps}")
+            # logger_paper.debug(f"[refine] {_steps}")
     return [_ans, _steps]
 
 

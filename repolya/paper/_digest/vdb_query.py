@@ -124,24 +124,6 @@ def qa_faiss_OpenAI_multi_query(_query, _db_name, _chain_type):
         _docs = _multi_retriever.get_relevant_documents(_query)
         _pretty_docs = pretty_print_docs(_docs)
         #####
-        # _qa_ws = RetrievalQAWithSourcesChain.from_chain_type(
-        #     llm,
-        #     chain_type=_chain_type
-        #     retriever=_multi_retriever
-        # )
-        # _ans_ws = _qa_ws(
-        #     {"question": _query},
-        #     return_only_outputs=False
-        # )
-        # _qa = RetrievalQA.from_chain_type(
-        #     llm,
-        #     chain_type=_chain_type
-        #     retriever=_multi_retriever,
-        #     return_source_documents=True
-        # )
-        # _ans = _qa(
-        #     {"query": _query}
-        # )
         _qa = load_qa_chain(
             llm,
             chain_type=_chain_type
