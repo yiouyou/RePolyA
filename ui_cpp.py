@@ -186,19 +186,22 @@ def jd_qa_pdf(_tmp_pdf, _ask, _type):
 #         _log = f.read()
 #     return _log
 
-
 ##### UI
 _description = """
 # Assistant
 """
+chat_ask = gr.Textbox(label="", placeholder="...", lines=5, max_lines=5, interactive=True, visible=True, scale=9)
+
 with gr.Blocks(title=_description) as demo:
     gr.Markdown(_description)
     fd_papers = gr.State([])
     fd_PDFs = gr.State([])
 
     with gr.Tab(label = "Chat4"):
+        
         gr.ChatInterface(
             fn=chat_predict_openai,
+            textbox=chat_ask,
             submit_btn="提交",
             stop_btn="停止",
             retry_btn="🔄 重试",
