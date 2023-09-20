@@ -40,6 +40,7 @@ import asyncio
 img_min_width = 120
 img_min_height = 120
 
+##### md5
 def calculate_md5(_fp):
     hash_md5 = hashlib.md5()
     with open(_fp, "rb") as f:

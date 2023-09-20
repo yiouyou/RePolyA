@@ -16,6 +16,7 @@ def digest_pdf(_fp):
     get_text_from_pdf(_fp)
     pdf_to_faiss(_fp)
 
+
 def qa_pdf(_fp, _query, _chain_type):
     _if_lotr = False
     ### qa_faiss_OpenAI_multi_query, not sentence-transformers (lotr)
@@ -31,6 +32,7 @@ def contains_chinese(_str):
         if '\u4e00' <= c <= '\u9fff':
             return True
     return False
+
 
 def trans_en2zh(_en):
     _zh = asyncio.run(trans_to(_en, 'chinese'))
