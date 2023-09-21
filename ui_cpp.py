@@ -250,7 +250,7 @@ with gr.Blocks(title=_description) as demo:
             [fd_ans, fd_context]
         )
 
-    with gr.Tab(label="精读（总结/问答）"):
+    with gr.Tab(label="精读（解析/总结/问答）"):
         jd_upload = gr.File(label="Upload a PDF file", file_count="multiple", type="file", interactive=True, visible=True)
         jd_radio = gr.Radio(
             ["快速", "精准"],
