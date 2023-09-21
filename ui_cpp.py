@@ -280,6 +280,11 @@ with gr.Blocks(title=_description) as demo:
             [jd_sum_btn]
         )
         jd_upload.clear(
+            chg_btn_color_if_clear,
+            [],
+            [jd_qlist_btn]
+        )
+        jd_upload.clear(
             clean_text_if_clear,
             [],
             [jd_sum, jd_qlist, jd_ans, jd_steps]
