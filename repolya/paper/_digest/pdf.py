@@ -14,6 +14,7 @@ from repolya.paper._digest.vdb_query import (
 )
 from repolya.paper._digest.split_sections import clean_and_split
 from repolya.paper._digest.trans import trans_to
+from repolya.paper._digest.chat_with import chat_with_openai_4
 
 from langchain.chat_models import ChatOpenAI
 from langchain.chains.summarize import load_summarize_chain
@@ -222,7 +223,7 @@ def multi_query_pdf(_fp, _query, _chain_type, _if_lotr):
 #             with get_openai_callback() as cb:
 #                 _ans = chain.run(_docs)
 #                 _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
-#                 _steps = f"{_token_cost}\n\n" + f"{'=' * 60} docs\n" + pretty_print_docs(_docs)
+#                 _steps = f"{_token_cost}\n\n" + f"{'=' * 40} docs\n" + pretty_print_docs(_docs)
 #                 logger_paper.info(f"[stuff] {_ans}")
 #                 logger_paper.info(f"[stuff] {_token_cost}")
 #                 logger_paper.debug(f"[stuff] {_steps}")
@@ -250,7 +251,7 @@ def multi_query_pdf(_fp, _query, _chain_type, _if_lotr):
 #         with get_openai_callback() as cb:
 #             _ans = map_reduce_chain.run(_split_docs)
 #             _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
-#             _steps = f"{_token_cost}\n\n" + f"{'=' * 60} split docs\n" + pretty_print_docs(_split_docs)
+#             _steps = f"{_token_cost}\n\n" + f"{'=' * 40} split docs\n" + pretty_print_docs(_split_docs)
 #             logger_paper.info(f"[map_reduce] {_ans}")
 #             logger_paper.info(f"[map_reduce] {_token_cost}")
 #             logger_paper.debug(f"[map_reduce] {_steps}")
@@ -260,7 +261,7 @@ def multi_query_pdf(_fp, _query, _chain_type, _if_lotr):
 #         with get_openai_callback() as cb:
 #             _ans = chain.run(_split_docs)
 #             _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
-#             _steps = f"{_token_cost}\n\n" + f"{'=' * 60} split docs\n" + pretty_print_docs(_split_docs)
+#             _steps = f"{_token_cost}\n\n" + f"{'=' * 40} split docs\n" + pretty_print_docs(_split_docs)
 #             logger_paper.info(f"[refine] {_ans}")
 #             logger_paper.info(f"[refine] {_token_cost}")
 #             logger_paper.debug(f"[refine] {_steps}")
@@ -316,7 +317,7 @@ def summarize_pdf_text(_fp, _chain_type):
                 _ans = _ans_en +"\n"+ '-'*40 +"\n"+ _ans_zh
                 _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
                 _steps = f"{_token_cost}\n\n"
-                _steps += f"{'=' * 60} docs\n" + pretty_print_docs(_split_docs)
+                _steps += f"{'=' * 40} docs\n" + pretty_print_docs(_split_docs)
                 logger_paper.info(f"[stuff] {_ans}")
                 logger_paper.info(f"[stuff] {_token_cost}")
                 logger_paper.debug(f"[stuff] {_steps}")
@@ -347,7 +348,7 @@ def summarize_pdf_text(_fp, _chain_type):
             _ans = _ans_en +"\n"+ '-'*40 +"\n"+ _ans_zh
             _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
             _steps = f"{_token_cost}\n\n"
-            _steps += f"{'=' * 60} split docs\n" + pretty_print_docs(_split_docs)
+            _steps += f"{'=' * 40} split docs\n" + pretty_print_docs(_split_docs)
             logger_paper.info(f"[map_reduce] {_ans}")
             logger_paper.info(f"[map_reduce] {_token_cost}")
             logger_paper.debug(f"[map_reduce] {_steps}")
@@ -357,10 +358,10 @@ def summarize_pdf_text(_fp, _chain_type):
         with get_openai_callback() as cb:
             _ans_en = chain.run(_split_docs)
             _ans_zh = asyncio.run(trans_to(_ans_en, 'chinese'))
-            _ans = _ans_en +"\n"+ '-'*40 +"\n"+ _ans_zh
+            _ans = _ans_en +"\n"+'-'*40 +"\n"+ _ans_zh
             _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
             _steps = f"{_token_cost}\n\n"
-            _steps += f"{'=' * 60} split docs\n" + pretty_print_docs(_split_docs)
+            _steps += f"{'=' * 40} split docs\n" + pretty_print_docs(_split_docs)
             logger_paper.info(f"[refine] {_ans}")
             logger_paper.info(f"[refine] {_token_cost}")
             logger_paper.debug(f"[refine] {_steps}")
@@ -415,19 +416,32 @@ def get_ans_from_qlist(_fp):
             _q_ans.append(i_ans)
             _q_step.append(i_step)
     ### all ans
-    _ans_str = ""
-    for i in range(len(_qlist)):
-        _ans_str += f"## {_qlist[i].strip()}\n" + f"{_q_ans[i]}\n\n"
     _ans_f = str(_out_dir / f"{_fn}_qlist_ans.txt")
-    with open(_ans_f, 'w') as wf:
-        wf.write(_ans_str)
+    if not os.path.exists(_ans_f):
+        _ans_str = ""
+        for i in range(len(_qlist)):
+            _ans_str += f"## {_qlist[i].strip()}\n" + f"{_q_ans[i]}\n\n"
+        with open(_ans_f, 'w') as wf:
+            wf.write(_ans_str)
     ### all step
-    _step_str = "\n".join(_q_step)
     _step_f = str(_out_dir / f"{_fn}_qlist_step.txt")
-    with open(_step_f, 'w') as wf:
-        wf.write(_step_str)
-    _ans = _ans_str
-    _steps = extract_and_sum(_step_str)
+    if not os.path.exists(_step_f):
+        _step_str = "\n".join(_q_step)
+        with open(_step_f, 'w') as wf:
+            wf.write(_step_str)
+    ### 总结 ans
+    _sys = '_sys_digest.txt'
+    _human = '_human_digest.txt'
+    _info = _ans_str
+    _res, _res_step = chat_with_openai_4(_sys, _human, _info)
+    _res_f = str(_out_dir / f"{_fn}_qlist_sum.txt")
+    if not os.path.exists(_res_f):
+        with open(_res_f, 'w') as wf:
+            wf.write(_res)
+    ### ans, steps
+    _ans = _ans_str +"\n"+'-'*40 +"\n"+ _res
+    _steps = _step_str +"\n"+'-'*40 +"\n"+ _res_step
+    _steps = extract_and_sum(_steps)
     return [_ans, _steps]
 
 
