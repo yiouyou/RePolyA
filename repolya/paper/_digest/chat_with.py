@@ -32,6 +32,5 @@ def chat_with_openai_4(_sys, _human, _info):
         chain = LLMChain(llm=llm, prompt=_prompt)
         _res = chain.run(info=_info)
         _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
-        _res = _res.strip().split("\n")
         _res_step = f"{_token_cost}\n\n" + "="*20+" prompt "+"="*20+"\n" + _prompt.format(info=_info) + "="*20+" prompt "+"="*20+"\n" + f"response:\n\n" + "\n".join(_res)
     return _res, _res_step

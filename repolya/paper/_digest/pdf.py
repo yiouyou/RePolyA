@@ -373,6 +373,10 @@ def summarize_pdf_text(_fp, _chain_type):
 
 
 ##### get_ans_from_qlist
+def get_md_head(text):
+    matches = re.findall(r"'(.*?)'", text)
+    return matches
+
 def get_ans_from_qlist(_fp):
     _ans, _steps = "", ""
     ### qlist
@@ -395,7 +399,12 @@ def get_ans_from_qlist(_fp):
     for i in _qlist:
         if i:
             _query = i.strip()
-            _fn0 = _query.replace('?', '').replace('？', '')
+            if '？' in _query:
+                _fn0 = _query.split('？')[0]
+            elif '?' in _query:
+                _fn0 = _query.split('?')[0]
+            else:
+                _fn0 = _query.replace('/', '|')
             i_ans_f = os.path.join(_out_ans_, "_ans_"+_fn0)
             i_step_f = os.path.join(_out_steps_, "_step_"+_fn0)
             i_ans, i_step = "", ""
@@ -415,33 +424,32 @@ def get_ans_from_qlist(_fp):
                         i_step = rf.read()
             _q_ans.append(i_ans)
             _q_step.append(i_step)
-    ### all ans
+    ### all qlist ans
     _ans_f = str(_out_dir / f"{_fn}_qlist_ans.txt")
+    _ans_str = ""
     if not os.path.exists(_ans_f):
-        _ans_str = ""
         for i in range(len(_qlist)):
-            _ans_str += f"## {_qlist[i].strip()}\n" + f"{_q_ans[i]}\n\n"
+            _h = get_md_head(_qlist[i].strip())
+            _a = _q_ans[i].replace("\n\n", "\n")
+            _ans_str += f"## {_h[0]}\n" + f"{_a}\n\n"
         with open(_ans_f, 'w') as wf:
             wf.write(_ans_str)
-    ### all step
+    else:
+        with open(_ans_f, 'r') as rf:
+            _ans_str = rf.read()
+    ### all qlist step
     _step_f = str(_out_dir / f"{_fn}_qlist_step.txt")
+    _step_str = ""
     if not os.path.exists(_step_f):
         _step_str = "\n".join(_q_step)
         with open(_step_f, 'w') as wf:
             wf.write(_step_str)
-    ### 总结 ans
-    _sys = '_sys_digest.txt'
-    _human = '_human_digest.txt'
-    _info = _ans_str
-    _res, _res_step = chat_with_openai_4(_sys, _human, _info)
-    _res_f = str(_out_dir / f"{_fn}_qlist_sum.txt")
-    if not os.path.exists(_res_f):
-        with open(_res_f, 'w') as wf:
-            wf.write(_res)
+    else:
+        with open(_step_f, 'r') as rf:
+            _step_str = rf.read()
     ### ans, steps
-    _ans = _ans_str +"\n"+'-'*40 +"\n"+ _res
-    _steps = _step_str +"\n"+'-'*40 +"\n"+ _res_step
-    _steps = extract_and_sum(_steps)
+    _ans = _ans_str
+    _steps = extract_and_sum(_step_str)
     return [_ans, _steps]
 
 
