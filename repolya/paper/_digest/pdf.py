@@ -1,4 +1,4 @@
-from repolya._const import PAPER_DIGEST
+from repolya._const import PAPER_DIGEST, PAPER_QLIST
 from repolya._log import logger_paper
 from repolya.paper._digest.vdb_generate import (
     pdf_to_faiss_OpenAI,
@@ -33,6 +33,7 @@ import fitz
 from PIL import Image
 import os
 import io
+import re
 import hashlib
 import asyncio
 
@@ -66,6 +67,30 @@ def get_out_dir(_fp):
     if not os.path.exists(_out_dir):
         os.makedirs(_out_dir)
     return _out_dir, _fn
+
+
+##### extract_and_sum
+def extract_and_sum(text):
+    # 用于存储总和
+    total_tokens = 0
+    total_prompt = 0
+    total_completion = 0
+    total_cost = 0.0
+    # 使用正则表达式找出所有符合格式的行
+    matches = re.findall(r"\nTokens: (\d+) = \(Prompt (\d+) \+ Completion (\d+)\) Cost: \$(\d+.\d+)\n", text)
+    # 遍历所有匹配项并加总
+    for match in matches:
+        # print(match)
+        tokens, prompt, completion = map(int, match[:-1])
+        cost = float(match[-1])
+        total_tokens += tokens
+        total_prompt += prompt
+        total_completion += completion
+        total_cost += cost
+    # 整合结果
+    _res = f"Tokens: {total_tokens} = (Prompt {total_prompt} + Completion {total_completion}) Cost: ${total_cost:.3f}"
+    return _res
+
 
 ##### imgs
 def find_png_files(_dir):
@@ -178,6 +203,7 @@ def multi_query_pdf(_fp, _query, _chain_type, _if_lotr):
             _ans, _steps = qa_faiss_OpenAI_multi_query(_query, _db_name_openai, _chain_type)
         else:
             logger_paper.info(f"no faiss_openai yet")
+    # _steps = extract_and_sum(_steps)
     return [_ans, _steps]
 
 
@@ -290,7 +316,7 @@ def summarize_pdf_text(_fp, _chain_type):
                 _ans = _ans_en +"\n"+ '-'*40 +"\n"+ _ans_zh
                 _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
                 _steps = f"{_token_cost}\n\n"
-                # _steps += f"{'=' * 60} docs\n" + pretty_print_docs(_split_docs)
+                _steps += f"{'=' * 60} docs\n" + pretty_print_docs(_split_docs)
                 logger_paper.info(f"[stuff] {_ans}")
                 logger_paper.info(f"[stuff] {_token_cost}")
                 logger_paper.debug(f"[stuff] {_steps}")
@@ -321,7 +347,7 @@ def summarize_pdf_text(_fp, _chain_type):
             _ans = _ans_en +"\n"+ '-'*40 +"\n"+ _ans_zh
             _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
             _steps = f"{_token_cost}\n\n"
-            # _steps += f"{'=' * 60} split docs\n" + pretty_print_docs(_split_docs)
+            _steps += f"{'=' * 60} split docs\n" + pretty_print_docs(_split_docs)
             logger_paper.info(f"[map_reduce] {_ans}")
             logger_paper.info(f"[map_reduce] {_token_cost}")
             logger_paper.debug(f"[map_reduce] {_steps}")
@@ -334,13 +360,74 @@ def summarize_pdf_text(_fp, _chain_type):
             _ans = _ans_en +"\n"+ '-'*40 +"\n"+ _ans_zh
             _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
             _steps = f"{_token_cost}\n\n"
-            # _steps += f"{'=' * 60} split docs\n" + pretty_print_docs(_split_docs)
+            _steps += f"{'=' * 60} split docs\n" + pretty_print_docs(_split_docs)
             logger_paper.info(f"[refine] {_ans}")
             logger_paper.info(f"[refine] {_token_cost}")
             logger_paper.debug(f"[refine] {_steps}")
     if '-'*40 in _ans:
         with open(_sum_fp, 'w') as wf:
             wf.write(_ans)
+    _steps = extract_and_sum(_steps)
+    return [_ans, _steps]
+
+
+##### get_ans_from_qlist
+def get_ans_from_qlist(_fp):
+    _ans, _steps = "", ""
+    ### qlist
+    _qlist_fp = PAPER_QLIST / '_qlist_zh'
+    with open(_qlist_fp, 'r') as rf:
+        _qlist = rf.readlines()
+    ### _ans_, _steps_
+    _out_dir, _fn = get_md5_out_dir(_fp)
+    _out_ans_ = os.path.join(_out_dir, '_ans_')
+    _out_steps_ = os.path.join(_out_dir, '_steps_')
+    if not os.path.exists(_out_ans_):
+        os.makedirs(_out_ans_)
+    if not os.path.exists(_out_steps_):
+        os.makedirs(_out_steps_)
+    _chain_type = "stuff"
+    _if_lotr = False
+    _q_ans = []
+    _q_step = []
+    ### qlist
+    for i in _qlist:
+        if i:
+            _query = i.strip()
+            _fn0 = _query.replace('?', '').replace('？', '')
+            i_ans_f = os.path.join(_out_ans_, "_ans_"+_fn0)
+            i_step_f = os.path.join(_out_steps_, "_step_"+_fn0)
+            i_ans, i_step = "", ""
+            if not os.path.exists(i_ans_f):
+                i_ans, i_step = multi_query_pdf(_fp, _query, _chain_type, _if_lotr)
+                ### write files
+                with open(i_ans_f, 'w') as wf:
+                    wf.write(i_ans)
+                with open(i_step_f, 'w') as wf:
+                    wf.write(i_step)
+            else:
+                ### read files
+                with open(i_ans_f, 'r') as rf:
+                    i_ans = rf.read()
+                if os.path.exists(i_step_f):
+                    with open(i_step_f, 'r') as rf:
+                        i_step = rf.read()
+            _q_ans.append(i_ans)
+            _q_step.append(i_step)
+    ### all ans
+    _ans_str = ""
+    for i in range(len(_qlist)):
+        _ans_str += f"## {_qlist[i].strip()}\n" + f"{_q_ans[i]}\n\n"
+    _ans_f = str(_out_dir / f"{_fn}_qlist_ans.txt")
+    with open(_ans_f, 'w') as wf:
+        wf.write(_ans_str)
+    ### all step
+    _step_str = "\n".join(_q_step)
+    _step_f = str(_out_dir / f"{_fn}_qlist_step.txt")
+    with open(_step_f, 'w') as wf:
+        wf.write(_step_str)
+    _ans = _ans_str
+    _steps = extract_and_sum(_step_str)
     return [_ans, _steps]
 
 

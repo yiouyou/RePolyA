@@ -112,7 +112,8 @@ Original question: {question}""",
 
 def qa_faiss_OpenAI_multi_query(_query, _db_name, _chain_type):
     _ans, _steps = "", ""
-    llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
+    # llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
+    llm = ChatOpenAI(model_name="gpt-3.5-turbo-16k", temperature=0)
     with get_openai_callback() as cb:
         _multi_retriever = get_faiss_OpenAI_multi_query_retriever(_db_name)
         _run_manager = CallbackManagerForRetrieverRun.get_noop_manager()
@@ -135,7 +136,7 @@ def qa_faiss_OpenAI_multi_query(_query, _db_name, _chain_type):
         _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
         # print(_token_cost)
         _steps = f"{_token_cost}\n\n"+ "\n".join(_generated_queries)
-        # _steps += f"\n\n{'=' * 60}docs\n" + pretty_print_docs(_docs)
+        _steps += f"\n\n{'=' * 60}docs\n" + pretty_print_docs(_docs)
         logger_paper.info(f"A: {_ans['output_text']}")
         logger_paper.info(f"[{_chain_type}] {_token_cost}")
         logger_paper.debug(f"[{_chain_type}] {_steps}")
@@ -245,7 +246,7 @@ def qa_faiss_ST_multi_query(_query, _db_name, _chain_type):
         _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
         # print(_token_cost)
         _steps = f"{_token_cost}\n\n"+ "\n".join(_generated_queries)
-        # _steps += f"\n\n{'=' * 60} docs\n" + pretty_print_docs(_docs)
+        _steps += f"\n\n{'=' * 60} docs\n" + pretty_print_docs(_docs)
         logger_paper.info(f"A: {_ans['output_text']}")
         logger_paper.info(f"[{_chain_type}(lotr)] {_token_cost}")
         logger_paper.debug(f"[{_chain_type}(lotr)] {_steps}")

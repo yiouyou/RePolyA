@@ -12,7 +12,7 @@ from repolya.paper.digestpaper import (
     digest_pdf,
     qa_pdf,
     sum_pdf,
-    trans_en2zh,
+    ans_qlist,
 )
 
 from repolya._log import logger_paper
@@ -29,8 +29,8 @@ def chg_btn_color_if_input(_topic):
 def chg_btn_color_if_clear():
     return gr.update(variant="secondary")
 
-def clean_sum_if_clear():
-    return ""
+def clean_text_if_clear():
+    return "", "", "", ""
 
 ##### search/fetch/ask
 def search_topic_papers(_topic, _N):
@@ -153,12 +153,14 @@ def jd_sum_pdf(_tmp_pdf, _type):
     _sum, _sum_steps = sum_pdf(_tmp_pdf, _chain_type)
     return _sum, _sum_steps
 
-def jd_qa_pdf(_tmp_pdf, _ask, _type):
+def jd_ans_qlist(_tmp_pdf):
+    _digest, _digest_steps = "", ""
+    _digest, _digest_steps = ans_qlist(_tmp_pdf)
+    return _digest, _digest_steps
+
+def jd_qa_pdf(_tmp_pdf, _ask):
     _ans, _steps = "", ""
-    _chain_type = "stuff"
-    if _type == "精准":
-        _chain_type = "refine"
-    _ans, _steps = qa_pdf(_tmp_pdf, _ask, _chain_type)
+    _ans, _steps = qa_pdf(_tmp_pdf, _ask)
     return _ans, _steps
 
 
@@ -258,7 +260,9 @@ with gr.Blocks(title=_description) as demo:
             value="快速"
         )
         jd_tmp_pdf = gr.Textbox(label="digest", visible=False)
-        jd_start_btn = gr.Button("总结全文", variant="secondary", visible=True)
+        jd_qlist_btn = gr.Button("开始解析", variant="secondary", visible=True)
+        jd_qlist = gr.Textbox(label="Digest|文章解析", placeholder="...", lines=15, max_lines=10, interactive=False, visible=True)
+        jd_sum_btn = gr.Button("开始总结", variant="secondary", visible=True)
         jd_sum = gr.Textbox(label="Summary|文章总结", placeholder="...", lines=15, max_lines=10, interactive=False, visible=True)
         with gr.Row():
             jd_ask = gr.Textbox(label="问题（英文问，英文答；中文问，中文答）")
@@ -273,19 +277,29 @@ with gr.Blocks(title=_description) as demo:
         jd_upload.clear(
             chg_btn_color_if_clear,
             [],
-            [jd_start_btn]
+            [jd_sum_btn]
         )
         jd_upload.clear(
-            clean_sum_if_clear,
+            clean_text_if_clear,
             [],
-            [jd_sum]
+            [jd_sum, jd_qlist, jd_ans, jd_steps]
         )
         jd_tmp_pdf.change(
             chg_btn_color_if_input,
             [jd_tmp_pdf],
-            [jd_start_btn]
+            [jd_qlist_btn]
         )
-        jd_start_btn.click(
+        jd_qlist_btn.click(
+            jd_ans_qlist,
+            [jd_tmp_pdf],
+            [jd_qlist, jd_steps]
+        )
+        jd_tmp_pdf.change(
+            chg_btn_color_if_input,
+            [jd_tmp_pdf],
+            [jd_sum_btn]
+        )
+        jd_sum_btn.click(
             jd_sum_pdf,
             [jd_tmp_pdf, jd_radio],
             [jd_sum, jd_steps]

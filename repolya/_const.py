@@ -31,6 +31,7 @@ PAPER_PDF = WORKSPACE_PAPER / '_pdf'
 PAPER_DIGEST = WORKSPACE_PAPER / '_pdf_digest'
 PAPER_JSONL = WORKSPACE_PAPER / '_jsonl'
 PAPER_SERVER_DUMP = PROJECT_ROOT / '_server_dump'
+PAPER_QLIST = PROJECT_ROOT / 'paper' / '_digest'
 
 
 ##### writer
