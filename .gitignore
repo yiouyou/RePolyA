@@ -36,6 +36,10 @@ repolya/_server_dump/*
 # _workspace
 repolya/_workspace/*
 !repolya/_workspace/.gitkeep
+# _workspace/_azure
+!repolya/_workspace/_azure
+repolya/_workspace/_azure/*
+!repolya/_workspace/_azure/.gitkeep
 # _workspace/_chat
 !repolya/_workspace/_chat
 repolya/_workspace/_chat/*

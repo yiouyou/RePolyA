@@ -66,3 +66,10 @@ TIMEOUT_SECONDS = 30
 MAX_RETRY = 2
 OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions"
 
+
+##### azure
+WORKSPACE_AZURE = PROJECT_ROOT / '_workspace' / '_azure'
+LOG_AZURE = LOG_ROOT / "azure.log"
+###
+AZURE_PROMPT = PROJECT_ROOT / 'azure' / '_prompt'
+
