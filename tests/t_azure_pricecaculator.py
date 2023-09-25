@@ -105,5 +105,3 @@ if __name__ == "__main__":
     price = calculator.calculate_price(options, usage_unit)
     print(price)
 
-    
-
