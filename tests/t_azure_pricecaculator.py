@@ -20,44 +20,49 @@ class MySqlPricingCalculator:
             ]
         }
 
+    def get_sku(self, options, usage_unit, category, sku_formats):
+        ii = {}
+        for i in sku_formats:
+            i_part = i[0]
+            i_unit = i[1]
+            if usage_unit[category][-1] in i_unit:
+                jj = {}
+                for j in self.sku_prices:
+                    n = 0
+                    i_key = {}
+                    for x in i_part:
+                        i_key[options[x]] = 1
+                    i_key[usage_unit[category][-1]] = 1
+                    i_key[category] = 1
+                    for k in i_key.keys():
+                        if k in j:
+                            n += i_key[k]
+                    jj[j] = n
+                max_jj = max(jj, key=jj.get)
+                # print(max_jj, jj[max_jj])
+                if jj[max_jj] == len(i_part) + 2:
+                    if max_jj not in ii.keys():
+                        ii[max_jj] = jj[max_jj]
+                    elif jj[max_jj] > ii[max_jj]:
+                        ii[max_jj] = jj[max_jj]
+        if ii:
+            max_ii = max(ii, key=ii.get)
+            if category == 'compute' and options['compute'] not in max_ii:
+                return None
+            else:
+                return max_ii
+        else:
+            return None
+
     def calculate_price(self, options, usage_unit):
         total_price = 0
         for category, sku_formats in self.sku_categories.items():
             sku_key = ''
-            ii = {}
             print('-'*40)
-            for i in sku_formats:
-                i_part = i[0]
-                i_unit = i[1]
-                if usage_unit[category][-1] in i_unit:
-                    jj = {}
-                    for j in self.sku_prices:
-                        n = 0
-                        i_key = {}
-                        for x in i_part:
-                            i_key[options[x]] = 1
-                        i_key[usage_unit[category][-1]] = 1
-                        i_key[category] = 1
-                        for k in i_key.keys():
-                            if k in j:
-                                n += i_key[k]
-                        jj[j] = n
-                    max_jj = max(jj, key=jj.get)
-                    # print(max_jj, jj[max_jj])
-                    if jj[max_jj] == len(i_part) + 2:
-                        if max_jj not in ii.keys():
-                            ii[max_jj] = jj[max_jj]
-                        elif jj[max_jj] > ii[max_jj]:
-                            ii[max_jj] = jj[max_jj]
-            print(ii)
-            if ii:
-                max_ii = max(ii, key=ii.get)
-            else:
-                return None
-            if category == 'compute' and options['compute'] not in max_ii:
-                return None
-            else:
-                sku_key = max_ii
+            _sku = self.get_sku(options, usage_unit, category, sku_formats)
+            print(_sku)
+            if _sku is not None:
+                sku_key = _sku
             category_usage = usage_unit[category][0]
             sku_price = self.sku_prices.get(sku_key, 0)
             if category == 'compute':
