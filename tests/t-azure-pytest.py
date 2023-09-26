@@ -6,7 +6,7 @@ import json
 # Define the test fixture
 @pytest.fixture
 def calculator():
-    with open('azure_mysql_sku_price.json', 'r') as rf:
+    with open('azure_mysql_sku_price_europe-west.json', 'r') as rf:
         sku_prices = json.load(rf)
     return MySqlPricingCalculator(sku_prices=sku_prices)
 
@@ -29,7 +29,7 @@ def test_calculator_0(calculator):
         'backup': [100, 'pergb'],
         'backupConsumedX': [1, 'x']
     }
-    expected_price = 84.82
+    expected_price = 100.45
     assert calculator.calculate_price(options=options, usage_unit=usage_unit) == expected_price
 
 
@@ -51,6 +51,6 @@ def test_calculator_1(calculator):
         'backup': [100, 'pergb'],
         'backupConsumedX': [1, 'x']
     }
-    expected_price = 209.92
+    expected_price = 248.84
     assert calculator.calculate_price(options=options, usage_unit=usage_unit) == expected_price
 

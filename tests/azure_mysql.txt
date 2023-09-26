@@ -22,15 +22,19 @@
  'vCores': ['1', '2', '4', '8', '12', '16', '20', '32', '48', '64', '80', '96']}
 
 ## skus examples
-flexible-server-generalpurpose-compute-d2asv4--perhouroneyearreserved
-generalpurpose-compute-g5-2--perhouroneyearreserved
-flexible-server-businesscritical-compute-e16dsv4--perhouroneyearreserved
-generalpurpose-compute-g5-16--perhour
+flexible-server-businesscritical-backup-lrs--pergb
+paid-iops-lrs--permillionoperations
+businesscritical-compute-g5-4--perhour
+flexible-server-burstable-compute-b8ms--perhour
+flexible-server-businesscritical-compute-e8asv4--perhour
+flexible-server-businesscritical-compute-e8dsv4--perhouroneyearreserved
+flexible-server-businesscritical-compute-e8dsv4--perhourthreeyearreserved
+flexible-server-generalpurpose-compute-d16dsv4--perhourthreeyearreserved
 businesscritical-compute-g5-32--perhouroneyearreserved
-flexible-server-generalpurpose-compute-d32asv4--perhouroneyearreserved
-flexible-server-generalpurpose-compute-d32dsv4--perhour
-flexible-server-businesscritical-compute-e48dsv4--perhourthreeyearreserved
-flexible-server-generalpurpose-compute-d48asv4--perhouroneyearreserved
+flexible-server-generalpurpose-compute-d32asv4--perhourthreeyearreserved
+flexible-server-generalpurpose-compute-d48dsv4--perhouroneyearreserved
+generalpurpose-compute-g5-64--perhour
+flexible-server-businesscritical-compute-e96dsv4--perhourthreeyearreserved
 ----------
 'tiers', 'backupRedundancies', 'computeTypes', 'iopsOptions', 'vCores', 'paymentOptions', 'deploymentOptions', 'storageRedundancies' are the available options to Azure MySQL service pricing caculator. 'skus examples' shows the naming rules of a single SKU. Please design a 'MySqlPricingCalculator' class based on the above information to calculate the mysql service price given the choosen options and actual usage of mysql. Assume sku_prices data (A dictionary containing SKU as a key and price as value) is given, and take following options and usage as the input:
 ```

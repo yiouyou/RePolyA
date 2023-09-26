@@ -69,18 +69,18 @@ class MySqlPricingCalculator:
                 category_usage *= usage_unit['servers'][0]
             if category == 'backup':
                 category_usage *= usage_unit['backupConsumedX'][0]
-            category_price = round(sku_price * category_usage, 2)
+            category_price = sku_price * category_usage
             total_price += category_price
             # print(">",sku_key)
             if category_price > 0:
-                print(f"{sku_price} * {category_usage} = {category_price}, {category}, {sku_key}")
+                print(f"{sku_price} * {category_usage} = {round(category_price, 2)}, {category}, {sku_key}")
         return round(total_price, 2)
 
 
 # Test Code
 if __name__ == "__main__":
     import json
-    with open('azure_mysql_sku_price.json', 'r') as rf:
+    with open('azure_mysql_sku_price_europe-west.json', 'r') as rf:
         sku_prices = json.load(rf)
     
     calculator = MySqlPricingCalculator(sku_prices)
@@ -99,6 +99,26 @@ if __name__ == "__main__":
         'compute': [730, 'perhour'],
         'storage': [500, 'pergb'],
         'iops': [0, 'periopspermonth'],
+        'backup': [100, 'pergb'],
+        'backupConsumedX': [1, 'x']
+    }
+    price = calculator.calculate_price(options, usage_unit)
+    print(price)
+
+    options = {
+        'deployment': 'flexible-server',
+        'tier': 'generalpurpose',
+        'compute': 'd2asv4',
+        'vCore': '4',
+        'storage': 'zrs',
+        'iops': 'additional',
+        'backup': 'lrs'
+    }
+    usage_unit = {
+        'servers': [3, 'x'],
+        'compute': [730, 'perhourthreeyearreserved'],
+        'storage': [5, 'pergb'],
+        'iops': [1000, 'periopspermonth'],
         'backup': [100, 'pergb'],
         'backupConsumedX': [1, 'x']
     }

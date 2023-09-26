@@ -27,9 +27,9 @@ for i in offers:
     prices = offers[i]['prices']
     for j in prices:
         # print(f"{i} ({j}): {prices[j]['us-east']['value']}")
-        sku_price[f"{i}--{j}"] = prices[j]['us-east']['value']
+        sku_price[f"{i}--{j}"] = prices[j]['europe-west']['value']
 
-with open('azure_mysql_sku_price.json', 'w') as wf:
+with open('azure_mysql_sku_price_europe-west.json', 'w') as wf:
     wf.write(json.dumps(sku_price, indent=4, ensure_ascii=False))
 
 skus = pricing_data['skus']
