@@ -128,6 +128,7 @@ print(wrong_index)
 
 _perf_col = [
     'cpu_percentp95_max',
+    'memory_percentp95_max',
     'storage_percentp95_max',
     'io_consumption_percentp95_max'
 ]

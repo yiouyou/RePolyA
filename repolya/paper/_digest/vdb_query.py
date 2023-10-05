@@ -1,6 +1,6 @@
 from repolya._log import logger_paper
 
-from langchain import LLMChain
+from langchain.chains import LLMChain
 from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate

@@ -316,7 +316,7 @@ with gr.Blocks(title=_description) as demo:
         )
         jd_ask_btn.click(
             jd_qa_pdf,
-            [jd_tmp_pdf, jd_ask, jd_radio],
+            [jd_tmp_pdf, jd_ask],
             [jd_ans, jd_steps]
         )
 

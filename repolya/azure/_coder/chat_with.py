@@ -2,7 +2,7 @@ from repolya._const import AZURE_PROMPT
 
 from langchain.callbacks import get_openai_callback
 from langchain.chat_models import ChatOpenAI
-from langchain import LLMChain
+from langchain.chains import LLMChain
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     SystemMessagePromptTemplate,

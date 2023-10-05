@@ -25,7 +25,7 @@ from langchain.chains import (
     ReduceDocumentsChain,
     MapReduceDocumentsChain,
 )
-from langchain.chains.llm import LLMChain
+from langchain.chains import LLMChain
 from langchain.chains.mapreduce import MapReduceChain
 from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from langchain.callbacks import get_openai_callback
