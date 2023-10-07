@@ -78,7 +78,7 @@ RD_user = UserProxyAgent(
         "work_dir": WORKSPACE_AUTOGEN,
         "last_n_messages": 2
     },
-    is_termination_msg=lambda x: x.get("content", "") and x.g("content", "").rstrip().endswith("TERMINATE"),
+    is_termination_msg=lambda x: x.get("content", "") and x.get("content", "").rstrip().endswith("TERMINATE"),
     human_input_mode="TERMINATE",
 )
 
