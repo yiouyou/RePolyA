@@ -7,7 +7,7 @@ from langchain.agents import initialize_agent
 from langchain.chat_models import ChatOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.summarize import load_summarize_chain
-from langchain import PromptTemplate
+from langchain.prompts import PromptTemplate
 
 # import openai
 # from dotenv import load_dotenv

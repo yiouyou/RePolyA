@@ -2,6 +2,7 @@ from repolya._const import AUTOGEN_CONFIG
 from repolya.autogen.agent import RD_user, RD_researcher
 from repolya.autogen.agent import A_user, A_assist
 from repolya.autogen.agent import CODE_user, CODE_pm, CODE_coder
+from repolya.autogen.agent import A_math, A_assist
 from repolya.autogen.tool import search, scrape
 
 from autogen import (
@@ -56,4 +57,13 @@ def do_research(query):
         RD_researcher
     )
     return RD_user.last_message()["content"]
+
+
+def do_math(query):
+    A_math.initiate_chat(
+        A_assist,
+        problem=query
+    )
+    return A_math.last_message()["content"]
+
 
