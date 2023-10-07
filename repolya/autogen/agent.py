@@ -270,24 +270,7 @@ RES_critic = AssistantAgent(
 )
 
 
-##### RAG_CODE
-def RAG_CODE_user(docs_path, model, collection_name):
-    RAG_CODE_user = RetrieveUserProxyAgent(
-        name="RAG_CODE_user",
-        retrieve_config={
-            "task": "code",
-            "docs_path": docs_path,
-            "chunk_token_size": 2000,
-            "model": model,
-            "client": chromadb.PersistentClient(path="/tmp/chromadb"),
-            "collection_name": collection_name,
-            "embedding_model": "all-mpnet-base-v2",
-        },
-        human_input_mode="NEVER",
-        max_consecutive_auto_reply=10,
-    )
-    return RAG_CODE_user
-
+##### RAG
 def RAG_DOC_user(docs_path, model, collection_name):
     RAG_DOC_user = RetrieveUserProxyAgent(
         name="RAG_DOC_user",
@@ -305,6 +288,23 @@ def RAG_DOC_user(docs_path, model, collection_name):
         max_consecutive_auto_reply=10,
     )
     return RAG_DOC_user
+
+def RAG_CODE_user(docs_path, model, collection_name):
+    RAG_CODE_user = RetrieveUserProxyAgent(
+        name="RAG_CODE_user",
+        retrieve_config={
+            "task": "code",
+            "docs_path": docs_path,
+            "chunk_token_size": 2000,
+            "model": model,
+            "client": chromadb.PersistentClient(path="/tmp/chromadb"),
+            "collection_name": collection_name,
+            "embedding_model": "all-mpnet-base-v2",
+        },
+        human_input_mode="NEVER",
+        max_consecutive_auto_reply=10,
+    )
+    return RAG_CODE_user
 
 RAG_assist = RetrieveAssistantAgent(
     name="RAG_CODE_assist",

@@ -138,14 +138,14 @@ def do_rag_doc(msg):
     _RAG_DOC_user.initiate_chat(
         RAG_assist,
         problem=msg,
-        n_results=5,
+        n_results=10,
     )
     return _RAG_DOC_user.last_message()["content"]
 
 
 def do_rag_code(msg):
     _RAG_CODE_user = RAG_CODE_user(
-        AUTOGEN_REF,
+        str(AUTOGEN_REF),
         'gpt-4',
         'autogen-docs'
     )

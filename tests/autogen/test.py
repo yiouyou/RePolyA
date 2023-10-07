@@ -37,7 +37,7 @@ if _do == 6:
 
 
 if _do == 7:
-    re = do_rag_doc("Who is the author of FLAML?")
+    re = do_rag_doc("Which film came out first, Blind Shaft or The Mask Of Fu Manchu?")
     print(f"{re}")
 
 
