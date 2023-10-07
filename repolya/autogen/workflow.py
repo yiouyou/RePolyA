@@ -1,9 +1,10 @@
 from repolya._const import AUTOGEN_CONFIG
-from repolya.autogen.agent import RD_user, RD_researcher
 from repolya.autogen.agent import A_user, A_assist
 from repolya.autogen.agent import CODE_user, CODE_pm, CODE_coder
-from repolya.autogen.agent import A_math, A_assist
-from repolya.autogen.tool import search, scrape
+from repolya.autogen.agent import RD_user, RD_researcher
+from repolya.autogen.agent import MATH_user, MATH_assist
+from repolya.autogen.agent import PLAN_TASK_user, PLAN_TASK_assist
+from repolya.autogen.tool import search, scrape, planner
 
 from autogen import (
     GroupChat,
@@ -14,15 +15,16 @@ from autogen import (
 config_list = config_list_from_json(env_or_file=str(AUTOGEN_CONFIG))
 
 
-def do_simple_ask(query):
+def do_simple_task(msg):
     A_user.initiate_chat(
         A_assist,
-        message=query,
+        message=msg,
+        clear_history=False,
     )
     return A_user.last_message()["content"]
 
 
-def do_simple_code(query):
+def do_simple_code(msg):
     groupchat = GroupChat(
         agents=[CODE_user, CODE_coder, CODE_pm],
         messages=[]
@@ -38,19 +40,22 @@ def do_simple_code(query):
     )
     CODE_user.initiate_chat(
         manager,
-        message=query,
+        message=msg,
     )
     return CODE_user.last_message()["content"]
 
 
-def do_research(query):
+def do_research(msg):
     RD_user.register_function(
         function_map={
             "search": search,
             "scrape": scrape,
         }
     )
-    RD_user.initiate_chat(RD_researcher, message=query)
+    RD_user.initiate_chat(
+        RD_researcher,
+        message=msg
+    )
     RD_user.stop_reply_at_receive(RD_researcher)
     RD_user.send(
         "Give me the research report that just generated again, return ONLY the report & reference links",
@@ -59,12 +64,25 @@ def do_research(query):
     return RD_user.last_message()["content"]
 
 
-def do_math(query):
-    A_math.initiate_chat(
-        A_assist,
-        problem=query,
+def do_math(msg):
+    MATH_user.initiate_chat(
+        MATH_assist,
+        problem=msg,
         prompt_type="two_tools"
     )
-    return A_math.last_message()["content"]
+    return MATH_user.last_message()["content"]
+
+
+def do_plan_task(msg):
+    PLAN_TASK_user.register_function(
+        function_map={
+            "planner": planner,
+        }
+    )
+    PLAN_TASK_user.initiate_chat(
+        PLAN_TASK_assist,
+        message=msg
+    )
+    return PLAN_TASK_user.last_message()["content"]
 
 

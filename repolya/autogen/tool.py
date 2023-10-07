@@ -9,10 +9,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.summarize import load_summarize_chain
 from langchain.prompts import PromptTemplate
 
-# import openai
-# from dotenv import load_dotenv
-# load_dotenv()
-# openai.api_key = os.getenv("OPENAI_API_KEY")
+from repolya.autogen.agent import PLANNER_user, PLANNER_planner
 
 
 def search(query):
@@ -80,4 +77,12 @@ def summary(content):
     )
     output = summary_chain.run(input_documents=docs,)
     return output
+
+
+def planner(message):
+    PLANNER_user.initiate_chat(
+        PLANNER_planner,
+        message=message
+    )
+    return PLANNER_user.last_message()["content"]
 
