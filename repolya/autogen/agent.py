@@ -185,7 +185,7 @@ PLAN_TASK_assist = AssistantAgent(
                 },
             },
         ],
-    }
+    },
 )
 
 
