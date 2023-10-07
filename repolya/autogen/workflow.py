@@ -62,7 +62,8 @@ def do_research(query):
 def do_math(query):
     A_math.initiate_chat(
         A_assist,
-        problem=query
+        problem=query,
+        prompt_type="two_tools"
     )
     return A_math.last_message()["content"]
 

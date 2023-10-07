@@ -37,3 +37,5 @@ mathproxyagent = MathUserProxyAgent(
 math_problem = "Find all $x$ that satisfy the inequality $(2x+10)(x+3)<(3x+9)(x+8)$. Express your answer in interval notation."
 mathproxyagent.initiate_chat(assistant, problem=math_problem)
 
+math_problem = "Find all numbers $a$ for which the graph of $y=x^2+a$ and the graph of $y=ax$ intersect. Express your answer in interval notation."
+mathproxyagent.initiate_chat(assistant, problem=math_problem, prompt_type="two_tools")

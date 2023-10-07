@@ -22,6 +22,6 @@ if _do == 3:
 
 
 if _do == 4:
-    re = do_math("Find all $x$ that satisfy the inequality $(2x+10)(x+3)<(3x+9)(x+8)$. Express your answer in interval notation.")
+    re = do_math("Find all numbers $a$ for which the graph of $y=x^2+a$ and the graph of $y=ax$ intersect. Express your answer in interval notation.")
     print(f"{re}")
 
