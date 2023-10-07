@@ -14,7 +14,7 @@ loguru
 markdownify
 openai
 openpyxl
-pyautogen
+pyautogen[blendsearch]
 pydantic==1.10.9
 python-dotenv
 python_docx

@@ -1,7 +1,7 @@
-import os
-_RePolyA = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-import sys
-sys.path.append(_RePolyA)
+# import os
+# _RePolyA = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# import sys
+# sys.path.append(_RePolyA)
 
 
 # from repolya.azure.app import run

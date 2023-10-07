@@ -25,6 +25,9 @@ key.yaml
 # mermaid
 *.mmd
 
+# autogen
+OAI_CONFIG_LIST
+
 # _log
 repolya/_log/*
 !repolya/_log/.gitkeep
@@ -36,6 +39,10 @@ repolya/_server_dump/*
 # _workspace
 repolya/_workspace/*
 !repolya/_workspace/.gitkeep
+# _workspace/_autogen
+!repolya/_workspace/_autogen
+repolya/_workspace/_autogen/*
+!repolya/_workspace/_autogen/.gitkeep
 # _workspace/_azure
 !repolya/_workspace/_azure
 repolya/_workspace/_azure/*

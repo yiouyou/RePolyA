@@ -73,3 +73,10 @@ LOG_AZURE = LOG_ROOT / "azure.log"
 ###
 AZURE_PROMPT = PROJECT_ROOT / 'azure' / '_prompt'
 
+
+##### autogen
+WORKSPACE_AUTOGEN = PROJECT_ROOT / '_workspace' / '_autogen'
+LOG_AUTOGEN = LOG_ROOT / "autogen.log"
+###
+AUTOGEN_CONFIG = PROJECT_ROOT / 'autogen' / 'OAI_CONFIG_LIST'
+
