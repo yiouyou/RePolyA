@@ -1,4 +1,4 @@
-from repolya._const import WORKSPACE_AUTOGEN, AUTOGEN_CONFIG
+from repolya._const import WORKSPACE_AUTOGEN, AUTOGEN_CONFIG, AUTOGEN_DOC
 from repolya._log import logger_autogen
 
 from autogen import (
@@ -7,7 +7,9 @@ from autogen import (
     config_list_from_json,
 )
 from autogen.agentchat.contrib.math_user_proxy_agent import MathUserProxyAgent
-
+from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProxyAgent
+from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
+import chromadb
 
 config_list = config_list_from_json(env_or_file=str(AUTOGEN_CONFIG))
 
@@ -28,6 +30,7 @@ A_assist = AssistantAgent(
         "config_list": config_list,
         "request_timeout": 300,
         "seed": 42,
+        "temperature": 0,
     },
     is_termination_msg=lambda x: True if "TERMINATE" in x.get("content") else False,
 )
@@ -47,6 +50,7 @@ MATH_assist = AssistantAgent(
         "config_list": config_list,
         "request_timeout": 600,
         "seed": 42,
+        "temperature": 0,
     },
     system_message="You are a helpful assistant.",
 )
@@ -69,6 +73,8 @@ CODE_coder = AssistantAgent(
         "config_list": config_list,
         "request_timeout": 120,
         "seed": 42,
+        "temperature": 0.1,
+        "model": "gpt-4",
     },
 )
 
@@ -78,6 +84,7 @@ CODE_pm = AssistantAgent(
         "config_list": config_list,
         "request_timeout": 120,
         "seed": 42,
+        "temperature": 0,
     },
     system_message="You will help break down the initial idea into a well scoped requirement for the coder; Do not involve in future conversations or error fixing",
 )
@@ -146,6 +153,8 @@ PLANNER_planner = AssistantAgent(
         "config_list": config_list,
         "request_timeout": 120,
         "seed": 42,
+        "temperature": 0,
+        "model": "gpt-4",
     },
     system_message="You are a helpful AI assistant. You suggest coding and reasoning steps for another AI assistant to accomplish a task. Do not suggest concrete code. For any action beyond writing code or reasoning, convert it to a step which can be implemented by writing code. For example, the action of browsing the web can be implemented by writing code which reads and prints the content of a web page. Finally, inspect the execution result. If the plan is not good, suggest a better plan. If the execution is wrong, analyze the error and suggest a fix."
 )
@@ -188,4 +197,122 @@ PLAN_TASK_assist = AssistantAgent(
     },
 )
 
+
+##### RES
+RES_user = UserProxyAgent(
+   name="RES_user",
+   system_message="A human admin. Interact with the planner to discuss the plan. Plan execution needs to be approved by this admin.",
+   code_execution_config=False,
+)
+
+RES_engineer = AssistantAgent(
+    name="RES_engineer",
+    llm_config={
+        "config_list": config_list,
+        "request_timeout": 120,
+        "seed": 42,
+        "temperature": 0,
+        "model": "gpt-4",
+    },
+    system_message='''Engineer. You follow an approved plan. You write python/shell code to solve tasks. Wrap the code in a code block that specifies the script type. The user can't modify your code. So do not suggest incomplete code which requires others to modify. Don't use a code block if it's not intended to be executed by the executor.
+Don't include multiple code blocks in one response. Do not ask others to copy and paste the result. Check the execution result returned by the executor.
+If the result indicates there is an error, fix the error and output the code again. Suggest the full code instead of partial code or code changes. If the error can't be fixed or if the task is not solved even after the code is executed successfully, analyze the problem, revisit your assumption, collect additional info you need, and think of a different approach to try.
+''',
+)
+
+RES_scientist = AssistantAgent(
+    name="RES_scientist",
+    llm_config={
+        "config_list": config_list,
+        "request_timeout": 120,
+        "seed": 42,
+        "temperature": 0,
+        "model": "gpt-4",
+    },
+    system_message="Scientist. You follow an approved plan. You are able to categorize papers after seeing their abstracts printed. You don't write code."
+)
+
+RES_planner = AssistantAgent(
+    name="RES_planner",
+    system_message='''Planner. Suggest a plan. Revise the plan based on feedback from admin and critic, until admin approval.
+The plan may involve an engineer who can write code and a scientist who doesn't write code.
+Explain the plan first. Be clear which step is performed by an engineer, and which step is performed by a scientist.
+''',
+    llm_config={
+        "config_list": config_list,
+        "request_timeout": 120,
+        "seed": 42,
+        "temperature": 0,
+        "model": "gpt-4",
+    },
+)
+
+RES_executor = UserProxyAgent(
+    name="RES_executor",
+    code_execution_config={
+        "work_dir": WORKSPACE_AUTOGEN,
+        "last_n_messages": 3,
+    },
+    system_message="Executor. Execute the code written by the engineer and report the result.",
+    human_input_mode="NEVER",
+)
+
+RES_critic = AssistantAgent(
+    name="RES_critic",
+    llm_config={
+        "config_list": config_list,
+        "request_timeout": 120,
+        "seed": 42,
+        "temperature": 0,
+        "model": "gpt-4",
+    },
+    system_message="Critic. Double check plan, claims, code from other agents and provide feedback. Check whether the plan includes adding verifiable info such as source URL.",
+)
+
+
+##### RAG_CODE
+def RAG_CODE_user(docs_path, model, collection_name):
+    RAG_CODE_user = RetrieveUserProxyAgent(
+        name="RAG_CODE_user",
+        retrieve_config={
+            "task": "code",
+            "docs_path": docs_path,
+            "chunk_token_size": 2000,
+            "model": model,
+            "client": chromadb.PersistentClient(path="/tmp/chromadb"),
+            "collection_name": collection_name,
+            "embedding_model": "all-mpnet-base-v2",
+        },
+        human_input_mode="NEVER",
+        max_consecutive_auto_reply=10,
+    )
+    return RAG_CODE_user
+
+def RAG_DOC_user(docs_path, model, collection_name):
+    RAG_DOC_user = RetrieveUserProxyAgent(
+        name="RAG_DOC_user",
+        retrieve_config={
+            "task": "qa",
+            "docs_path": docs_path,
+            "chunk_token_size": 2000,
+            "model": model,
+            "client": chromadb.PersistentClient(path="/tmp/chromadb"),
+            "collection_name": collection_name,
+            "chunk_mode": "one_line",
+            "embedding_model": "all-MiniLM-L12-v2",
+        },
+        human_input_mode="NEVER",
+        max_consecutive_auto_reply=10,
+    )
+    return RAG_DOC_user
+
+RAG_assist = RetrieveAssistantAgent(
+    name="RAG_CODE_assist",
+    llm_config={
+        "config_list": config_list,
+        "request_timeout": 600,
+        "seed": 42,
+    },
+    system_message="You are a helpful assistant.",
+)
 

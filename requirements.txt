@@ -2,12 +2,14 @@ anthropic
 arxiv
 asyncio
 council-ai
+chromadb
 doctran
 duckduckgo-search
 faiss-cpu
 fastapi
 fire
 gradio
+ipython
 langchain
 langchainhub
 loguru

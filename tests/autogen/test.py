@@ -3,7 +3,7 @@ _RePolyA = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 import sys
 sys.path.append(_RePolyA)
 
-from repolya.autogen.workflow import do_simple_task, do_simple_code, do_research, do_math, do_plan_task
+from repolya.autogen.workflow import do_simple_task, do_simple_code, do_rd, do_math, do_plan_task, do_res, do_rag_doc, do_rag_code
 
 
 _do = int(sys.argv[1])
@@ -17,7 +17,7 @@ if _do == 2:
     print(f"{re}")
 
 if _do == 3:
-    re = do_research("UDP-GlcA大规模生成")
+    re = do_rd("UDP-GlcA大规模生成")
     print(f"{re}")
 
 
@@ -28,5 +28,20 @@ if _do == 4:
 
 if _do == 5:
     re = do_plan_task("Suggest a fix to an open good first issue of flaml")
+    print(f"{re}")
+
+
+if _do == 6:
+    re = do_res("find papers on LLM applications from arxiv in the last week, create a markdown table of different domains.")
+    print(f"{re}")
+
+
+if _do == 7:
+    re = do_rag_doc("Who is the author of FLAML?")
+    print(f"{re}")
+
+
+if _do == 8:
+    re = do_rag_code("How can I use FLAML to perform a classification task and use spark to do parallel training. Train 30 seconds and force cancel jobs if time limit is reached.")
     print(f"{re}")
 
