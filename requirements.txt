@@ -8,6 +8,7 @@ duckduckgo-search
 faiss-cpu
 fastapi
 fire
+flaml[automl]
 gradio
 ipython
 langchain
@@ -17,6 +18,7 @@ markdownify
 openai
 openpyxl
 pyautogen[blendsearch]
+pyautogen[retrievechat]
 pydantic==1.10.9
 python-dotenv
 python_docx
