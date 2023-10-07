@@ -13,7 +13,7 @@ import os
 
 llm_kwargs = {
     'api_key': os.getenv("OPENAI_API_KEY"),
-    'llm_model': os.getenv("OPENAI_LLM_MODEL"),
+    'llm_model': os.getenv("OPENAI_API_MODEL"),
     "temperature": 0,
     "top_p": 1.0
 }

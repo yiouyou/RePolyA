@@ -228,7 +228,7 @@ def multi_query_pdf(_fp, _query, _chain_type, _if_lotr):
 #                 logger_paper.info(f"[stuff] {_token_cost}")
 #                 logger_paper.debug(f"[stuff] {_steps}")
 #     elif _chain_type == 'map_reduce':
-#         llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
+#         llm = ChatOpenAI(model_name=os.getenv('OPENAI_API_MODEL'), temperature=0)
 #         map_prompt = hub.pull("rlm/map-prompt")
 #         map_chain = LLMChain(llm=llm, prompt=map_prompt)
 #         reduce_prompt = hub.pull("rlm/reduce-prompt")
@@ -256,7 +256,7 @@ def multi_query_pdf(_fp, _query, _chain_type, _if_lotr):
 #             logger_paper.info(f"[map_reduce] {_token_cost}")
 #             logger_paper.debug(f"[map_reduce] {_steps}")
 #     elif _chain_type == 'refine':
-#         llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
+#         llm = ChatOpenAI(model_name=os.getenv('OPENAI_API_MODEL'), temperature=0)
 #         chain = load_summarize_chain(llm, chain_type="refine")
 #         with get_openai_callback() as cb:
 #             _ans = chain.run(_split_docs)
@@ -322,7 +322,7 @@ def summarize_pdf_text(_fp, _chain_type):
                 logger_paper.info(f"[stuff] {_token_cost}")
                 logger_paper.debug(f"[stuff] {_steps}")
     elif _chain_type == 'map_reduce':
-        llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
+        llm = ChatOpenAI(model_name=os.getenv('OPENAI_API_MODEL'), temperature=0)
         map_prompt = hub.pull("rlm/map-prompt")
         map_chain = LLMChain(llm=llm, prompt=map_prompt)
         reduce_prompt = hub.pull("rlm/reduce-prompt")
@@ -353,7 +353,7 @@ def summarize_pdf_text(_fp, _chain_type):
             logger_paper.info(f"[map_reduce] {_token_cost}")
             logger_paper.debug(f"[map_reduce] {_steps}")
     elif _chain_type == 'refine':
-        llm = ChatOpenAI(model_name=os.getenv('OPENAI_LLM_MODEL'), temperature=0)
+        llm = ChatOpenAI(model_name=os.getenv('OPENAI_API_MODEL'), temperature=0)
         chain = load_summarize_chain(llm, chain_type="refine")
         with get_openai_callback() as cb:
             _ans_en = chain.run(_split_docs)
