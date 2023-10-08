@@ -281,8 +281,8 @@ def RAG_DOC_user(docs_path, model, collection_name):
             "model": model,
             "client": chromadb.PersistentClient(path="/tmp/chromadb"),
             "collection_name": collection_name,
-            "chunk_mode": "one_line",
             "embedding_model": "all-MiniLM-L12-v2",
+            "chunk_mode": "one_line", # multi_lines
         },
         human_input_mode="NEVER",
         max_consecutive_auto_reply=10,
@@ -300,6 +300,7 @@ def RAG_CODE_user(docs_path, model, collection_name):
             "client": chromadb.PersistentClient(path="/tmp/chromadb"),
             "collection_name": collection_name,
             "embedding_model": "all-mpnet-base-v2",
+            "chunk_mode": "multi_lines", # one_line
         },
         human_input_mode="NEVER",
         max_consecutive_auto_reply=10,

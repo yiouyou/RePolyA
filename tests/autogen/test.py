@@ -3,6 +3,7 @@ _RePolyA = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 import sys
 sys.path.append(_RePolyA)
 
+from repolya._const import AUTOGEN_REF
 from repolya.autogen.workflow import do_simple_task, do_simple_code, do_rd, do_math, do_plan_task, do_res, do_rag_doc, do_rag_code
 
 
@@ -12,9 +13,11 @@ if _do == 1:
     re = do_simple_task("查找一下长沙的天气.")
     print(f"{re}")
 
+
 if _do == 2:
     re = do_simple_code("For certain cloud services (such as computing), assuming there are several given attributes (such as vCore, memory, iops, storage, backup, etc.) of each computing resource sku, write a flexible and basic recommendation class to filter out unfitted skus and find the lowest price as the recommendation for customers.")
     print(f"{re}")
+
 
 if _do == 3:
     re = do_rd("UDP-GlcA大规模生成")
@@ -37,11 +40,21 @@ if _do == 6:
 
 
 if _do == 7:
-    re = do_rag_doc("Which film came out first, Blind Shaft or The Mask Of Fu Manchu?")
+    re = do_rag_doc(
+        msg="Which film came out first, Blind Shaft or The Mask Of Fu Manchu?",
+        search_string="",
+        docs_path="https://huggingface.co/datasets/thinkall/2WikiMultihopQA/resolve/main/corpus.txt",
+        collection_name='natural-questions',
+    )
     print(f"{re}")
 
 
 if _do == 8:
-    re = do_rag_code("How can I use FLAML to perform a classification task and use spark to do parallel training. Train 30 seconds and force cancel jobs if time limit is reached.")
+    re = do_rag_code(
+        msg="How can I use FLAML to perform a classification task and use spark to do parallel training. Train 30 seconds and force cancel jobs if time limit is reached.",
+        search_string="spark",
+        docs_path=str(AUTOGEN_REF),
+        collection_name='autogen-docs',
+    )
     print(f"{re}")
 

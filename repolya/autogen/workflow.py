@@ -127,33 +127,34 @@ def do_res(msg):
     return RES_user.last_message()["content"]
 
 
-def do_rag_doc(msg):
-    corpus_file = "https://huggingface.co/datasets/thinkall/2WikiMultihopQA/resolve/main/corpus.txt"
+def do_rag_doc(msg, search_string, docs_path, collection_name):
     _RAG_DOC_user = RAG_DOC_user(
-        corpus_file,
+        docs_path,
         'gpt-3.5-turbo-16k',
-        'natural-questions'
+        collection_name,
     )
     RAG_assist.reset()
     _RAG_DOC_user.initiate_chat(
         RAG_assist,
         problem=msg,
         n_results=10,
+        search_string=search_string,
     )
     return _RAG_DOC_user.last_message()["content"]
 
 
-def do_rag_code(msg):
+def do_rag_code(msg, search_string, docs_path, collection_name):
     _RAG_CODE_user = RAG_CODE_user(
-        str(AUTOGEN_REF),
+        docs_path,
         'gpt-4',
-        'autogen-docs'
+        collection_name,
     )
     RAG_assist.reset()
     _RAG_CODE_user.initiate_chat(
         RAG_assist,
         problem=msg,
-        search_string="spark"
+        n_results=10,
+        search_string=search_string,
     )
     return _RAG_CODE_user.last_message()["content"]
 
