@@ -272,7 +272,7 @@ RES_critic = AssistantAgent(
 
 ##### RAG
 def RAG_DOC_user(docs_path, model, collection_name):
-    RAG_DOC_user = RetrieveUserProxyAgent(
+    _RAG_DOC_user = RetrieveUserProxyAgent(
         name="RAG_DOC_user",
         retrieve_config={
             "task": "qa",
@@ -287,10 +287,10 @@ def RAG_DOC_user(docs_path, model, collection_name):
         human_input_mode="NEVER",
         max_consecutive_auto_reply=10,
     )
-    return RAG_DOC_user
+    return _RAG_DOC_user
 
 def RAG_CODE_user(docs_path, model, collection_name):
-    RAG_CODE_user = RetrieveUserProxyAgent(
+    _RAG_CODE_user = RetrieveUserProxyAgent(
         name="RAG_CODE_user",
         retrieve_config={
             "task": "code",
@@ -305,7 +305,7 @@ def RAG_CODE_user(docs_path, model, collection_name):
         human_input_mode="NEVER",
         max_consecutive_auto_reply=10,
     )
-    return RAG_CODE_user
+    return _RAG_CODE_user
 
 RAG_assist = RetrieveAssistantAgent(
     name="RAG_CODE_assist",
