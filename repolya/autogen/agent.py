@@ -277,7 +277,6 @@ def RAG_DOC_user(docs_path, model, collection_name):
         retrieve_config={
             "task": "qa",
             "docs_path": docs_path,
-            "chunk_token_size": 2000,
             "model": model,
             "client": chromadb.PersistentClient(path="/tmp/chromadb"),
             "collection_name": collection_name,
@@ -295,7 +294,6 @@ def RAG_CODE_user(docs_path, model, collection_name):
         retrieve_config={
             "task": "code",
             "docs_path": docs_path,
-            "chunk_token_size": 2000,
             "model": model,
             "client": chromadb.PersistentClient(path="/tmp/chromadb"),
             "collection_name": collection_name,

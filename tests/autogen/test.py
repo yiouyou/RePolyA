@@ -44,7 +44,7 @@ if _do == 7:
         msg="Which film came out first, Blind Shaft or The Mask Of Fu Manchu?",
         search_string="",
         docs_path="https://huggingface.co/datasets/thinkall/2WikiMultihopQA/resolve/main/corpus.txt",
-        collection_name='natural-questions',
+        collection_name="rag_doc",
     )
     print(f"{re}")
 
@@ -54,7 +54,59 @@ if _do == 8:
         msg="How can I use FLAML to perform a classification task and use spark to do parallel training. Train 30 seconds and force cancel jobs if time limit is reached.",
         search_string="spark",
         docs_path=str(AUTOGEN_REF),
-        collection_name='autogen-docs',
+        collection_name="rag_code",
     )
     print(f"{re}")
+
+
+if _do == 77:
+    from autogen.retrieve_utils import create_vector_db_from_dir, query_vector_db
+    import chromadb
+    print("Trying to create collection.")
+    create_vector_db_from_dir(
+        dir_path="https://huggingface.co/datasets/thinkall/2WikiMultihopQA/resolve/main/corpus.txt",
+        max_tokens=16000*0.4,
+        client=chromadb.Client(),
+        collection_name="rag_doc",
+        embedding_model="all-MiniLM-L12-v2",
+        chunk_mode="one_line",
+        must_break_at_empty_line=True,
+        get_or_create=False,
+    )
+    problem = "who is Maheen Khan?"
+    results = query_vector_db(
+        query_texts=[problem],
+        n_results=10,
+        search_string="",
+        client=chromadb.Client(),
+        collection_name="rag_doc",
+        embedding_model="all-MiniLM-L12-v2",
+    )
+    print("doc_ids: ", results["ids"])
+
+
+if _do == 88:
+    from autogen.retrieve_utils import create_vector_db_from_dir, query_vector_db
+    import chromadb
+    print("Trying to create collection.")
+    create_vector_db_from_dir(
+        dir_path=str(AUTOGEN_REF),
+        max_tokens=8000*0.4,
+        client=chromadb.Client(),
+        collection_name="rag_code",
+        embedding_model="all-mpnet-base-v2",
+        chunk_mode="multi_lines",
+        must_break_at_empty_line=True,
+        get_or_create=False,
+    )
+    problem = "How can I use FLAML to perform a classification task and use spark to do parallel training. Train 30 seconds and force cancel jobs if time limit is reached.",
+    results = query_vector_db(
+        query_texts=[problem],
+        n_results=10,
+        search_string="spark",
+        client=chromadb.Client(),
+        collection_name="rag_code",
+        embedding_model="all-mpnet-base-v2",
+    )
+    print("doc_ids: ", results["ids"])
 
