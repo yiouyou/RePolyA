@@ -1,6 +1,6 @@
 from repolya._const import AUTOGEN_CONFIG, AUTOGEN_DOC, AUTOGEN_REF
 from repolya.autogen.agent import A_user, A_assist
-from repolya.autogen.agent import CODE_user, CODE_pm, CODE_coder
+from repolya.autogen.agent import CODE_user, CODE_pm, CODE_coder, CODE_qa
 from repolya.autogen.agent import RD_user, RD_researcher
 from repolya.autogen.agent import MATH_user, MATH_assist
 from repolya.autogen.agent import PLAN_TASK_user, PLAN_TASK_assist
@@ -32,23 +32,25 @@ def do_simple_code(msg):
         agents=[
             CODE_user,
             CODE_coder,
-            CODE_pm
+            CODE_qa,
+            CODE_pm,
         ],
         messages=[],
-        max_round=12,
+        max_round=20,
     )
     manager = GroupChatManager(
         name="CODE_GroupChatManager",
         groupchat=groupchat,
         llm_config={
             "config_list": config_list,
-            "request_timeout": 120,
+            "request_timeout": 300,
             "seed": 42,
         }
     )
     CODE_user.initiate_chat(
         manager,
         message=msg,
+        clear_history=False,
     )
     return CODE_user.last_message()["content"]
 
