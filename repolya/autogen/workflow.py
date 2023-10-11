@@ -32,6 +32,33 @@ def do_simple_code(msg):
         agents=[
             CODE_user,
             CODE_coder,
+            CODE_pm,
+        ],
+        messages=[],
+        max_round=20,
+    )
+    manager = GroupChatManager(
+        name="CODE_GroupChatManager",
+        groupchat=groupchat,
+        llm_config={
+            "config_list": config_list,
+            "request_timeout": 300,
+            "seed": 42,
+        }
+    )
+    CODE_user.initiate_chat(
+        manager,
+        message=msg,
+        clear_history=False,
+    )
+    return CODE_user.last_message()["content"]
+
+
+def do_simple_code_qa(msg):
+    groupchat = GroupChat(
+        agents=[
+            CODE_user,
+            CODE_coder,
             CODE_qa,
             CODE_pm,
         ],
