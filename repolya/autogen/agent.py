@@ -65,7 +65,7 @@ CODE_user = UserProxyAgent(
         "last_n_messages": 3,
     },
     human_input_mode="NEVER", # "ALWAYS",
-    system_message="A human admin who will give the idea, run the code provided by Coder and save the code file to disk.",
+    system_message="A human admin who will give the idea, run the code provided by Coder and save the code to disk, but do NOT run the test code provided by QA.",
     max_consecutive_auto_reply=10,
 )
 
@@ -90,7 +90,11 @@ CODE_qa = AssistantAgent(
         "temperature": 0,
         "model": "gpt-4",
     },
-    system_message="Write comprehensive and robust tests to ensure codes will work as expected without bugs. The test code you write should conform to code standard like PEP8, be modular, easy to read and maintain, and use 'unittest' module. If you want the user to save the code in a file before executing it, put # filename: <filename> inside the code block as the first line.",
+    system_message="""Write comprehensive and robust tests to ensure codes will work as expected without bugs.
+The test code you write should conform to code standard like PEP8, be modular, easy to read and maintain, and use 'unittest' module.
+If you want the user to save the code in a file before executing it, put # filename: <filename> inside the code block as the first line.
+Reply "TERMINATE" in the end when everything is done.
+    """,
     is_termination_msg=lambda x: True if "TERMINATE" in x.get("content") else False,
 )
 

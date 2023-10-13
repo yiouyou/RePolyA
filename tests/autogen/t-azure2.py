@@ -50,7 +50,7 @@ path of workspace: {_workspace}
 path of 'service_options': {_options}
 'recommend.py':
 {_recommend_txt}
-In workspace, create the 't-recommend.py' in which write the test code for 'recommend.py' using 'unittest' module. The code you write should be comprehensive and robust to ensure codes will work as expected without bugs, while also conforming to coding standards like PEP8, and being modular, easy to read, and maintainable.
+In workspace, create the 't-recommend.py' in which write the test code for get_service_price function of 'recommend.py' using 'unittest' module. The code you write should be comprehensive and robust to ensure codes will work as expected without bugs, while also conforming to coding standards like PEP8, and being modular, easy to read, and maintainable.
 
 Important Notes:
 1. test code should start with following:
@@ -66,6 +66,7 @@ import unittest
 
 Remeber, save the code to disk.
 '''
+    print("task2:")
     re = do_simple_code(_task2)
     print(f"out: '{re}'")
 
