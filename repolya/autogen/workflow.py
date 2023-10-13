@@ -1,4 +1,4 @@
-from repolya._const import AUTOGEN_CONFIG, AUTOGEN_DOC, AUTOGEN_REF
+from repolya._const import AUTOGEN_CONFIG, WORKSPACE_AUTOGEN, AUTOGEN_DOC, AUTOGEN_REF
 from repolya.autogen.agent import A_user, A_assist
 from repolya.autogen.agent import CODE_user, CODE_pm, CODE_coder, CODE_qa
 from repolya.autogen.agent import RD_user, RD_researcher
@@ -11,8 +11,9 @@ from repolya.autogen.tool import search, scrape, planner
 from autogen import (
     GroupChat,
     GroupChatManager,
-    config_list_from_json
+    config_list_from_json,
 )
+
 
 config_list = config_list_from_json(env_or_file=str(AUTOGEN_CONFIG))
 
