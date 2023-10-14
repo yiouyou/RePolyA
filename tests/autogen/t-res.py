@@ -4,12 +4,17 @@ import sys
 sys.path.append(_RePolyA)
 
 from repolya.autogen.workflow import do_res
+from repolya.autogen.util import cost_usage
+from autogen import ChatCompletion
+
+
+ChatCompletion.start_logging(reset_counter=True, compact=False)
 
 
 _task='''UDP-GlcA的大规模合成'''
 re = do_res(_task)
 print(f"out: '{re}'")
-
+print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")
 
 # import os
 # from dotenv import load_dotenv

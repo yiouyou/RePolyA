@@ -4,6 +4,11 @@ import sys
 sys.path.append(_RePolyA)
 
 from repolya.autogen.workflow import do_simple_task, do_plan_task
+from repolya.autogen.util import cost_usage
+from autogen import ChatCompletion
+
+
+ChatCompletion.start_logging(reset_counter=True, compact=False)
 
 
 _n = int(sys.argv[1])
@@ -18,6 +23,9 @@ if _n == 2:
     _task='''Suggest a fix to an open good first issue of flaml.'''
     re = do_plan_task(_task)
     print(f"out: '{re}'")
+
+
+print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")
 
 
 # import os
@@ -61,3 +69,4 @@ if _n == 2:
 # import json
 # with open(WORKSPACE_AUTOGEN /'_talk_autogen.json', 'w') as wf:
 #     wf.write(json.dumps(ChatCompletion.logged_history, indent=4, ensure_ascii=False))
+

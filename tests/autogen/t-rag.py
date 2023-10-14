@@ -5,6 +5,11 @@ sys.path.append(_RePolyA)
 
 from repolya._const import AUTOGEN_REF
 from repolya.autogen.workflow import do_rag_doc, do_rag_code
+from repolya.autogen.util import cost_usage
+from autogen import ChatCompletion
+
+
+ChatCompletion.start_logging(reset_counter=True, compact=False)
 
 
 _n = int(sys.argv[1])
@@ -85,4 +90,7 @@ if _n == 22:
     for i in results["ids"][0]:
         i_txt = results["ids"][0][i]
         print(f"{i}: '{i_txt}'")
+
+
+print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")
 

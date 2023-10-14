@@ -4,11 +4,17 @@ import sys
 sys.path.append(_RePolyA)
 
 from repolya.autogen.workflow import do_math
+from repolya.autogen.util import cost_usage
+from autogen import ChatCompletion
+
+
+ChatCompletion.start_logging(reset_counter=True, compact=False)
 
 
 _task='''Find all numbers $a$ for which the graph of $y=x^2+a$ and the graph of $y=ax$ intersect. Express your answer in interval notation.'''
 re = do_math(_task)
 print(f"out: '{re}'")
+print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")
 
 
 # import os

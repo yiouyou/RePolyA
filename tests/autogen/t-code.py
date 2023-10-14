@@ -4,11 +4,17 @@ import sys
 sys.path.append(_RePolyA)
 
 from repolya.autogen.workflow import do_simple_code
+from repolya.autogen.util import cost_usage
+from autogen import ChatCompletion
+
+
+ChatCompletion.start_logging(reset_counter=True, compact=False)
 
 
 _task='''For certain cloud services (such as computing), assuming there are several given attributes (such as vCore, memory, iops, storage, backup, etc.) of each computing resource sku, write a flexible and basic recommendation class to filter out unfitted skus and find the lowest price as the recommendation for customers.'''
 re = do_simple_code(_task)
 print(f"out: '{re}'")
+print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")
 
 
 # import os

@@ -3,8 +3,14 @@ _RePolyA = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 import sys
 sys.path.append(_RePolyA)
 
-from repolya._const import AUTOGEN_REF, WORKSPACE_AUTOGEN
+from repolya._const import WORKSPACE_AUTOGEN
 from repolya.autogen.workflow import do_simple_code_qa
+from repolya.autogen.util import cost_usage
+from autogen import ChatCompletion
+
+
+ChatCompletion.start_logging(reset_counter=True, compact=False)
+
 
 _d = '''linux-standard-s2-payg, 0.19
 linux-standard-s3-payg, 0.38
@@ -13,8 +19,6 @@ windows-basic-b3-payg, 0.3
 windows-free-f1-payg, 0
 '''
 _format = 'os-tier-type-unit'
-
-_workspace = str(WORKSPACE_AUTOGEN)
 _options = str(WORKSPACE_AUTOGEN / 'service_options')
 
 _task = f'''
@@ -36,4 +40,5 @@ Remeber, save the code to disk.
 
 re = do_simple_code_qa(_task)
 print(f"out: '{re}'")
+print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")
 

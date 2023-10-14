@@ -63,7 +63,7 @@ def do_simple_code(msg):
             CODE_pm,
         ],
         messages=[],
-        max_round=20,
+        max_round=10,
     )
     manager = GroupChatManager(
         name="CODE_GroupChatManager",
