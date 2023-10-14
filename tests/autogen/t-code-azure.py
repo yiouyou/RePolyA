@@ -4,7 +4,7 @@ import sys
 sys.path.append(_RePolyA)
 
 from repolya._const import AUTOGEN_REF, WORKSPACE_AUTOGEN
-from repolya.autogen.workflow import do_simple_task, do_simple_code, do_simple_code_qa, do_rd, do_math, do_plan_task, do_res, do_rag_doc, do_rag_code
+from repolya.autogen.workflow import do_simple_code_qa
 
 _d = '''linux-standard-s2-payg, 0.19
 linux-standard-s3-payg, 0.38
@@ -18,9 +18,8 @@ _workspace = str(WORKSPACE_AUTOGEN)
 _options = str(WORKSPACE_AUTOGEN / 'service_options')
 
 _task = f'''
-path of workspace: {_workspace}
 path of 'service_options': {_options}
-In workspace, create the 'recommend.py' in which write two functions:
+Create the 'recommend.py' in which write two functions:
 - def get_service_price(path_of_service_options:str, given_service:str) -> price:float # get the price of the given service from the 'service_options'
 - def cheapest_option(path_of_service_options:str, given_service:str) -> [cheapest_service:str, price:float] # select the cheapest alternative service from the 'service_options'
 The service options are listed in the format of '{_format}' as follows:

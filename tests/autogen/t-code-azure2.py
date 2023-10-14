@@ -3,8 +3,8 @@ _RePolyA = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 import sys
 sys.path.append(_RePolyA)
 
-from repolya._const import AUTOGEN_REF, WORKSPACE_AUTOGEN
-from repolya.autogen.workflow import do_simple_task, do_simple_code, do_simple_code_qa, do_rd, do_math, do_plan_task, do_res, do_rag_doc, do_rag_code
+from repolya._const import WORKSPACE_AUTOGEN
+from repolya.autogen.workflow import do_simple_code
 
 _d = '''linux-standard-s2-payg, 0.19
 linux-standard-s3-payg, 0.38
@@ -14,13 +14,12 @@ windows-free-f1-payg, 0
 '''
 _format = 'os-tier-type-unit'
 
-_workspace = str(WORKSPACE_AUTOGEN)
+_workspace = './code'
 _options = str(WORKSPACE_AUTOGEN / 'service_options')
 
 _task1 = f'''
-path of workspace: {_workspace}
 path of 'service_options': {_options}
-In workspace, create the 'recommend.py' in which write two functions:
+Create the 'recommend2.py' in which write two functions:
 - def get_service_price(path_of_service_options:str, given_service:str) -> price:float # get the price of the given service from the 'service_options'
 - def cheapest_option(path_of_service_options:str, given_service:str) -> [cheapest_service:str, price:float] # select the cheapest alternative service from the 'service_options'
 The service options are listed in the format of '{_format}' as follows:
@@ -37,27 +36,26 @@ Important Notes:
 Remeber, save the code to disk.
 '''
 
-# print("task1:")
-# re = do_simple_code(_task1)
-# print(f"task1 out: '{re}'")
+print("task1:")
+re = do_simple_code(_task1)
+print(f"task1 out: '{re}'")
 
-_recommend = str(WORKSPACE_AUTOGEN / 'recommend.py')
+_recommend = './code/recommend2.py'
 
 if os.path.exists(_recommend):
     _recommend_txt = open(_recommend, 'r').read()
     _task2 = f'''
-path of workspace: {_workspace}
 path of 'service_options': {_options}
-'recommend.py':
+'recommend2.py':
 {_recommend_txt}
-In workspace, create the 't-recommend.py' in which write the test code for get_service_price function of 'recommend.py' using 'unittest' module. The code you write should be comprehensive and robust to ensure codes will work as expected without bugs, while also conforming to coding standards like PEP8, and being modular, easy to read, and maintainable.
+Create the 't-recommend2.py' in which write the test code for get_service_price function of 'recommend2.py' using 'unittest' module. The code you write should be comprehensive and robust to ensure codes will work as expected without bugs, while also conforming to coding standards like PEP8, and being modular, easy to read, and maintainable.
 
 Important Notes:
 1. test code should start with following:
 """
 import sys
 sys.path.append('{_workspace}')
-from recommend import get_service_price, cheapest_option
+from recommend2 import get_service_price, cheapest_option
 import unittest
 """; 
 2. test case1 for 'get_service_price': given 'windows-basic-b3-payg', output should be ('windows-basic-b1-payg', 0.075);

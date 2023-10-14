@@ -1,3 +1,5 @@
+from repolya.autogen.as_planner import PLANNER_user, PLANNER_planner
+
 import os
 import json
 import requests
@@ -9,9 +11,21 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.summarize import load_summarize_chain
 from langchain.prompts import PromptTemplate
 
-from repolya.autogen.agent import PLANNER_user, PLANNER_planner
 
-
+_def_search = {
+    "name": "search",
+    "description": "google search for relevant information",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "query": {
+                "type": "string",
+                "description": "Google search query",
+            }
+        },
+        "required": ["query"],
+    },
+}
 def search(query):
     url = "https://google.serper.dev/search"
     payload = json.dumps({
@@ -25,6 +39,20 @@ def search(query):
     return response.json()
 
 
+_def_scrape = {
+    "name": "scrape",
+    "description": "scraping website content based on url",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "url": {
+                "type": "string",
+                "description": "website url to scrape",
+            }
+        },
+        "required": ["url"],
+    },
+            }
 def scrape(url: str):
     headers = {
         'Cache-Control': 'no-cache',
@@ -79,6 +107,20 @@ def summary(content):
     return output
 
 
+_def_planner = {
+    "name": "planner",
+    "description": "ask planner to: 1. get a plan for finishing a task, 2. verify the execution result of the plan and potentially suggest new plan.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "message": {
+                "type": "string",
+                "description": "question to ask planner. Make sure the question include enough context, such as the code and the execution result. The planner does not know the conversation between you and the user, unless you share the conversation with the planner.",
+            },
+        },
+        "required": ["message"],
+    },
+}
 def planner(message):
     PLANNER_user.initiate_chat(
         PLANNER_planner,
@@ -86,3 +128,6 @@ def planner(message):
     )
     return PLANNER_user.last_message()["content"]
 
+
+rd_functions = [_def_search, _def_scrape]
+plantask_functions = [_def_planner]
