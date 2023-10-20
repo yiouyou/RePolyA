@@ -24,7 +24,7 @@ RePolyA is under the Apache 2.0 License. See [LICENSE](https://github.com/yiouyo
 ## Acknowledgements
 This project is based on, or has taken inspiration from, other open source projects, including:
 - [LangChain](https://github.com/langchain-ai/langchain)
-- [MetaGPT](https://github.com/geekan/MetaGPT)
+- [autogen](https://github.com/microsoft/autogen.git)
 - [aider](https://github.com/paul-gauthier/aider)
 
 We thank the creators and contributors of these projects for their work and encourage everyone to check them out.
