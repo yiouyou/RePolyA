@@ -189,7 +189,6 @@ with gr.Blocks(title=_description) as demo:
     fd_PDFs = gr.State([])
 
     with gr.Tab(label = "Chat4"):
-        
         gr.ChatInterface(
             fn=chat_predict_openai,
             textbox=chat_ask,

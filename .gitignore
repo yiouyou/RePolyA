@@ -2,6 +2,8 @@
 tmp*
 *_examples*
 *cache*
+tests/frank/
+tests/frank/*.*
 
 # gradio tmp
 gradio/
@@ -63,6 +65,10 @@ repolya/_workspace/_metagpt/*
 !repolya/_workspace/_paper
 repolya/_workspace/_paper/*
 !repolya/_workspace/_paper/.gitkeep
+# _workspace/_rag
+!repolya/_workspace/_rag
+repolya/_workspace/_rag/*
+!repolya/_workspace/_rag/.gitkeep
 # _workspace/_writer
 !repolya/_workspace/_writer
 repolya/_workspace/_writer/*

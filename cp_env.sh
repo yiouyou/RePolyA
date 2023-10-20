@@ -4,4 +4,6 @@ cp .env repolya/chat/
 cp .env repolya/coder/
 cp .env repolya/metagpt/
 cp .env repolya/paper/
+cp .env repolya/rag/
+cp .env repolya/toolset/
 cp .env repolya/writer/

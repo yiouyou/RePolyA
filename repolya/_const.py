@@ -20,12 +20,12 @@ LOG_ROOT = PROJECT_ROOT / '_log'
 
 ##### chat
 WORKSPACE_CHAT = PROJECT_ROOT / '_workspace' / '_chat'
-LOG_CHAT = LOG_ROOT / "chat.log"
+LOG_CHAT = LOG_ROOT / 'chat.log'
 
 
 ##### paper
 WORKSPACE_PAPER = PROJECT_ROOT / '_workspace' / '_paper'
-LOG_PAPER = LOG_ROOT / "paper.log"
+LOG_PAPER = LOG_ROOT / 'paper.log'
 ###
 PAPER_PDF = WORKSPACE_PAPER / '_pdf'
 PAPER_DIGEST = WORKSPACE_PAPER / '_pdf_digest'
@@ -37,12 +37,12 @@ PAPER_QLIST = PROJECT_ROOT / 'paper' / '_digest'
 
 ##### writer
 WORKSPACE_WRITER = PROJECT_ROOT / '_workspace' / '_writer'
-LOG_WRITER = LOG_ROOT / "writer.log"
+LOG_WRITER = LOG_ROOT / 'writer.log'
 
 
 ##### metagpt
 WORKSPACE_METAGPT = PROJECT_ROOT / '_workspace' / '_metagpt'
-LOG_METAGPT = LOG_ROOT / "metagpt.log"
+LOG_METAGPT = LOG_ROOT / 'metagpt.log'
 ###
 TMP = PROJECT_ROOT / 'tmp'
 DATA_PATH = PROJECT_ROOT / 'data'
@@ -51,7 +51,7 @@ UT_PATH = PROJECT_ROOT / 'data' / 'ut'
 UT_PY_PATH = PROJECT_ROOT / 'data' / 'ut' / 'files' / 'ut'
 SWAGGER_PATH = PROJECT_ROOT / 'data' / 'ut' / 'files' / 'api'
 API_QUESTIONS_PATH = PROJECT_ROOT / 'data' / 'ut' / 'files' / 'question/'
-RESEARCH_PATH = PROJECT_ROOT / 'data' / "research"
+RESEARCH_PATH = PROJECT_ROOT / 'data' / 'research'
 PROMPT_PATH = PROJECT_ROOT / 'metagpt '/ 'prompts'
 YAPI_URL = "http://yapi.deepwisdomai.com/"
 MEM_TTL = 24 * 30 * 3600
@@ -59,7 +59,7 @@ MEM_TTL = 24 * 30 * 3600
 
 ##### coder
 WORKSPACE_CODER = PROJECT_ROOT / '_workspace' / '_coder'
-LOG_CODER = LOG_ROOT / "coder.log"
+LOG_CODER = LOG_ROOT / 'coder.log'
 ###
 DEFAULT_WORKER_NUM = 1
 TIMEOUT_SECONDS = 30
@@ -69,16 +69,24 @@ OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions"
 
 ##### azure
 WORKSPACE_AZURE = PROJECT_ROOT / '_workspace' / '_azure'
-LOG_AZURE = LOG_ROOT / "azure.log"
+LOG_AZURE = LOG_ROOT / 'azure.log'
 ###
 AZURE_PROMPT = PROJECT_ROOT / 'azure' / '_prompt'
 
 
 ##### autogen
 WORKSPACE_AUTOGEN = PROJECT_ROOT / '_workspace' / '_autogen'
-LOG_AUTOGEN = LOG_ROOT / "autogen.log"
+LOG_AUTOGEN = LOG_ROOT / 'autogen.log'
 ###
 AUTOGEN_CONFIG = PROJECT_ROOT / 'autogen' / 'OAI_CONFIG_LIST'
 AUTOGEN_DOC = WORKSPACE_AUTOGEN / 'doc'
 AUTOGEN_REF = WORKSPACE_AUTOGEN / 'ref'
+AUTOGEN_IMG = WORKSPACE_AUTOGEN / 'img'
+
+
+##### rag
+WORKSPACE_RAG = PROJECT_ROOT / '_workspace' / '_rag'
+LOG_RAG = LOG_ROOT / 'rag.log'
+###
+RAG_PDF = WORKSPACE_AUTOGEN / 'pdf'
 

@@ -1,7 +1,10 @@
 from repolya._const import AUTOGEN_CONFIG
 from repolya._log import logger_autogen
 
-from repolya.autogen.tool import plantask_functions
+from repolya.autogen.tool_function import (
+    planner,
+    _def_planner,
+)
 
 from autogen import (
     AssistantAgent,
@@ -12,13 +15,17 @@ from autogen import (
 
 config_list = config_list_from_json(env_or_file=str(AUTOGEN_CONFIG))
 
-gpt4_config = {
+
+# Base Configuration
+base_config = {
     "config_list": config_list,
-    "model": "gpt-4",
+    "request_timeout": 300,
     "temperature": 0,
-    "request_timeout": 120,
+    "model": "gpt-4",
+    # "use_cache": False,
     "seed": 42,
 }
+
 
 ##### plan task
 PLAN_TASK_user = UserProxyAgent(
@@ -30,15 +37,15 @@ PLAN_TASK_user = UserProxyAgent(
     max_consecutive_auto_reply=10,
 )
 
+
 PLAN_TASK_assist = AssistantAgent(
     name="PLAN_assist",
     llm_config={
-        "config_list": config_list,
-        "request_timeout": 600,
-        "seed": 42,
-        "temperature": 0,
-        "model": "gpt-4",
-        "functions": plantask_functions,
+        **base_config,
+        "functions": [_def_planner],
+    },
+    function_map={
+        "planner": planner,
     },
 )
 

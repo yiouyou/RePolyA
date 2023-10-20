@@ -10,15 +10,20 @@ from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProx
 from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
 import chromadb
 
+
 config_list = config_list_from_json(env_or_file=str(AUTOGEN_CONFIG))
 
-gpt4_config = {
+
+# Base Configuration
+base_config = {
     "config_list": config_list,
-    "model": "gpt-4",
-    "temperature": 0,
     "request_timeout": 120,
+    "temperature": 0,
+    "model": "gpt-4",
+    # "use_cache": False,
     "seed": 42,
 }
+
 
 ##### RAG
 def RAG_DOC_user(docs_path, model, collection_name):
@@ -57,7 +62,7 @@ def RAG_CODE_user(docs_path, model, collection_name):
 
 RAG_assist = RetrieveAssistantAgent(
     name="RAG_CODE_assist",
-    llm_config=gpt4_config,
+    llm_config=base_config,
     system_message="You are a helpful assistant.",
 )
 

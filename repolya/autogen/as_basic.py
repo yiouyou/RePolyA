@@ -10,21 +10,17 @@ from autogen import (
 
 config_list = config_list_from_json(env_or_file=str(AUTOGEN_CONFIG))
 
-gpt4_config = {
+
+# Base Configuration
+base_config = {
     "config_list": config_list,
-    "model": "gpt-4",
+    "request_timeout": 300,
     "temperature": 0,
-    "request_timeout": 120,
+    "model": "gpt-4",
+    # "use_cache": False,
     "seed": 42,
 }
 
-gpt35_config = {
-    "config_list": config_list,
-    "model": "gpt-3.5-turbo",
-    "temperature": 0,
-    "request_timeout": 120,
-    "seed": 42,
-}
 
 ##### Basic
 A_user = UserProxyAgent(
@@ -37,9 +33,10 @@ A_user = UserProxyAgent(
     max_consecutive_auto_reply=10,
 )
 
+
 A_assist = AssistantAgent(
     name="A_assist", 
-    llm_config=gpt35_config,
+    llm_config=base_config,
     is_termination_msg=lambda x: True if "TERMINATE" in x.get("content") else False,
 )
 
