@@ -2,8 +2,6 @@
 tmp*
 *_examples*
 *cache*
-tests/frank/
-tests/frank/*.*
 
 # gradio tmp
 gradio/

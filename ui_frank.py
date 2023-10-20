@@ -18,19 +18,16 @@ from repolya.rag.doc_loader import get_docs_from_pdf
 from repolya.rag.doc_splitter import split_docs_recursive
 
 from repolya._log import logger_rag
-from repolya._const import LOG_ROOT
+from repolya._const import LOG_ROOT, WORKSPACE_RAG
 _log_ans = LOG_ROOT / '_ans.txt'
 _log_ref = LOG_ROOT / '_ref.txt'
 
 import time
 import concurrent.futures as cf
 import threading
-from pathlib import Path
-_pwd = Path(__file__).absolute()
-_path = _pwd.parent
 
 
-_pdf = str(_path / 'tests' / 'frank' / 'frank_doc.pdf')
+_pdf = str(WORKSPACE_RAG / 'frank_doc.pdf')
 _docs = get_docs_from_pdf(_pdf)
 _splited_docs = split_docs_recursive(_docs, 1000, 50)
 _splited_docs_list = []
@@ -47,7 +44,7 @@ def chg_btn_color_if_input(_topic):
 
 def qa_faiss_openai(_query):
     start_time = time.time()
-    _vdb_name = str(_path / 'tests' / 'frank' / 'frank_doc_openai')
+    _vdb_name = str(WORKSPACE_RAG / 'frank_doc_openai')
     _vdb = get_faiss_OpenAI(_vdb_name)
     _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
     end_time = time.time()
@@ -59,7 +56,7 @@ def qa_faiss_openai(_query):
 
 def qa_faiss_huggingface(_query):
     start_time = time.time()
-    _vdb_name = str(_path / 'tests' / 'frank' / 'frank_doc_huggingface')
+    _vdb_name = str(WORKSPACE_RAG / 'frank_doc_huggingface')
     _vdb = get_faiss_HuggingFace(_vdb_name)
     _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
     end_time = time.time()
