@@ -52,6 +52,7 @@ scidownl
 seaborn
 sentence-transformers
 setuptools
+termcolor
 tiktoken
 tqdm
 unstructured

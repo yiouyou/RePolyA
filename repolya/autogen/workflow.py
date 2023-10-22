@@ -2,6 +2,7 @@ from repolya._const import AUTOGEN_CONFIG
 from repolya._log import logger_autogen
 
 from repolya.autogen.as_basic import A_user, A_assist
+from repolya.autogen.as_teachable import TEACHABLE_user, TEACHABLE_agent
 from repolya.autogen.as_book import WB_user, WB_executor, WB_author, WB_planner, WB_editor, WB_critic
 from repolya.autogen.as_code import CODE_user, CODE_pm, CODE_engineer, CODE_qa
 from repolya.autogen.as_math import MATH_user, MATH_assist
@@ -62,6 +63,16 @@ def do_simple_task(msg):
         clear_history=False,
     )
     return A_user.last_message()["content"]
+
+
+def do_teachable(msg):
+    TEACHABLE_user.initiate_chat(
+        TEACHABLE_agent,
+        message=msg,
+        clear_history=False,
+    )
+    # teachable_agent.learn_from_user_feedback()
+    return TEACHABLE_user.last_message()["content"]
 
 
 def do_plan_task(msg):
