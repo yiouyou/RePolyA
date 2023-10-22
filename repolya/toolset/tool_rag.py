@@ -1,5 +1,3 @@
-from langchain.chat_models import ChatOpenAI
-from langchain.chains import RetrievalQA, RetrievalQAWithSourcesChain
 from langchain.tools import tool
 from langchain.tools import StructuredTool
 

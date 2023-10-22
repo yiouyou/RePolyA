@@ -2,14 +2,15 @@ from repolya._log import logger_rag
 
 from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI
-
 from langchain.chains import (
     LLMChain,
     RetrievalQA,
     RetrievalQAWithSourcesChain,
     StuffDocumentsChain,
 )
+from langchain.document_loaders import TextLoader
 from langchain.chains.question_answering import load_qa_chain
+from langchain.chains.summarize import load_summarize_chain
 from langchain.callbacks import get_openai_callback
 from langchain.callbacks.manager import (
     AsyncCallbackManagerForRetrieverRun,
@@ -137,4 +138,17 @@ def qa_docs_parent_query(_query, _docs, _chain_type):
         logger_rag.info(f"[{_chain_type}] {_token_cost}")
         logger_rag.debug(f"[{_chain_type}] {_steps}")
     return [_ans['output_text'], _steps, _token_cost]
+
+
+##### summerize the qa ans txt file
+def qa_summerize(_txt_fp: str, _chain_type: str):
+    docs = TextLoader(_txt_fp).load()
+    llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
+    with get_openai_callback() as cb:
+        chain = load_summarize_chain(llm, chain_type=_chain_type)
+        _sum = chain.run(docs)
+        _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
+        logger_rag.info(f"summarize: {_sum}")
+        logger_rag.info(f"[{_chain_type}] {_token_cost}")
+    return [_sum, _token_cost]
 
