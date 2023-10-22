@@ -6,7 +6,10 @@ from repolya.autogen.as_book import WB_user, WB_executor, WB_author, WB_planner,
 from repolya.autogen.as_code import CODE_user, CODE_pm, CODE_engineer, CODE_qa
 from repolya.autogen.as_math import MATH_user, MATH_assist
 from repolya.autogen.as_plantask import PLAN_TASK_user, PLAN_TASK_assist
-from repolya.autogen.as_rag import RAG_CODE_user, RAG_DOC_user, RAG_assist
+from repolya.autogen.as_rag import (
+    RAG_CODE_user, RAG_DOC_user, RAG_assist,
+    RAG_boss, RAG_boss_aid, RAG_pm, RAG_engineer, RAG_reviewer,
+)
 from repolya.autogen.as_rd import RD_user, RD_researcher
 from repolya.autogen.as_research import RES_user, RES_engineer, RES_scientist, RES_planner, RES_executor, RES_critic
 from repolya.autogen.as_draw import DRAW_user, DRAW_artist, DRAW_critic
@@ -16,9 +19,7 @@ from repolya.autogen.db_postgre import (
     PostgresManager,
     add_cap_ref,
 )
-from repolya.autogen.orchestrator import (
-    Orchestrator,
-)
+from repolya.autogen.organizer import Organizer
 
 from autogen import (
     GroupChat,
@@ -38,8 +39,8 @@ base_config = {
     "request_timeout": 120,
     "temperature": 0,
     "model": "gpt-4",
-    # "use_cache": False,
-    "seed": 42,
+    "use_cache": False,
+    # "seed": 42,
 }
 
 
@@ -187,6 +188,107 @@ def do_rag_code(msg, search_string, docs_path, collection_name):
         search_string=search_string,
     )
     return _RAG_CODE_user.last_message()["content"]
+
+
+def do_rag_code_aid(msg, docs_path, collection_name):
+    _RAG_boss_aid = RAG_boss_aid(
+        docs_path,
+        'gpt-4',
+        collection_name,
+    )
+    _RAG_boss_aid.reset(),
+    RAG_pm.reset(),
+    RAG_engineer.reset(),
+    RAG_reviewer.reset(),
+    groupchat = GroupChat(
+        agents=[
+            _RAG_boss_aid,
+            RAG_engineer,
+            RAG_pm,
+            RAG_reviewer,
+        ],
+        messages=[],
+        max_round=12
+    )
+    manager = GroupChatManager(
+        groupchat=groupchat,
+        llm_config=base_config,
+    )
+    ### Start chatting with boss_aid as this is the user proxy agent
+    _RAG_boss_aid.initiate_chat(
+        manager,
+        problem=msg,
+        n_results=3,
+    )
+
+
+def do_rag_code_call_aid(msg, docs_path, collection_name):
+    RAG_boss.reset(),
+    RAG_pm.reset(),
+    RAG_engineer.reset(),
+    RAG_reviewer.reset(),
+    _RAG_boss_aid = RAG_boss_aid(
+        docs_path,
+        'gpt-4',
+        collection_name,
+    )
+    def retrieve_content(message):
+        _RAG_boss_aid.n_results = 3  # Set the number of results to be retrieved.
+        # Check if we need to update the context.
+        update_context_case1, update_context_case2 = _RAG_boss_aid._check_update_context(message)
+        if (update_context_case1 or update_context_case2) and _RAG_boss_aid.update_context:
+            _RAG_boss_aid.problem = message if not hasattr(_RAG_boss_aid, "problem") else _RAG_boss_aid.problem
+            _, ret_msg = _RAG_boss_aid._generate_retrieve_user_reply(message)
+        else:
+            ret_msg = _RAG_boss_aid.generate_init_message(message, n_results=3)
+        return ret_msg if ret_msg else message
+    _RAG_boss_aid.human_input_mode = "NEVER"
+    llm_config = {
+        **base_config,
+        "functions": [
+            {
+                "name": "retrieve_content",
+                "description": "retrieve content for code generation and question answering.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "message": {
+                            "type": "string",
+                            "description": "Refined message which keeps the original meaning and can be used to retrieve content for code generation and question answering.",
+                        },
+                    },
+                    "required": ["message"],
+                },
+            },
+        ],
+    }
+    for agent in [RAG_pm, RAG_engineer, RAG_reviewer]:
+        # update llm_config for assistant agents.
+        agent.llm_config.update(llm_config)
+        agent.register_function(
+            function_map={
+                "retrieve_content": retrieve_content,
+            }
+        )
+    groupchat = GroupChat(
+        agents=[
+            RAG_boss,
+            RAG_engineer,
+            RAG_pm,
+            RAG_reviewer,
+        ],
+        messages=[],
+        max_round=12
+    )
+    manager = GroupChatManager(
+        groupchat=groupchat,
+        llm_config=base_config,
+    )
+    ### Start chatting with boss_aid as this is the user proxy agent
+    RAG_boss.initiate_chat(
+        manager,
+        message=msg,
+    )
 
 
 def do_write_book(msg):

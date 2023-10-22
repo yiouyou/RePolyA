@@ -4,7 +4,7 @@ import sys
 sys.path.append(_RePolyA)
 
 from repolya._const import AUTOGEN_REF
-from repolya.autogen.workflow import do_rag_doc, do_rag_code
+from repolya.autogen.workflow import do_rag_doc, do_rag_code, do_rag_code_aid, do_rag_code_call_aid
 from repolya.autogen.util import cost_usage
 from autogen import ChatCompletion
 
@@ -90,6 +90,24 @@ if _n == 22:
     for i in results["ids"][0]:
         i_txt = results["ids"][0][i]
         print(f"{i}: '{i_txt}'")
+
+
+if _n == 3:
+    re = do_rag_code_aid(
+        msg="How to use spark for parallel training in FLAML? Give me sample code.",
+        docs_path="https://raw.githubusercontent.com/microsoft/FLAML/main/website/docs/Examples/Integrate%20-%20Spark.md",
+        collection_name="rag_code_aid",
+    )
+    print(f"{re}")
+
+
+if _n == 4:
+    re = do_rag_code_call_aid(
+        msg="How to use spark for parallel training in FLAML? Give me sample code.",
+        docs_path="https://raw.githubusercontent.com/microsoft/FLAML/main/website/docs/Examples/Integrate%20-%20Spark.md",
+        collection_name="rag_code_aid",
+    )
+    print(f"{re}")
 
 
 print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")

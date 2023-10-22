@@ -12,11 +12,11 @@ from autogen import (
 
 config_list = config_list_from_json(env_or_file=str(AUTOGEN_CONFIG))
 
-class Orchestractor:
+class Organizer:
     def __init__(
         self,
-        name: Optional[str] = "Orchestractor",
         agents: List[ConversableAgent],
+        name: Optional[str] = "Orchestractor",
     ):
         self.name = name
         self.agents = agents

@@ -33,6 +33,7 @@ openai
 openpyxl
 pandas
 playwright
+psycopg2-binary
 pyautogen
 pybtex
 pydantic==1.10.9
