@@ -25,7 +25,7 @@ base_config = {
     "config_list": config_list,
     "request_timeout": 120,
     "temperature": 0,
-    "model": "gpt-4",
+    "model": "gpt-3.5-turbo",
     # "use_cache": False,
     "seed": 42,
 }

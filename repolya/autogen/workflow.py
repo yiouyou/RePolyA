@@ -1,4 +1,4 @@
-from repolya._const import AUTOGEN_CONFIG
+from repolya._const import AUTOGEN_CONFIG, WORKSPACE_RAG
 from repolya._log import logger_autogen
 
 from repolya.autogen.as_basic import A_user, A_assist
@@ -10,16 +10,30 @@ from repolya.autogen.as_plantask import PLAN_TASK_user, PLAN_TASK_assist
 from repolya.autogen.as_rag import (
     RAG_CODE_user, RAG_DOC_user, RAG_assist,
     RAG_boss, RAG_boss_aid, RAG_pm, RAG_engineer, RAG_reviewer,
+    RAG_task_user, RAG_task_planner, RAG_task_critic,
 )
 from repolya.autogen.as_rd import RD_user, RD_researcher
 from repolya.autogen.as_research import RES_user, RES_engineer, RES_scientist, RES_planner, RES_executor, RES_critic
 from repolya.autogen.as_draw import DRAW_user, DRAW_artist, DRAW_critic
 from repolya.autogen.as_postgre import POSTGRE_user, POSTGRE_engineer, POSTGRE_analyst, POSTGRE_pm
 from repolya.autogen.as_util import text_report_analyst, json_report_analyst, yaml_report_analyst
+
 from repolya.autogen.db_postgre import (
     PostgresManager,
     add_cap_ref,
 )
+from repolya.rag.vdb_faiss import (
+    get_faiss_OpenAI,
+    get_faiss_HuggingFace,
+)
+from repolya.rag.qa_chain import (
+    qa_vdb_multi_query,
+    qa_docs_ensemble_query,
+    qa_docs_parent_query,
+    qa_summerize,
+    summerize_text,
+)
+
 from repolya.autogen.organizer import Organizer
 
 from autogen import (
@@ -29,6 +43,8 @@ from autogen import (
 )
 
 import os
+import re
+import time
 
 
 config_list = config_list_from_json(env_or_file=str(AUTOGEN_CONFIG))
@@ -37,9 +53,9 @@ config_list = config_list_from_json(env_or_file=str(AUTOGEN_CONFIG))
 # Base Configuration
 base_config = {
     "config_list": config_list,
-    "request_timeout": 120,
+    "request_timeout": 300,
     "temperature": 0,
-    "model": "gpt-4",
+    "model": "gpt-3.5-turbo",
     "use_cache": False,
     # "seed": 42,
 }
@@ -201,6 +217,35 @@ def do_rag_code(msg, search_string, docs_path, collection_name):
     return _RAG_CODE_user.last_message()["content"]
 
 
+def create_rag_task_list(msg):
+    _agents = [
+        RAG_task_user,
+        RAG_task_planner,
+        RAG_task_critic,
+        RAG_task_planner,
+    ]
+    _organizer = Organizer(
+        name="Ask for Frank ::: RAG Task Team",
+        agents=_agents,
+    )
+    success, _messages = _organizer.sequential_conversation(msg)
+    # print(success)
+    # print(_messages)
+    _task_list = _messages[-1]
+    return _task_list
+
+
+def search_faiss_openai(text):
+    _vdb_name = str(WORKSPACE_RAG / 'frank_doc_openai')
+    _vdb = get_faiss_OpenAI(_vdb_name)
+    _re = []
+    questions = [re.sub(r"^\d+\.\s*", "", line) for line in text.split("\n") if re.match(r"^\d+\.", line)]
+    for i in questions:
+        _ans, _step, _token_cost = qa_vdb_multi_query(i, _vdb, 'stuff')
+        _re.append(f"A: {i}\nQ: {_ans}")
+    return '\n\n'.join(_re)
+
+
 def do_rag_code_aid(msg, docs_path, collection_name):
     _RAG_boss_aid = RAG_boss_aid(
         docs_path,
@@ -219,7 +264,7 @@ def do_rag_code_aid(msg, docs_path, collection_name):
             RAG_reviewer,
         ],
         messages=[],
-        max_round=12
+        max_round=12,
     )
     manager = GroupChatManager(
         groupchat=groupchat,
@@ -289,7 +334,7 @@ def do_rag_code_call_aid(msg, docs_path, collection_name):
             RAG_reviewer,
         ],
         messages=[],
-        max_round=12
+        max_round=12,
     )
     manager = GroupChatManager(
         groupchat=groupchat,
@@ -389,7 +434,7 @@ def do_postgre(msg):
     return POSTGRE_user.last_message()["content"]
 
 
-def do_postgre_orchestrator(msg):
+def do_postgre_organizer(msg):
     DB_URL = os.environ.get("POSTGRE_URL")
     POSTGRES_TABLE_DEFINITIONS_CAP_REF = "TABLE_DEFINITIONS"
     _prompt = f"Fulfill this database query: {msg}. "
@@ -409,11 +454,11 @@ def do_postgre_orchestrator(msg):
         POSTGRE_analyst,
         POSTGRE_pm,
     ]
-    data_eng_orchestrator = Orchestrator(
+    data_eng_organizer = Organizer(
         name="Postgres Data Analytics Multi-Agent ::: Data Engineering Team",
         agents=data_eng_agents,
     )
-    success, data_eng_messages = data_eng_orchestrator.sequential_conversation(prompt)
+    success, data_eng_messages = data_eng_organizer.sequential_conversation(prompt)
     data_to_report = data_eng_messages[-2]["content"]
     # data_to_report = [
     #     {
@@ -442,10 +487,10 @@ def do_postgre_orchestrator(msg):
         json_report_analyst,
         yaml_report_analyst,
     ]
-    data_viz_orchestrator = Orchestrator(
+    data_viz_organizer = Organizer(
         name="Postgres Data Analytics Multi-Agent :::   Data Viz Team",
         agents=data_viz_agents,
     )
     data_viz_prompt = f"Here is the data to report: {data_to_report}"
-    data_viz_orchestrator.broadcast_conversation(data_viz_prompt)
+    data_viz_organizer.broadcast_conversation(data_viz_prompt)
 

@@ -2,6 +2,11 @@ from repolya._log import logger_rag
 
 from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI
+from langchain.prompts import (
+    PromptTemplate,
+    ChatPromptTemplate,
+)
+from langchain.schema import StrOutputParser
 from langchain.chains import (
     LLMChain,
     RetrievalQA,
@@ -22,6 +27,7 @@ from repolya.rag.retriever import (
     get_docs_ensemble_retriever,
     get_docs_parent_retriever,
 )
+from repolya.toolset.load_file import load_text_to_doc
 
 
 def pretty_print_docs(docs):
@@ -151,4 +157,36 @@ def qa_summerize(_txt_fp: str, _chain_type: str):
         logger_rag.info(f"summarize: {_sum}")
         logger_rag.info(f"[{_chain_type}] {_token_cost}")
     return [_sum, _token_cost]
+
+
+##### summerize text
+def summerize_text(_text: str, _chain_type: str):
+    doc = load_text_to_doc(_text)
+    llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
+    with get_openai_callback() as cb:
+        chain = load_summarize_chain(llm, chain_type=_chain_type)
+        _sum = chain.run([doc])
+        _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
+        logger_rag.info(f"summarize: {_sum}")
+        logger_rag.info(f"[{_chain_type}] {_token_cost}")
+    return [_sum, _token_cost]
+
+
+##### qa with context
+def qa_with_context(_query, _context):
+    llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
+    template ="""Giving following context:
+{_context}
+
+Completely answer the following questions from all angles as a perfessional lawyer without any bias:
+{_query}
+"""
+    prompt = PromptTemplate.from_template(template)
+    with get_openai_callback() as cb:
+        chain = prompt | llm | StrOutputParser()
+        _ans = chain.invoke({"_query": _query, "_context": _context})
+        _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
+        logger_rag.info(f"{_ans}")
+        logger_rag.info(f"{_token_cost}")
+    return [_ans, _token_cost]
 

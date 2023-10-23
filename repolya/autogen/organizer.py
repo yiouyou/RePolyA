@@ -120,7 +120,7 @@ class Organizer:
                 if was_successful:
                     print(f"✅ Orchestrator was successful")
                 else:
-                    print(f"❌ Orchestrator failed")
+                    print(f"✅ NO 'APPROVED'(completed_keyword) OR ❌ Orchestrator failed")
                 return was_successful, self.messages
 
     def broadcast_conversation(self, prompt: str) -> Tuple[bool, List[str]]:

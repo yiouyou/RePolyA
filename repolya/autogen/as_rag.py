@@ -10,6 +10,13 @@ from autogen.agentchat.contrib.retrieve_user_proxy_agent import RetrieveUserProx
 from autogen.agentchat.contrib.retrieve_assistant_agent import RetrieveAssistantAgent
 import chromadb
 
+from repolya.autogen.tool_function import (
+    qa_faiss_openai_frank,
+    _def_qa_faiss_openai_frank,
+    qa_summerize,
+    _def_qa_summerize,
+)
+
 
 config_list = config_list_from_json(env_or_file=str(AUTOGEN_CONFIG))
 is_termination_msg = lambda x: isinstance(x, dict) and "TERMINATE" == str(x.get("content", ""))[-9:].upper()
@@ -20,9 +27,9 @@ is_termination_msg = lambda x: isinstance(x, dict) and "TERMINATE" == str(x.get(
 # Base Configuration
 base_config = {
     "config_list": config_list,
-    "request_timeout": 120,
+    "request_timeout": 300,
     "temperature": 0,
-    "model": "gpt-4",
+    "model": "gpt-3.5-turbo",
     "use_cache": False,
     # "seed": 42,
 }
@@ -72,6 +79,7 @@ RAG_assist = RetrieveAssistantAgent(
 )
 
 
+#### boss, etc.
 BOSS_PROMPT = "The boss who ask questions and give tasks."
 RAG_boss = UserProxyAgent(
     name="RAG_boss",
@@ -128,4 +136,68 @@ RAG_reviewer = AssistantAgent(
     is_termination_msg=is_termination_msg,
     system_message=REVIEWER_PROMPT,
 )
+
+
+##### Organizer
+COMPLETION_PROMPT = "If everything looks good, respond with APPROVED."
+
+USER_PROMPT = "User. You ask the Planner questions and assign tasks."
+RAG_task_user = UserProxyAgent(
+    name="RAG_user",
+    code_execution_config=False,
+    human_input_mode="NEVER",
+    is_termination_msg=is_termination_msg,
+    system_message=USER_PROMPT,
+)
+
+
+PLANNER_PROMPT = "Planner. To help the User to collect information and evidence out of a personal information database, you need to break down complex questions into simpler sub-questions (no more than THREE) for easier answer retrieval from the database. Send the list to the the Critic for review. And adjust the list based on the Critic's feedback, keep the number of questions around FIVE. Output the list only, no comments, nothing else."
+RAG_task_planner = AssistantAgent(
+    name="RAG_task_planner",
+    llm_config=base_config,
+    code_execution_config=False,
+    is_termination_msg=is_termination_msg,
+    system_message=PLANNER_PROMPT,
+)
+
+
+CRITIC_PROMPT = "Critic. Double check the list of sub-questions from Planner and provide feedback."
+RAG_task_critic = AssistantAgent(
+    name="RAG_task_critic",
+    llm_config=base_config,
+    is_termination_msg=is_termination_msg,
+    system_message=CRITIC_PROMPT,
+)
+
+
+# SEARCHER_PROMPT = "Searcher. You use given function to search for information in the database."
+# RAG_task_searcher = AssistantAgent(
+#     name="RAG_task_searcher",
+#     llm_config={
+#         **base_config,
+#         "functions": [_def_qa_faiss_openai_frank],
+#     },
+#     function_map={
+#         "qa_faiss_openai_frank": qa_faiss_openai_frank,
+#     },
+#     code_execution_config=False,
+#     is_termination_msg=is_termination_msg,
+#     system_message=SEARCHER_PROMPT,
+# )
+
+
+# SUMMERIZER_PROMPT = "Summerizer. You use given function to summerize a given text. Reply `TERMINATE` in the end when everything is done."
+# RAG_task_summerizer = AssistantAgent(
+#     name="RAG_task_summerizer",
+#     llm_config={
+#         **base_config,
+#         "functions": [_def_qa_summerize],
+#     },
+#     function_map={
+#         "qa_summerize": qa_summerize,
+#     },
+#     code_execution_config=False,
+#     is_termination_msg=is_termination_msg,
+#     system_message=SUMMERIZER_PROMPT,
+# )
 

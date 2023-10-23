@@ -1,10 +1,13 @@
-from repolya._const import AUTOGEN_IMG
+from repolya._const import AUTOGEN_IMG, WORKSPACE_RAG
+from repolya._log import logger_rag
 from repolya.autogen.as_planner import PLANNER_user, PLANNER_planner
 from repolya.autogen.db_postgre import PostgresManager
 
 import os
 import json
 import yaml
+import time
+import random
 import requests
 import http.client
 from datetime import datetime
@@ -16,6 +19,18 @@ from langchain.chat_models import ChatOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.summarize import load_summarize_chain
 from langchain.prompts import PromptTemplate
+
+from repolya.rag.vdb_faiss import (
+    get_faiss_OpenAI,
+    get_faiss_HuggingFace,
+)
+from repolya.rag.qa_chain import (
+    qa_vdb_multi_query,
+    qa_docs_ensemble_query,
+    qa_docs_parent_query,
+    qa_summerize,
+    summerize_text,
+)
 
 
 ##### search
@@ -338,4 +353,48 @@ def write_yaml_file(fname, yaml_str: str):
     # Write the Python object to the file as YAML
     with open(fname, "w") as f:
         yaml.safe_dump(data, f)
+
+
+##### qa_faiss_openai_frank
+_def_qa_faiss_openai_frank = {
+    "name": "qa_faiss_openai_frank",
+    "description": "Search information about Frank in a faiss vector db with openai embedding",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "query": {
+                "type": "string",
+                "description": "The query to search",
+            },
+        },
+        "required": ["query"],
+    },
+}
+def qa_faiss_openai_frank(query):
+    time.sleep(random.uniform(1, 2))
+    _vdb_name = str(WORKSPACE_RAG / 'frank_doc_openai')
+    _vdb = get_faiss_OpenAI(_vdb_name)
+    _ans, _step, _token_cost = qa_vdb_multi_query(query, _vdb, 'stuff')
+    return _ans
+
+
+##### summerize
+_def_qa_summerize = {
+    "name": "qa_summerize",
+    "description": "Summerize a text",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "text": {
+                "type": "string",
+                "description": "The text to summerize",
+            },
+        },
+        "required": ["text"],
+    },
+}
+def qa_summerize(text):
+    time.sleep(random.uniform(1, 2))
+    _sum, _token_cost = summerize_text(text, 'stuff')
+    return _sum
 
