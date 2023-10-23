@@ -242,7 +242,7 @@ def search_faiss_openai(text):
     questions = [re.sub(r"^\d+\.\s*", "", line) for line in text.split("\n") if re.match(r"^\d+\.", line)]
     for i in questions:
         _ans, _step, _token_cost = qa_vdb_multi_query(i, _vdb, 'stuff')
-        _re.append(f"A: {i}\nQ: {_ans}")
+        _re.append(f"Q: {i}\nA: {_ans}")
     return '\n\n'.join(_re)
 
 
