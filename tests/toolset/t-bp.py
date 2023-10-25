@@ -20,7 +20,10 @@ bp_schema_urls = [
 ]
 
 
-urls_to_faiss(pj_urls, str(WORKSPACE_RAG / "cq_bp_pj_openai"), str(WORKSPACE_RAG / "cq_bp_pj_clean_txt"))
+vdb_pj = str(WORKSPACE_RAG / "cq_bp_pj_openai")
+urls_to_faiss(pj_urls, vdb_pj, str(WORKSPACE_RAG / "cq_bp_pj_clean_txt"))
 
-urls_to_faiss(pj_urls, str(WORKSPACE_RAG / "cq_bp_schema_openai"), str(WORKSPACE_RAG / "cq_bp_schema_clean_txt"))
+vdb_bp = str(WORKSPACE_RAG / "cq_bp_schema_openai")
+urls_to_faiss(bp_schema_urls, vdb_bp, str(WORKSPACE_RAG / "cq_bp_schema_clean_txt"))
+
 
