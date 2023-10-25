@@ -393,3 +393,4 @@ def get_ans_from_qlist(_fp):
     _ans = _ans_str
     _steps = extract_and_sum(_step_str)
     return [_ans, _steps]
+
