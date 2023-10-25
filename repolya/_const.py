@@ -88,5 +88,5 @@ AUTOGEN_IMG = WORKSPACE_AUTOGEN / 'img'
 WORKSPACE_RAG = PROJECT_ROOT / '_workspace' / '_rag'
 LOG_RAG = LOG_ROOT / 'rag.log'
 ###
-RAG_PDF = WORKSPACE_AUTOGEN / 'pdf'
+RAG_PDF = WORKSPACE_RAG / 'pdf'
 

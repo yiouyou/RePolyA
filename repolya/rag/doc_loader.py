@@ -8,11 +8,11 @@ import re
 
 ##### docs
 def clean_txt(_txt):
-    _1 = re.sub(r"\n+", "\n", _txt)
-    _2 = re.sub(r"\t+\n", "\n", _1)
-    _3 = re.sub(r" +\n", "\n", _2)
-    _clean_txt = re.sub(r"\n+", "\n", _3)
-    return _clean_txt
+    _txt = re.sub(r"\n+", "\n", _txt)
+    _txt = re.sub(r"\t+", "\t", _txt)
+    _txt = re.sub(r' +', ' ', _txt)
+    _txt = re.sub(r'^\s+', '', _txt, flags=re.MULTILINE)
+    return _txt
 
 def get_docs_from_pdf(_fp):
     _f = os.path.basename(_fp)

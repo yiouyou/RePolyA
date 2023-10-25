@@ -1,9 +1,10 @@
 from repolya._log import logger_rag
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.text_splitter import MarkdownHeaderTextSplitter
 
 
-##### split
+##### RecursiveCharacterTextSplitter
 def get_RecursiveCharacterTextSplitter(text_chunk_size=3000, text_chunk_overlap=300):
     ##### default list is ["\n\n", "\n", " ", ""]
     text_splitter = RecursiveCharacterTextSplitter(
@@ -17,7 +18,28 @@ def get_RecursiveCharacterTextSplitter(text_chunk_size=3000, text_chunk_overlap=
     return text_splitter
 
 
+##### MarkdownHeaderTextSplitter
+def get_MarkdownHeaderTextSplitter():
+    headers_to_split_on = [
+        ("#", "Header 1"),
+        ("##", "Header 2"),
+        ("###", "Header 3"),
+        ("####", "Header 4"),
+    ]
+    md_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
+    return md_splitter
+
+
+##### split general
 def split_docs_recursive(_docs, text_chunk_size, text_chunk_overlap):
+    text_splitter = get_RecursiveCharacterTextSplitter(text_chunk_size, text_chunk_overlap)
+    splited_docs = text_splitter.split_documents(_docs)
+    logger_rag.info(f"split {len(_docs)} docs to {len(splited_docs)} splited_docs")
+    return splited_docs
+
+
+##### split pdf
+def split_pdf_docs_recursive(_docs, text_chunk_size, text_chunk_overlap):
     text_splitter = get_RecursiveCharacterTextSplitter(text_chunk_size, text_chunk_overlap)
     splited_docs = text_splitter.split_documents(_docs)
     for i in splited_docs:
@@ -29,7 +51,7 @@ def split_docs_recursive(_docs, text_chunk_size, text_chunk_overlap):
     return splited_docs
 
 
-def split_text_recursive(_text, _fp, text_chunk_size, text_chunk_overlap):
+def split_pdf_text_recursive(_text, _fp, text_chunk_size, text_chunk_overlap):
     text_splitter = get_RecursiveCharacterTextSplitter(text_chunk_size, text_chunk_overlap)
     _docs = text_splitter.create_documents([_text])
     _n = 0
@@ -41,5 +63,3 @@ def split_text_recursive(_text, _fp, text_chunk_size, text_chunk_overlap):
         _n += 1
     logger_rag.info(f"split text to {len(_docs)} docs")
     return _docs
-
-

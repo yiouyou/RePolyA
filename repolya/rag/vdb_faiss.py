@@ -1,7 +1,7 @@
 from repolya._log import logger_rag
 
 from repolya.rag.doc_loader import get_docs_from_pdf
-from repolya.rag.doc_splitter import split_docs_recursive
+from repolya.rag.doc_splitter import split_pdf_docs_recursive
 from repolya.rag.embedding import get_embedding_OpenAI, get_embedding_HuggingFace
 
 from langchain.vectorstores import FAISS
@@ -25,7 +25,7 @@ def pdf_to_faiss_OpenAI(_fp, _db_name, text_chunk_size=3000, text_chunk_overlap=
     docs = get_docs_from_pdf(_fp)
     if len(docs) > 0:
         logger_rag.info(f"docs: {len(docs)}")
-        splited_docs = split_docs_recursive(docs, text_chunk_size, text_chunk_overlap)
+        splited_docs = split_pdf_docs_recursive(docs, text_chunk_size, text_chunk_overlap)
         logger_rag.info(f"splited_docs: {len(splited_docs)}")
         embedding_to_faiss_OpenAI(splited_docs, _db_name)
     else:
@@ -60,7 +60,7 @@ def pdf_to_faiss_HuggingFace(_fp, _db_name, text_chunk_size=3000, text_chunk_ove
     docs = get_docs_from_pdf(_fp)
     if len(docs) > 0:
         logger_rag.info(f"docs: {len(docs)}")
-        splited_docs = split_docs_recursive(docs, text_chunk_size, text_chunk_overlap)
+        splited_docs = split_pdf_docs_recursive(docs, text_chunk_size, text_chunk_overlap)
         logger_rag.info(f"splited_docs: {len(splited_docs)}")
         embedding_to_faiss_HuggingFace(splited_docs, _db_name)
     else:

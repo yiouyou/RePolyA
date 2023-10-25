@@ -16,7 +16,7 @@ from repolya.rag.qa_chain import (
     qa_summerize,
 )
 from repolya.rag.doc_loader import get_docs_from_pdf
-from repolya.rag.doc_splitter import split_docs_recursive
+from repolya.rag.doc_splitter import split_pdf_docs_recursive
 
 from repolya.autogen.workflow import create_rag_task_list, search_faiss_openai
 from repolya.autogen.util import cost_usage
@@ -37,7 +37,7 @@ import threading
 
 _pdf = str(WORKSPACE_RAG / 'frank_doc.pdf')
 _docs = get_docs_from_pdf(_pdf)
-_splited_docs = split_docs_recursive(_docs, 1000, 50)
+_splited_docs = split_pdf_docs_recursive(_docs, 1000, 50)
 _splited_docs_list = []
 for doc in _splited_docs:
     _splited_docs_list.append(doc.page_content)

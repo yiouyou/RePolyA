@@ -2,7 +2,7 @@ from repolya._const import RAG_PDF, PAPER_QLIST
 from repolya._log import logger_rag
 
 from repolya.rag.doc_splitter import (
-  split_docs_recursive,
+  split_pdf_docs_recursive,
   split_text_recursive,
 )
 from repolya.rag.vdb_faiss import (

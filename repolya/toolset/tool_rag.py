@@ -2,7 +2,7 @@ from langchain.tools import tool
 from langchain.tools import StructuredTool
 
 from repolya.rag.doc_loader import get_docs_from_pdf
-from repolya.rag.doc_splitter import split_docs_recursive
+from repolya.rag.doc_splitter import split_pdf_docs_recursive
 from repolya.rag.vdb_faiss import (
     get_faiss_OpenAI,
     get_faiss_HuggingFace,
@@ -44,7 +44,7 @@ def tool_qa_pdf_ensemble_query(_pdf: str):
         _docs = get_docs_from_pdf(_pdf)
         text_chunk_size = 1000
         text_chunk_overlap = 50
-        _splited_docs = split_docs_recursive(_docs, text_chunk_size, text_chunk_overlap)
+        _splited_docs = split_pdf_docs_recursive(_docs, text_chunk_size, text_chunk_overlap)
         _ans, _steps, _token_cost = qa_docs_ensemble_query(_query, _splited_docs, _chain_type)
         return _ans
     _info_type = '.'.join(os.path.basename(_pdf).split('.')[:-1])
@@ -62,7 +62,7 @@ def tool_qa_pdf_parent_query(_pdf: str):
         _docs = get_docs_from_pdf(_pdf)
         text_chunk_size = 1000
         text_chunk_overlap = 50
-        _splited_docs = split_docs_recursive(_docs, text_chunk_size, text_chunk_overlap)
+        _splited_docs = split_pdf_docs_recursive(_docs, text_chunk_size, text_chunk_overlap)
         _ans, _steps, _token_cost = qa_docs_parent_query(_query, _splited_docs, _chain_type)
         return _ans
     _info_type = '.'.join(os.path.basename(_pdf).split('.')[:-1])

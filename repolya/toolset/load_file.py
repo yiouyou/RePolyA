@@ -1,10 +1,17 @@
 from langchain.docstore.document import Document
 from langchain.document_loaders.csv_loader import CSVLoader
-from langchain.document_loaders import Docx2txtLoader
-from langchain.document_loaders import UnstructuredPowerPointLoader
-from langchain.document_loaders import UnstructuredEmailLoader
-from langchain.document_loaders import S3FileLoader
-from langchain.document_loaders import S3DirectoryLoader
+from langchain.document_loaders import (
+    TextLoader,
+    BSHTMLLoader,
+    PythonLoader,
+    PyMuPDFLoader,
+    UnstructuredMarkdownLoader,
+    UnstructuredWordDocumentLoader,
+    UnstructuredPowerPointLoader,
+    UnstructuredEmailLoader,
+    S3FileLoader,
+    S3DirectoryLoader,
+)
 
 
 ##### Document
@@ -13,6 +20,41 @@ def load_text_to_doc(text: str, metadata: dict = {}):
         page_content=text,
         metadata=metadata,
     )
+    return doc
+
+
+##### TextLoader
+def load_txt_to_docs(text: str):
+    loader = TextLoader(text)
+    doc = loader.load()
+    return doc
+
+
+##### PythonLoader
+def load_py_to_docs(file_path: str):
+    loader = PythonLoader(file_path)
+    doc = loader.load()
+    return doc
+
+
+##### PyMuPDFLoader
+def load_pdf_to_docs(file_path: str):
+    loader = PyMuPDFLoader(file_path)
+    doc = loader.load()
+    return doc
+
+
+##### UnstructuredMarkdownLoader
+def load_md_to_docs(file_path: str | list[str]):
+    loader = UnstructuredMarkdownLoader(file_path)
+    docs = loader.load()
+    return docs
+
+
+##### BSHTMLLoader
+def load_html_to_docs(file_path: str):
+    loader = BSHTMLLoader(file_path)
+    doc = loader.load()
     return doc
 
 
@@ -27,21 +69,22 @@ def load_csv_to_docs(file_path: str, fieldnames: list[str]):
         },
         encoding="utf-8",
     )
-    docs = loader.load()
-    return docs
+    doc = loader.load()
+    return doc
 
 
-##### Docx2txtLoader
-def load_docx_to_docs(file_path: str):
-    loader = Docx2txtLoader(
+##### UnstructuredWordDocumentLoader
+def load_docx_to_docs(file_path: str | list[str]):
+    loader = UnstructuredWordDocumentLoader(
         file_path=file_path,
+        mode="elements",
     )
     docs = loader.load()
     return docs
 
 
 ##### UnstructuredPowerPointLoader
-def load_pptx_to_docs(file_path: str):
+def load_pptx_to_docs(file_path: str | list[str]):
     loader = UnstructuredPowerPointLoader(
         file_path=file_path,
         mode="elements",
@@ -57,8 +100,8 @@ def load_eml_to_docs(file_path: str):
         mode="elements",
         process_attachments=True,
     )
-    docs = loader.load()
-    return docs
+    doc = loader.load()
+    return doc
 
 
 ##### S3FileLoader

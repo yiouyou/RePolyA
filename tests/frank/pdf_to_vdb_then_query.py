@@ -5,7 +5,7 @@ sys.path.append(_RePolyA)
 
 from repolya._const import WORKSPACE_RAG
 from repolya.rag.doc_loader import get_docs_from_pdf
-from repolya.rag.doc_splitter import split_docs_recursive
+from repolya.rag.doc_splitter import split_pdf_docs_recursive
 from repolya.rag.vdb_faiss import (
     embedding_to_faiss_OpenAI,
     embedding_to_faiss_HuggingFace,
@@ -28,7 +28,7 @@ text_chunk_size = 1000
 text_chunk_overlap = 50
 
 _docs = get_docs_from_pdf(_pdf)
-_splited_docs = split_docs_recursive(_docs, text_chunk_size, text_chunk_overlap)
+_splited_docs = split_pdf_docs_recursive(_docs, text_chunk_size, text_chunk_overlap)
 
 _splited_docs_list = []
 for doc in _splited_docs:
