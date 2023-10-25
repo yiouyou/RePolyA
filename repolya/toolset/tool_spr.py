@@ -1,3 +1,6 @@
+from langchain.tools import tool
+from langchain.tools import StructuredTool
+
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import StrOutputParser
@@ -45,6 +48,7 @@ SPR_UNPACK_TEMPLATE_ZH = """＃ 使命
 使用提供给您的入门知识来完全解开并阐明该概念。 逐个方面进行讨论，弥补缺失的部分，并利用你的推理能力来充分阐明这个概念。 您的输出应该采用原始文章、文档或材料的形式。
 """
 
+
 def spr_chain(_sys, _text):
     _re, _token_cost = "", ""
     prompt = ChatPromptTemplate.from_messages(
@@ -70,18 +74,54 @@ def spr_generator(_text):
     _re, _token_cost = spr_chain(SPR_PACK_TEMPLATE, _text)
     return _re, _token_cost
 
+def tool_spr_generator():
+    tool = StructuredTool.from_function(
+        spr_generator,
+        name="Generate SPR",
+        description="Generate a Sparse Priming Representation (SPR) from a given text.",
+        verbose=True,
+    )
+    return tool
+
 
 def spr_unpack(_text):
     _re, _token_cost = spr_chain(SPR_UNPACK_TEMPLATE, _text)
     return _re, _token_cost
+
+def tool_spr_unpack():
+    tool = StructuredTool.from_function(
+        spr_unpack,
+        name="Unpack SPR",
+        description="Unpack a Sparse Priming Representation (SPR) into a full text.",
+        verbose=True,
+    )
+    return tool
 
 
 def zh_spr_generator(_text):
     _re, _token_cost = spr_chain(SPR_PACK_TEMPLATE_ZH, _text)
     return _re, _token_cost
 
+def tool_zh_spr_generator():
+    tool = StructuredTool.from_function(
+        zh_spr_generator,
+        name="Generate SPR (ZH)",
+        description="Generate a Sparse Priming Representation (SPR) from a given text.",
+        verbose=True,
+    )
+    return tool
+
 
 def zh_spr_unpack(_text):
     _re, _token_cost = spr_chain(SPR_UNPACK_TEMPLATE_ZH, _text)
     return _re, _token_cost
+
+def tool_zh_spr_unpack():
+    tool = StructuredTool.from_function(
+        zh_spr_unpack,
+        name="Unpack SPR (ZH)",
+        description="Unpack a Sparse Priming Representation (SPR) into a full text.",
+        verbose=True,
+    )
+    return tool
 

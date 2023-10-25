@@ -61,34 +61,3 @@ for i in _docs:
 # print(_docs)
 
 
-_bp_frame = """
-# Company Purpose
-Define your company in a single declarative sentence. This is harder than it looks. It's easy to get caught up listing features instead of communicating your mission.
-
-# Problem
-Describe the pain of your customer. How is this addressed today and what are the shortcomings to current solutions.
-
-# Solution
-Explain your eureka moment. Why is your value prop unique and compelling? Why will it endure? And where does it go from here?
-
-# Why Now?
-The best companies almost always have a clear why now? Nature hates a vacuum—so why hasn't your solution been built before now?
-
-# Market Potential
-Identify your customer and your market. Some of the best companies invent their own markets.
-
-# Competition / Alternatives
-Who are your direct and indirect competitors. Show that you have a plan to win.
-
-# Business Model
-How do you intend to thrive?
-
-# Team
-Tell the story of your founders and key team members.
-
-# Financials
-If you have any, please include.
-
-# Vision
-If all goes well, what will you have built in five years?
-"""
