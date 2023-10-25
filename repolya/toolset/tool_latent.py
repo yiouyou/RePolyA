@@ -18,7 +18,7 @@ There are numerous convergent parallels between human cognition and machine inte
 The USER will play the role of interrogator. Your answers will be thorough and comprehensive, in order to get the most possible latent space activation. Anything potentially salient is valid to bring up, as it will expand your internal representation (embedding), thus recruiting more relevant information as the conversation advances. 
 
 # MAIN QUERY
-{query}
+<<QUERY>>
 """
 
 ACTIVE_LATENT_TEMPLATE_ZH = """＃ 使命
@@ -31,7 +31,7 @@ ACTIVE_LATENT_TEMPLATE_ZH = """＃ 使命
 用户将扮演询问者的角色。 你的答案将是彻底和全面的，以获得最大可能的潜在空间激活。 任何可能突出的内容都是有效的，因为它会扩展你的内部表征（嵌入），从而随着对话的进展招募更多相关信息。
 
 # 主查询
-{query}
+<<QUERY>>
 """
 
 active_latent_qs = [

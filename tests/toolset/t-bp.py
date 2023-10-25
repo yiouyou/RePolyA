@@ -11,6 +11,9 @@ from repolya.rag.vdb_faiss import (
     get_faiss_HuggingFace,
 )
 from repolya.rag.qa_chain import qa_vdb_multi_query
+
+from repolya.toolset.tool_bp import get_inspiration, _bp_10_zh
+
 import time
 
 
@@ -45,37 +48,24 @@ def qa_faiss_openai(_query, _vdb_name):
     return [_ans, _step, _token_cost, _time]
 
 
-_ans, _step, _token_cost, _time = qa_faiss_openai(sys.argv[1], vdb_pj)
-print(_ans)
-# print(_step)
-print(_token_cost)
-print(_time)
+# _ans, _step, _token_cost, _time = qa_faiss_openai(sys.argv[1], vdb_pj)
+# print(_ans)
+# # print(_step)
+# print(_token_cost)
+# print(_time)
 
-_bp_10 = {
-    "Company Purpose": "Define your company in a single declarative sentence.",
-    "Problem": "Describe the pain of your customer (or the customer's customer). Outline how the customer addresses the issue today and what are the shortcomings of current solutions.",
-    "Solution": "Why is your value prop unique and compelling? Why will it endure? Provide use cases.",
-    "Why Now": "Set up the historical evolution of your category. Why hasn't your solution been built before now? Define recent trends that make your solution possible.",
-    "Market Potential": "Identify your customer and your market. Calculate the TAM (top-down), SAM (bottoms-up), and SOM.",
-    "Competition/Alternatives": "Who are your direct and indirect competitors? List competitive advantages. Show that you have a plan to win.",
-    "Product": "Product line-up (form factors, functionality, features, packaging, IP). Development roadmap.",
-    "Business Model": "How do you intend to thrive? Revenue model, sales&distribution model, pricing, customer list, etc.",
-    "Team": "Tell the story of your founders and key team members. Board of Directors/Advisors.",
-    "Financials": "If you have any, please include (P&L, Balance sheet, Cash flow, Cap table, The deal, etc.)",
-    "Vision": "If all goes well, what will you have built in five years?",
-}
 
-_bp_10_zh = {
-    "公司宗旨": "用一个宣告性的句子定义您的公司。",
-    "市场痛点": "描述您的客户（或客户的客户）的痛点。概述客户如何处理这个问题，以及当前解决方案的不足之处。",
-    "解决方案": "为什么您的价值主张是独特和引人注目的？为什么它会持久？请提供使用案例。",
-    "时机": "概述公司类别的历史演变。为什么以前没有您的解决方案？最近哪些趋势使您的解决方案成为可能？",
-    "市场空间": "确定您的客户和市场。计算TAM（自上而下），SAM（自下而上）和SOM。",
-    "竞争态势": "谁是您的直接和间接竞争对手？列出他们的竞争优势。论述您的获胜计划。",
-    "产品": "产品线（形态、功能、特点、包装、知识产权）。开发路线图。",
-    "商业模式": "您打算如何繁荣发展？概述收入模型、销售和分销模型、定价、潜在客户等。",
-    "团队": "讲述您的创始人和关键团队成员的故事。董事会/顾问。",
-    "财务预测": "如果有的话，请附上损益表、资产负债表、现金流量表、股本结构、重要交易等。",
-    "愿景": "如果一切顺利，五年后您将建立什么？",
-}
+# get_inspiration("新式茶饮", "竞争态势")
+
+_dir = str(WORKSPACE_RAG / "cq_bp")
+
+if not os.path.exists(_dir):
+    os.makedirs(_dir)    
+
+for _topic in _bp_10_zh.keys():
+    _re, _token_cost = get_inspiration("新式茶饮", _topic)
+    with open(os.path.join(_dir, f"{_topic}.qlist"), "w") as f:
+        f.write(f"{_re}\n\n{_token_cost}")
+
+
 
