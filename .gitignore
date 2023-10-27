@@ -67,6 +67,10 @@ repolya/_workspace/_paper/*
 !repolya/_workspace/_rag
 repolya/_workspace/_rag/*
 !repolya/_workspace/_rag/.gitkeep
+# _workspace/_toolset
+!repolya/_workspace/_toolset
+repolya/_workspace/_toolset/*
+!repolya/_workspace/_toolset/.gitkeep
 # _workspace/_writer
 !repolya/_workspace/_writer
 repolya/_workspace/_writer/*

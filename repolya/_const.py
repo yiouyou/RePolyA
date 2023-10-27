@@ -18,26 +18,37 @@ def get_project_root():
 PROJECT_ROOT = get_project_root() / 'repolya'
 LOG_ROOT = PROJECT_ROOT / '_log'
 
+
+##### autogen
+WORKSPACE_AUTOGEN = PROJECT_ROOT / '_workspace' / '_autogen'
+LOG_AUTOGEN = LOG_ROOT / 'autogen.log'
+###
+AUTOGEN_CONFIG = PROJECT_ROOT / 'autogen' / 'OAI_CONFIG_LIST'
+AUTOGEN_DOC = WORKSPACE_AUTOGEN / 'doc'
+AUTOGEN_REF = WORKSPACE_AUTOGEN / 'ref'
+AUTOGEN_IMG = WORKSPACE_AUTOGEN / 'img'
+
+
+##### azure
+WORKSPACE_AZURE = PROJECT_ROOT / '_workspace' / '_azure'
+LOG_AZURE = LOG_ROOT / 'azure.log'
+###
+AZURE_PROMPT = PROJECT_ROOT / 'azure' / '_prompt'
+
+
 ##### chat
 WORKSPACE_CHAT = PROJECT_ROOT / '_workspace' / '_chat'
 LOG_CHAT = LOG_ROOT / 'chat.log'
 
 
-##### paper
-WORKSPACE_PAPER = PROJECT_ROOT / '_workspace' / '_paper'
-LOG_PAPER = LOG_ROOT / 'paper.log'
+##### coder
+WORKSPACE_CODER = PROJECT_ROOT / '_workspace' / '_coder'
+LOG_CODER = LOG_ROOT / 'coder.log'
 ###
-PAPER_PDF = WORKSPACE_PAPER / '_pdf'
-PAPER_DIGEST = WORKSPACE_PAPER / '_pdf_digest'
-PAPER_JSONL = WORKSPACE_PAPER / '_jsonl'
-PAPER_SERVER_DUMP = PROJECT_ROOT / '_server_dump'
-PAPER_PROMPT = PROJECT_ROOT / 'paper' / '_prompt'
-PAPER_QLIST = PROJECT_ROOT / 'paper' / '_digest'
-
-
-##### writer
-WORKSPACE_WRITER = PROJECT_ROOT / '_workspace' / '_writer'
-LOG_WRITER = LOG_ROOT / 'writer.log'
+DEFAULT_WORKER_NUM = 1
+TIMEOUT_SECONDS = 30
+MAX_RETRY = 2
+OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions"
 
 
 ##### metagpt
@@ -57,31 +68,16 @@ YAPI_URL = "http://yapi.deepwisdomai.com/"
 MEM_TTL = 24 * 30 * 3600
 
 
-##### coder
-WORKSPACE_CODER = PROJECT_ROOT / '_workspace' / '_coder'
-LOG_CODER = LOG_ROOT / 'coder.log'
+##### paper
+WORKSPACE_PAPER = PROJECT_ROOT / '_workspace' / '_paper'
+LOG_PAPER = LOG_ROOT / 'paper.log'
 ###
-DEFAULT_WORKER_NUM = 1
-TIMEOUT_SECONDS = 30
-MAX_RETRY = 2
-OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions"
-
-
-##### azure
-WORKSPACE_AZURE = PROJECT_ROOT / '_workspace' / '_azure'
-LOG_AZURE = LOG_ROOT / 'azure.log'
-###
-AZURE_PROMPT = PROJECT_ROOT / 'azure' / '_prompt'
-
-
-##### autogen
-WORKSPACE_AUTOGEN = PROJECT_ROOT / '_workspace' / '_autogen'
-LOG_AUTOGEN = LOG_ROOT / 'autogen.log'
-###
-AUTOGEN_CONFIG = PROJECT_ROOT / 'autogen' / 'OAI_CONFIG_LIST'
-AUTOGEN_DOC = WORKSPACE_AUTOGEN / 'doc'
-AUTOGEN_REF = WORKSPACE_AUTOGEN / 'ref'
-AUTOGEN_IMG = WORKSPACE_AUTOGEN / 'img'
+PAPER_PDF = WORKSPACE_PAPER / '_pdf'
+PAPER_DIGEST = WORKSPACE_PAPER / '_pdf_digest'
+PAPER_JSONL = WORKSPACE_PAPER / '_jsonl'
+PAPER_SERVER_DUMP = PROJECT_ROOT / '_server_dump'
+PAPER_PROMPT = PROJECT_ROOT / 'paper' / '_prompt'
+PAPER_QLIST = PROJECT_ROOT / 'paper' / '_digest'
 
 
 ##### rag
@@ -89,4 +85,14 @@ WORKSPACE_RAG = PROJECT_ROOT / '_workspace' / '_rag'
 LOG_RAG = LOG_ROOT / 'rag.log'
 ###
 RAG_PDF = WORKSPACE_RAG / 'pdf'
+
+
+##### toolset
+WORKSPACE_TOOLSET = PROJECT_ROOT / '_workspace' / '_toolset'
+LOG_TOOLSET = LOG_ROOT / 'toolset.log'
+
+
+##### writer
+WORKSPACE_WRITER = PROJECT_ROOT / '_workspace' / '_writer'
+LOG_WRITER = LOG_ROOT / 'writer.log'
 

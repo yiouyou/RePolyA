@@ -145,7 +145,7 @@ def _handle_error(error: ToolException) -> str:
 
 yfinance_news = YahooFinanceNewsTool()
 youtube_search = YouTubeSearchTool()
-search_ddg_news = DuckDuckGoSearchResults(api_wrapper=DuckDuckGoSearchAPIWrapper(region="zh-CN", time="d", max_results=2), backend="news")
+search_ddg_news = DuckDuckGoSearchResults(api_wrapper=DuckDuckGoSearchAPIWrapper(region="zh-CN", time="d", max_results=3), backend="news")
 
 search_yfinance_news = Tool.from_function(
     func=yfinance_news,

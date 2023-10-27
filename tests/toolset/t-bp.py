@@ -12,7 +12,8 @@ from repolya.rag.vdb_faiss import (
 )
 from repolya.rag.qa_chain import qa_vdb_multi_query
 
-from repolya.toolset.tool_bp import get_inspiration, _bp_10_zh
+from repolya.toolset.tool_bp import get_inspiration, _bp_10_zh, qlist_to_ans, ans_to_bp, bp_to_md
+from repolya.toolset.tool_stepback import stepback_question, stepback_ddg
 
 import time
 
@@ -33,39 +34,29 @@ bp_schema_urls = [
 vdb_pj = str(WORKSPACE_RAG / "cq_bp_pj_openai")
 vdb_bp = str(WORKSPACE_RAG / "cq_bp_schema_openai")
 
+_dir = str(WORKSPACE_RAG / "cq_bp")
+if not os.path.exists(_dir):
+    os.makedirs(_dir)
+
+
 # urls_to_faiss(pj_urls, vdb_pj, str(WORKSPACE_RAG / "cq_bp_pj_clean_txt"))
 # urls_to_faiss(bp_schema_urls, vdb_bp, str(WORKSPACE_RAG / "cq_bp_schema_clean_txt"))
 
+# for _topic in _bp_10_zh.keys():
+#     _re, _token_cost = get_inspiration("新式茶饮", _topic)
+#     with open(os.path.join(_dir, f"{_topic}.qlist"), "w") as f:
+#         f.write(f"{_re}\n\n{_token_cost}")
 
-def qa_faiss_openai(_query, _vdb_name):
-    start_time = time.time()
-    _vdb = get_faiss_OpenAI(_vdb_name)
-    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
-    end_time = time.time()
-    execution_time = end_time - start_time
-    _time = f"Time: {execution_time:.1f} seconds"
-    logger_rag.info(f"{_time}")
-    return [_ans, _step, _token_cost, _time]
+# qlist_to_ans(_dir, vdb_pj)
+# ans_to_bp(_dir, '新式茶饮')
+bp_to_md(_dir, '新式茶饮')
 
 
+##### test
+# print(stepback_ddg(sys.argv[1]))
 # _ans, _step, _token_cost, _time = qa_faiss_openai(sys.argv[1], vdb_pj)
 # print(_ans)
 # # print(_step)
 # print(_token_cost)
 # print(_time)
-
-
-# get_inspiration("新式茶饮", "竞争态势")
-
-_dir = str(WORKSPACE_RAG / "cq_bp")
-
-if not os.path.exists(_dir):
-    os.makedirs(_dir)    
-
-for _topic in _bp_10_zh.keys():
-    _re, _token_cost = get_inspiration("新式茶饮", _topic)
-    with open(os.path.join(_dir, f"{_topic}.qlist"), "w") as f:
-        f.write(f"{_re}\n\n{_token_cost}")
-
-
 

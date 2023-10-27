@@ -7,10 +7,19 @@ from langchain.schema import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
 from langchain.callbacks import get_openai_callback
 
+from repolya._log import logger_toolset
 from repolya.toolset.tool_latent import ACTIVE_LATENT_TEMPLATE, ACTIVE_LATENT_TEMPLATE_ZH
+from repolya.rag.vdb_faiss import (
+    get_faiss_OpenAI,
+    get_faiss_HuggingFace,
+)
+from repolya.rag.qa_chain import qa_vdb_multi_query
 
 from unittest.mock import patch
 from openai.error import RateLimitError
+import time
+import re
+import os
 
 
 _bp_10 = {
@@ -94,4 +103,184 @@ def get_inspiration(_category, _topic):
 # 10. 商业可持续性：新式茶饮业对环境和社会的影响如何进行管理和减少？有无其他可持续发展的商业做法或潜在机会？
 # 这些问题和角度可以帮助您更全面地思考和完善新式茶饮商业BP的商业模式部分。通过分析和回答这些问题，您可以深入了解茶饮行业并从中获取灵感和创意。记得和商业案例数据库中的相关案例相比较和分析，以寻找最适合您的商业模式。
 
+
+def find_file_ext(_dir, _ext):
+    _files = []
+    for root, dirs, files in os.walk(_dir):
+        for file in files:
+            if file.endswith(_ext):
+                full_path = os.path.join(root, file)
+                _files.append(full_path)
+    return _files
+
+
+def extract_questions(text):
+    pattern = r'\d+\.\s*[^：]+[：]\s*([^。？]*[。？])'
+    extracted_texts = re.findall(pattern, text)
+    split_lists = [re.findall(r'[^。？]*[。？]', text) for text in extracted_texts]
+    flat_list = [item.strip() for sublist in split_lists for item in sublist]
+    return flat_list
+
+
+def qa_faiss_openai(_query, _vdb_name):
+    start_time = time.time()
+    _vdb = get_faiss_OpenAI(_vdb_name)
+    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
+    end_time = time.time()
+    execution_time = end_time - start_time
+    _time = f"Time: {execution_time:.1f} seconds"
+    logger_toolset.info(f"{_time}")
+    return [_ans, _step, _token_cost, _time]
+
+
+def clean_txt(_txt):
+    _txt = re.sub(r"\n+", "\n", _txt)
+    _txt = re.sub(r"\t+", "\t", _txt)
+    _txt = re.sub(r' +', ' ', _txt)
+    _txt = re.sub(r'^\s+', '', _txt, flags=re.MULTILINE)
+    return _txt
+
+
+def qlist_to_ans(_dir, _vdb_name):
+    _files = find_file_ext(_dir, '.qlist')
+    for i in _files:
+        _topic = os.path.basename(i).split('.')[0]
+        logger_toolset.info(f"{_topic}")
+        _out_fp = os.path.join(_dir, f"{_topic}.ans")
+        _out = []
+        _out.append(f"# {_topic}\n")
+        with open(i, 'r') as rf:
+            _qlist = rf.read()
+        _questions = extract_questions(_qlist)
+        for j in _questions:
+            _q = f"{j}" + "如果未找到相关答案，仅输出'无'。"
+            _ans, _step, _token_cost, _time = qa_faiss_openai(_q, _vdb_name)
+            logger_toolset.info(f"'{_ans}'")
+            # logger_toolset.info(f"{_step}")
+            logger_toolset.info(f"{_token_cost}")
+            logger_toolset.info(f"{_time}")
+            if _ans != '无':
+                if _ans.endswith('无'):
+                    _ans = _ans.replace("无", "")
+                _ans = clean_txt(_ans)
+                _out.append(f"## {j}\n{_ans}\n")
+        with open(_out_fp, 'w') as wf:
+            wf.write('\n'.join(_out))
+
+
+def bp_chain(_sys, _text):
+    _re, _token_cost = "", ""
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", _sys),
+            ("human", "{text}"),
+        ]
+    )
+    model = ChatOpenAI(model="gpt-4", temperature=0)
+    runnable = (
+        {"text": RunnablePassthrough()}
+        | prompt 
+        | model 
+        | StrOutputParser()
+    )
+    with get_openai_callback() as cb:
+        _re = runnable.invoke(_text)
+        _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
+    return _re, _token_cost
+
+
+SLIDE_TEMPLATE = """# MISSION
+You are a slide deck builder. You will be given a topic and will be expected to generate slide deck text with a very specific format. 
+
+# INPUT
+The user will give you input of various kinds, usually a topic or request. This will be highly varied, but your output must be super consistent.
+
+# OUTPUT FORMAT
+
+1. Slide Title (Two or Three Words Max)
+2. Concept Description of Definition (2 or 3 complete sentences with word economy)
+3. Exactly five points, characteristics, or details in "labeled list" bullet point format
+
+# EXAMPLE OUTPUT
+
+Speed Chess
+
+Speed chess is a variant of chess where players have to make quick decisions. The strategy is not about making perfect moves, but about making decisions that are fractionally better than your opponent's. Speed is more important than perfection.
+
+- Quick Decisions: The need to make moves within a short time frame.
+- Fractionally Better Moves: The goal is not perfection, but outperforming the opponent.
+- Speed Over Perfection: Fast, good-enough decisions are more valuable than slow, perfect ones.
+- Time Management: Effective use of the limited time is crucial.
+- Adaptability: Ability to quickly adjust strategy based on the opponent's moves."""
+
+
+SLIDE_TEMPLATE_ZH = """＃ 使命
+您是幻灯片制作者。 您将获得一个主题，并需要生成具有非常特定格式的幻灯片文本。
+
+＃ 输入
+用户将为您提供各种输入，通常是主题或请求。 这将会有很大的不同，但你的输出必须非常一致。
+
+＃ 输出格式
+
+1. 幻灯片标题（最多五六个字）
+2. 定义的概念描述（2或3个带有经济词的完整句子）
+3. “标记列表”项目符号格式中恰好有五个点、特征或细节
+
+# 输出示例
+
+速度棋
+
+速度棋是国际象棋的一种变体，玩家必须快速做出决定。 该策略不是要做出完美的动作，而是要做出比对手好一点的决策。 速度比完美更重要。
+
+- 快速决策：需要在短时间内采取行动。
+- 分数更好的动作：目标不是完美，而是超越对手。
+- 速度胜于完美：快速、足够好的决策比缓慢、完美的决策更有价值。
+- 时间管理：有效利用有限的时间至关重要。
+- 适应性：能够根据对手的动作快速调整策略。"""
+
+
+def ans_to_bp(_dir, _category):
+    _files = find_file_ext(_dir, '.ans')
+    for i in _files:
+        _topic = os.path.basename(i).split('.')[0]
+        _topic_goal = _bp_10_zh[_topic]
+        logger_toolset.info(f"{_topic}")
+        _out_fp = os.path.join(_dir, f"{_topic}.bp")
+        with open(i, 'r') as rf:
+            _ans = rf.read()
+        _text = f"你是一个经验丰富的'{_category}'赛道的创业者。请针对红杉资本类型的机构投资人，结合以下内容撰写商业计划书的'{_topic}'({_topic_goal})部分:\n\n{_ans}"
+        _re, _token_cost = bp_chain(SLIDE_TEMPLATE_ZH, _text)
+        logger_toolset.info(f"'{_re}'")
+        logger_toolset.info(f"{_token_cost}")
+        with open(_out_fp, 'w') as wf:
+            wf.write(_re)
+
+
+def bp_to_md(_dir, _category):
+    _out_fp = os.path.join(_dir, f"{_category}.md")
+    _out = []
+    _files = find_file_ext(_dir, '.bp')
+    _pages = [
+        "公司宗旨",
+        "市场痛点",
+        "解决方案",
+        "时机",
+        "市场空间",
+        "竞争态势",
+        "产品",
+        "商业模式",
+        "团队",
+        "财务预测",
+        "愿景",
+    ]
+    for i in _pages:
+        for j in _files:
+            if i in j:
+                with open(j, 'r') as rf:
+                    _text = rf.read()
+                _text = _text.split("\n\n")[1:]
+                _text = "\n\n".join(_text)
+                _out.append(f"# {i}\n\n{_text}")
+    with open(_out_fp, 'w') as wf:
+        wf.write('\n\n'.join(_out))
 
