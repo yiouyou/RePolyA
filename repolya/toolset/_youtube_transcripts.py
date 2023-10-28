@@ -4,6 +4,7 @@ from repolya._log import logger_toolset
 import scrapetube
 from youtube_transcript_api import YouTubeTranscriptApi
 import os
+from pprint import pprint
 
 
 def save_file(filepath, content):
@@ -25,6 +26,10 @@ def download_channel_transcripts(channel_id='UCvKRFNawVcuz4b9ihUTApCg'):
     videos = scrapetube.get_channel(channel_id)
     logger_toolset.info(f"videos: {videos}")
     for video in videos:
+        _id = video['videoId']
+        _title = video['title']['runs'][0]['text']
+        _label = video['title']['accessibility']['accessibilityData']['label']
+        print(f"{_id}\n{_title}\n{_label}\n")
         try:
             transcript = YouTubeTranscriptApi.get_transcript(video['videoId'])
             text = ['[{} - {}] {}'.format(i['start'], i['start'] + i['duration'], i['text']) for i in transcript]
@@ -35,5 +40,4 @@ def download_channel_transcripts(channel_id='UCvKRFNawVcuz4b9ihUTApCg'):
             save_file(_out_fp, block)
         except Exception as oops:
             logger_toolset.error(video['title'], oops)
-
 
