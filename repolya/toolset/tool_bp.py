@@ -7,19 +7,22 @@ from langchain.schema import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
 from langchain.callbacks import get_openai_callback
 
+from repolya._const import WORKSPACE_TOOLSET
 from repolya._log import logger_toolset
-from repolya.toolset.tool_latent import ACTIVE_LATENT_TEMPLATE, ACTIVE_LATENT_TEMPLATE_ZH
 from repolya.rag.vdb_faiss import (
     get_faiss_OpenAI,
     get_faiss_HuggingFace,
 )
+from repolya.rag.digest_urls import urls_to_faiss
 from repolya.rag.qa_chain import qa_vdb_multi_query
+from repolya.toolset.tool_latent import ACTIVE_LATENT_TEMPLATE, ACTIVE_LATENT_TEMPLATE_ZH
 
 from unittest.mock import patch
 from openai.error import RateLimitError
 import time
 import re
 import os
+
 
 
 _bp_10 = {
@@ -283,4 +286,28 @@ def bp_to_md(_dir, _category):
                 _out.append(f"# {i}\n\n{_text}")
     with open(_out_fp, 'w') as wf:
         wf.write('\n\n'.join(_out))
+
+
+bp_schema_urls = [
+    "https://mp.weixin.qq.com/s?__biz=MzAwODE5NDg3NQ==&mid=2651241894&idx=1&sn=cef55d78e8358fcb112161909deedf9b&chksm=808083f2b7f70ae44fb787bd7a3f989d0bde44f8dca2c9084dbebc56b81dceaffd3d83a40e13&mpshare=1&scene=1&srcid=0712rUvBd2qwR1f8J4NiuRVn&sharer_sharetime=1689138875790&sharer_shareid=e232e219e77fde9c69a9fd7891294beb&exportkey=n_ChQIAhIQushYMwnOzvA2rZJC9eMObBLfAQIE97dBBAEAAAAAAChQIh67qFgAAAAOpnltbLcz9gKNyK89dVj0OVwZPhDTnMcgj8QsTg3Awd7xv1V4QZqD0C%2BkRFtFYa4QjhWuMAawvFLparvqWKEbla2GyZOByt8f6UJsMuZnul1mwzfFSN3YvsZh%2FKlH7YB5JXxQOCrg9iQGDylEs8x83lgwVYCe7MI8fUpCRk%2FUKj6LxaMCTMx0VTtp6cFdCOG1ch7eoZXD3dwfhkGN5j0nmV6YEu4zVcRMNdkVa%2BSETpi9SKDNsZOgVsN4cbNaLrj0hoYRcO%2BBNz8%3D&acctmode=0&pass_ticket=QlGoQ3abrBrScGv3K%2BtjIY49pxaeULaYhlaoWtKwSF5kgB%2FXO10zgrGdnHnOZvNC&wx_header=0#rd",
+    "https://mp.weixin.qq.com/s?__biz=MzkzOTE3Mjc0Mw==&mid=2247485653&idx=2&sn=2ba3ae266d59928d623790676cb330f0&chksm=c2f5be3df582372b3542d778a132e9c6a8e4a16dff72f29e4cab7d56481d763bfac81ff72ad7&mpshare=1&scene=1&srcid=10249EmVRr2OIkTCcCwymiGg&sharer_shareinfo=ff48ad6cce39dbd48f12ca020f2ca665&sharer_shareinfo_first=ff48ad6cce39dbd48f12ca020f2ca665&exportkey=n_ChQIAhIQWm18TtzqQgmxzKUXfFqhohLfAQIE97dBBAEAAAAAAHSDLkEz4TwAAAAOpnltbLcz9gKNyK89dVj0JQQqNWWeXN2%2FDEspQcDqe8yV7ZjdvW3eCyKHrbFwqg%2F1AXbZVlVxTnW5MIQrt%2BGXpcSOMZee65RV85WDt0oPe%2BUfqlpYPcEoF1sjLNYR%2F9OGesIimFnmEX6G4wB0UNJ0NXoLu8plFCgGRQzaFlUjSYgpOKkHVdcaFQLw%2BWZZmqO1hr1DDv%2BmQ0TZg0KJbZ8JXAg7sbahTSmiHIGaBVszNyxk4CNoFGpnRl2Whinwzo5jGT7r%2BLz1JfQ%3D&acctmode=0&pass_ticket=UCWH4gnvTTUTRtR9fTTdP0SCRnVWTPM%2B50MhWwlo4SGvEFOnHo8GHxVfDmOgzhYk&wx_header=0#rd",
+    "https://mp.weixin.qq.com/s?__biz=MzIzMDI2ODQyNQ==&mid=2247491537&idx=1&sn=dd3024e6f45499e5e449af0150a68980&chksm=e8b754b7dfc0dda1573949a4ca442accc6f947fadeaa63ec83914a285567f7650dfbce8e7014&mpshare=1&scene=1&srcid=1024k726iTRWDL76R19WHyKU&sharer_shareinfo=46ae74af33674252763fb57bf3393f37&sharer_shareinfo_first=46ae74af33674252763fb57bf3393f37&exportkey=n_ChQIAhIQBbLLOErYAqhTTbp%2Bv8oOuxLvAQIE97dBBAEAAAAAANBcLZjh2T8AAAAOpnltbLcz9gKNyK89dVj0LKQB1Q07ORc7PQ3inRPsDr9HXw%2B6LPd9fPeHWNWca7MDl3pCUOKmPO80OtQTq%2BEZpaj5vDG5m%2Fs33PDOgWU4Uw%2Bth0YBJsWz1cMY8iZu%2BzLVDT0oXM8EE455pms2o%2Bltk27tbvSqyOTtHeeMAStbYibdiWydVwjxXxF8zebNHPJuZbb0h9qQCrX7mYftCfEuj1iTIwqGUpR%2B%2BJarLR8%2Bf41Qp51A8FxZnMFc3E%2FKTwKImcakA4mGL3P1p2BwTrqaVNufOHzfAHdI&acctmode=0&pass_ticket=Rcd%2FZr3rGEN5PVPhxCms7S0GGBmjZXfxUvmbzB22Lakg%2BFt7diGeqKzn6KXtl%2Bme&wx_header=0#rd",
+]
+
+
+def create_bp_from_urls(pj_urls: list[str], _category: str, bp_schema_urls=bp_schema_urls):
+    _dir = str(WORKSPACE_TOOLSET / _category)
+    if not os.path.exists(_dir):
+        os.makedirs(_dir)
+    vdb_pj = str(WORKSPACE_TOOLSET / f"{_category}_pj_openai")
+    vdb_bp = str(WORKSPACE_TOOLSET / f"{_category}_schema_openai")
+    urls_to_faiss(pj_urls, vdb_pj, str(WORKSPACE_TOOLSET / f"{_category}_pj_clean_txt"))
+    urls_to_faiss(bp_schema_urls, vdb_bp, str(WORKSPACE_TOOLSET / f"{_category}_schema_clean_txt"))
+    for _topic in _bp_10_zh.keys():
+        _re, _token_cost = get_inspiration(_category, _topic)
+        with open(os.path.join(_dir, f"{_topic}.qlist"), "w") as f:
+            f.write(f"{_re}\n\n{_token_cost}")
+    qlist_to_ans(_dir, vdb_pj)
+    ans_to_bp(_dir, _category)
+    bp_to_md(_dir, _category)
 
