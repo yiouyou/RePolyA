@@ -47,6 +47,15 @@ def stepback_question(_question):
         _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
     return _stepback, _token_cost
 
+def tool_stepback_question():
+    tool = StructuredTool.from_function(
+        stepback_question,
+        name="Stepback Question",
+        description="Stepback a question to a more generic question.",
+        verbose=True,
+    )
+    return tool
+
 
 def stepback_ddg(_question):
     _stepback, _tc = stepback_question(_question)
@@ -69,4 +78,13 @@ def stepback_ddg(_question):
         _re = chain.invoke({"question": _question, "stepback_question": _stepback})
         _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
     return _re, _token_cost
+
+def tool_stepback_ddg():
+    tool = StructuredTool.from_function(
+        stepback_ddg,
+        name="Stepback Question and Search DuckDuckGo",
+        description="Stepback a question to a more generic question and search for answers with DuckDuckGo.",
+        verbose=True,
+    )
+    return tool
 

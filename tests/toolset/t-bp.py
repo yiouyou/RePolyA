@@ -12,7 +12,7 @@ from repolya.rag.vdb_faiss import (
 )
 from repolya.rag.qa_chain import qa_vdb_multi_query
 
-from repolya.toolset.tool_bp import _bp_10_zh, get_inspiration, qlist_to_ans, ans_to_bp, bp_to_md, create_bp_from_urls
+from RePolyA.repolya.toolset._bp import _bp_10_zh, get_inspiration, qlist_to_ans, ans_to_bp, bp_to_md, create_bp_from_urls
 from repolya.toolset.tool_stepback import stepback_question, stepback_ddg
 
 import time

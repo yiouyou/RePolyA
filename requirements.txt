@@ -52,6 +52,7 @@ scidownl
 seaborn
 sentence-transformers
 setuptools
+scrapetube
 termcolor
 tiktoken
 tqdm
