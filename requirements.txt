@@ -20,6 +20,7 @@ fire
 flaml
 gradio
 googlemaps
+halo
 html2text
 ipython
 langchain
