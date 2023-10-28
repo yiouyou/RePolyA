@@ -1,3 +1,4 @@
+cp .env repolya/app/
 cp .env repolya/autogen/
 cp .env repolya/azure/
 cp .env repolya/chat/
