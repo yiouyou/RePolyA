@@ -16,11 +16,13 @@ from pprint import pprint
 
 
 ##### 英文
-# channel_id='UCvKRFNawVcuz4b9ihUTApCg' # David Shapiro
-channel_id='UCgo_-fjJxnLwwwq5dSY72rg' # 自说自话的总裁
-# channel_id='UCyO-Rh1EX_6VNn3RKPeJ6kQ' # 硬核的半佛仙人
-# download_channel_transcripts(channel_id)
+# channel_id = 'UCvKRFNawVcuz4b9ihUTApCg' # David Shapiro
+channel_id ='UCgo_-fjJxnLwwwq5dSY72rg' # 自说自话的总裁
+# channel_id = 'UCyO-Rh1EX_6VNn3RKPeJ6kQ' # 硬核的半佛仙人
+# channel_id = 'UC5DGiN7-nlPno2kjHUdcdCg' # 老肉雜談
+# channel_id = 'UCPG0y4RcPuqWZ5WKQMeNmzw' # 大刘科普
 
+# download_channel_transcripts(channel_id)
 pprint(get_channel_video_urls(channel_id))
 
 ##### 英文
