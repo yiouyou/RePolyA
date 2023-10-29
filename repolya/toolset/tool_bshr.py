@@ -19,7 +19,7 @@ from repolya.app.bshr.prompt import (
     SYS_REFINE_ZH,
 )
 
-from halo import Halo
+# from halo import Halo
 import requests
 import json
 import re
@@ -47,8 +47,8 @@ def _chain(_sys: str, _human: str):
 
 
 def search_wikipedia(query: str) -> (str, str):
-    spinner = Halo(text='Information Foraging...', spinner='dots')
-    spinner.start()
+    # spinner = Halo(text='Information Foraging...', spinner='dots')
+    # spinner.start()
     url = 'https://en.wikipedia.org/w/api.php'
     search_params = {
         'action': 'query',
@@ -72,7 +72,7 @@ def search_wikipedia(query: str) -> (str, str):
     page_id = list(data['query']['pages'].keys())[0]
     content = data['query']['pages'][page_id]['extract']
     url = f"https://en.wikipedia.org/?curid={page_id}"
-    spinner.stop()
+    # spinner.stop()
     return content, url
 
 
