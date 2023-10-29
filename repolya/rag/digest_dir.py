@@ -20,6 +20,8 @@ from repolya.toolset.load_file import (
 )
 
 import os
+import re
+import hashlib
 
 
 text_chunk_size = 1000
@@ -34,22 +36,25 @@ def get_files_from_dir(_dir, _ext):
     Returns:
     list: 具有指定扩展名的文件的路径列表。
     """
-    matched_files = []
+    _files = []
     # os.walk 生成目录树中的文件名
-    for dirpath, dirnames, filenames in os.walk(_dir):
-        for filename in filenames:
+    for root, dirs, files in os.walk(_dir):
+        for file in files:
             # 检查文件扩展名是否在我们的扩展名列表中
-            if any(filename.endswith(ext) for ext in _ext):
-                full_path = os.path.join(dirpath, filename)
-                matched_files.append(full_path)
-    return matched_files
-# # 测试函数
-# _dir = "/path/to/search"
-# _ext = [".txt", ".pdf"]
-# print(get_files_from_dir(_dir, _ext))
+            if any(file.endswith(ext) for ext in _ext):
+                full_path = os.path.join(root, file)
+                _files.append(full_path)
+    return _files
 
 
-def dir_to_faiss(_dir: str, _vdb_name: str, _clean_txt_dir: str):
+def str_to_sha256(_str):
+    """Convert a string to its SHA-256 hash."""
+    sha256_hash = hashlib.sha256()
+    sha256_hash.update(_str.encode('utf-8'))
+    return sha256_hash.hexdigest()
+
+
+def dir_to_faiss_openai(_dir: str, _vdb_name: str, _clean_txt_dir: str):
     if not os.path.exists(_clean_txt_dir):
         os.makedirs(_clean_txt_dir)
     _DOCs = []
@@ -87,6 +92,10 @@ def dir_to_faiss(_dir: str, _vdb_name: str, _clean_txt_dir: str):
         _doc = load_eml_to_docs(i)
         _DOCs.extend(_doc)
     ### docs -> faiss
+    if len(_DOCs) == 0:
+        logger_rag.error(f"NO docs found in dir '{_dir}'")
+        return
+    logger_rag.info(f"Find {len(_DOCs)} docs in dir '{_dir}'")
     for i in range(len(_DOCs)):
         _d = _DOCs[i].to_json()
         _page_content = _d['kwargs']['page_content']
@@ -94,11 +103,18 @@ def dir_to_faiss(_dir: str, _vdb_name: str, _clean_txt_dir: str):
         _metadata = _d['kwargs']['metadata']
         _new_metadata = {}
         _new_metadata['source'] = _metadata['source']
-        _new_metadata['title'] = _new_page_content.split('\n')[0]
+        _source_fn = os.path.splitext(os.path.basename(_metadata['source']))[0]
+        ### title: 前10个非空字符
+        _new_metadata['title'] = f"{_source_fn}, " + re.sub('\s', '', _new_page_content)[:10]
+        # print(_new_metadata['source'])
+        # print(_source_fn)
+        # print(_new_metadata['title'])
         _new_metadata['description'] = ''
         _DOCs[i].page_content = _new_page_content
         _DOCs[i].metadata = _new_metadata
-        _clean_out = os.path.join(_clean_txt_dir, f"{_new_metadata['title']}.txt")
+        _clean_file = str_to_sha256(_new_page_content.split('\n')[0]) + ".txt"
+        # logger_rag.info(f"write '{_clean_file}'")
+        _clean_out = os.path.join(_clean_txt_dir, _clean_file)
         with open(_clean_out, 'w') as f:
             f.write(_new_page_content)
     _splited_docs = split_docs_recursive(_DOCs, text_chunk_size, text_chunk_overlap)

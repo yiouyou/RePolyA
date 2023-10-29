@@ -108,7 +108,7 @@ if __name__ == "__main__":
         server_name="0.0.0.0",
         server_port=_port,
         share=False,
-        favicon_path="./asset/favicon_wa.png",
+        favicon_path="./asset/favicon_assistant.png",
         # auth = ('sz','1123'),
         # auth_message= "欢迎回来！",
         ssl_verify=False,

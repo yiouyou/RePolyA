@@ -41,10 +41,10 @@ pydub
 pymed
 pypdf
 python-dotenv
-python_docx
+python-docx
 pytube
 pyzotero
-rank_bm25
+rank-bm25
 replicate
 requests
 scholarly
@@ -62,5 +62,5 @@ wikipedia
 wolframalpha
 yfinance
 youtube-transcript-api
-youtube_search
-yt_dlp
+youtube-search
+yt-dlp

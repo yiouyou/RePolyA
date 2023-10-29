@@ -179,7 +179,7 @@ def jd_qa_pdf(_tmp_pdf, _ask):
 
 ##### UI
 _description = """
-# Assistant
+# 科研
 """
 chat_ask = gr.Textbox(label="", placeholder="...", lines=5, max_lines=5, interactive=True, visible=True, scale=9)
 
@@ -369,7 +369,7 @@ if __name__ == "__main__":
                 server_name="0.0.0.0",
                 server_port=_port,
                 share=False,
-                favicon_path="./asset/favicon_wa.png",
+                favicon_path="./asset/favicon_paper.png",
                 # auth = ('sz','1123'),
                 # auth_message= "欢迎回来！",
                 ssl_verify=False,

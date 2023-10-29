@@ -13,6 +13,16 @@ from langchain.document_loaders import (
     S3DirectoryLoader,
 )
 
+import re
+
+
+def clean_txt(_txt):
+    _txt = re.sub(r"\n+", "\n", _txt)
+    _txt = re.sub(r"\t+", "\t", _txt)
+    _txt = re.sub(r' +', ' ', _txt)
+    _txt = re.sub(r'^\s+', '', _txt, flags=re.MULTILINE)
+    return _txt
+
 
 ##### Document
 def load_text_to_doc(text: str, metadata: dict = {}):
@@ -24,38 +34,44 @@ def load_text_to_doc(text: str, metadata: dict = {}):
 
 
 ##### TextLoader
-def load_txt_to_docs(text: str):
-    loader = TextLoader(text)
-    doc = loader.load()
-    return doc
+def load_txt_to_docs(file_path: str):
+    loader = TextLoader(file_path, encoding='utf-8')
+    docs = loader.load()
+    for doc in docs:
+        doc.page_content = clean_txt(doc.page_content)
+    return docs
 
 
 ##### PythonLoader
 def load_py_to_docs(file_path: str):
     loader = PythonLoader(file_path)
-    doc = loader.load()
-    return doc
+    docs = loader.load()
+    return docs
 
 
 ##### PyMuPDFLoader
 def load_pdf_to_docs(file_path: str):
     loader = PyMuPDFLoader(file_path)
-    doc = loader.load()
-    return doc
+    docs = loader.load()
+    for doc in docs:
+        doc.page_content = clean_txt(doc.page_content)
+    return docs
 
 
 ##### UnstructuredMarkdownLoader
 def load_md_to_docs(file_path: str | list[str]):
     loader = UnstructuredMarkdownLoader(file_path)
     docs = loader.load()
+    for doc in docs:
+        doc.page_content = clean_txt(doc.page_content)
     return docs
 
 
 ##### BSHTMLLoader
 def load_html_to_docs(file_path: str):
     loader = BSHTMLLoader(file_path)
-    doc = loader.load()
-    return doc
+    docs = loader.load()
+    return docs
 
 
 ##### CSVLoader
@@ -69,8 +85,8 @@ def load_csv_to_docs(file_path: str, fieldnames: list[str]):
         },
         encoding="utf-8",
     )
-    doc = loader.load()
-    return doc
+    docs = loader.load()
+    return docs
 
 
 ##### UnstructuredWordDocumentLoader
@@ -80,6 +96,8 @@ def load_docx_to_docs(file_path: str | list[str]):
         mode="elements",
     )
     docs = loader.load()
+    for doc in docs:
+        doc.page_content = clean_txt(doc.page_content)
     return docs
 
 
@@ -90,6 +108,8 @@ def load_pptx_to_docs(file_path: str | list[str]):
         mode="elements",
     )
     docs = loader.load()
+    for doc in docs:
+        doc.page_content = clean_txt(doc.page_content)
     return docs
 
 
@@ -100,8 +120,8 @@ def load_eml_to_docs(file_path: str):
         mode="elements",
         process_attachments=True,
     )
-    doc = loader.load()
-    return doc
+    docs = loader.load()
+    return docs
 
 
 ##### S3FileLoader
