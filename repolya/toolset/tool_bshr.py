@@ -25,7 +25,7 @@ import json
 import re
 
 
-def bshr_chain(_sys: str, _text: str):
+def _chain(_sys: str, _human: str):
     _re, _token_cost = "", ""
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -41,7 +41,7 @@ def bshr_chain(_sys: str, _text: str):
         | StrOutputParser()
     )
     with get_openai_callback() as cb:
-        _re = runnable.invoke(_text)
+        _re = runnable.invoke({"text": _human})
         _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
     return _re, _token_cost
 
@@ -116,13 +116,13 @@ def brainstorm(_query: str, _notes: str, _queries: str):
 # PREVIOUS QUERIES
 {_queries}
 """
-    _re, _token_cost = bshr_chain(_sys, _human)
+    _re, _token_cost = _chain(_sys, _human)
     _tc.append(_token_cost)
     logger_toolset.info(f"new questions: {_re}")
     _questions = json.loads(_re)
     for _q in _questions:
         content, url = search_wikipedia(_q)
-        compressed_content, spr_tokens = bshr_chain(_spr, content)
+        compressed_content, spr_tokens = _chain(_spr, content)
         _tc.append(spr_tokens)
         _notes = f"{_notes}\n\nURL: {url}\nNOTE: {compressed_content}"
         logger_toolset.info(_q)
@@ -152,7 +152,7 @@ def hypothesize(_query: str, _notes: str, _hypotheses: str):
 # PREVIOUS HYPOTHISES
 {_hypotheses}
 """
-    _re, _token_cost = bshr_chain(_sys, _human)
+    _re, _token_cost = _chain(_sys, _human)
     # logger_toolset.info(f"new hypothesis: '{_re}'")
     return _re, _token_cost
 
@@ -175,7 +175,7 @@ def satisfice(_query: str, _notes: str, _queries: str, _hypothesis: str):
 {_hypothesis}
 
 """
-    _re, _token_cost = bshr_chain(_sys, _human)
+    _re, _token_cost = _chain(_sys, _human)
     _feedback = json.loads(_re)
     return _feedback["satisficed"], _feedback["feedback"], _token_cost
 
@@ -183,7 +183,7 @@ def satisfice(_query: str, _notes: str, _queries: str, _hypothesis: str):
 def refine(_notes: str):
     _sys = SYS_REFINE
     _human = _notes
-    _re, _token_cost = bshr_chain(_sys, _human)
+    _re, _token_cost = _chain(_sys, _human)
     return _re, _token_cost
 
 
@@ -236,6 +236,16 @@ def run_bshr(_query: str):
         notes, _token_cost = refine(notes)
         _tc.append(_token_cost)
         logger_toolset.info(f"iteration ({iteration}) completed")
-    _re = new_hypothesis.split("\n")[-1]
+    _re = new_hypothesis.split("\n\n")[-1]
     return _re, calc_token_cost(_tc)
+
+
+def tool_bshr():
+    tool = StructuredTool.from_function(
+        run_bshr,
+        name="BSHR with wikipedia (EN)",
+        description="BSHR (Brainstorm, Hypothesize, Satisfice, Refine), information foraging with wikipedia.",
+        verbose=True,
+    )
+    return tool
 
