@@ -99,7 +99,7 @@ def chg_textbox_visible(_radio):
 ##### RAG
 def qa_faiss_openai(_query):
     start_time = time.time()
-    _vdb_name = str(WORKSPACE_RAG / 'frank_doc_openai')
+    _vdb_name = str(WORKSPACE_RAG / 'lj_rag_openai')
     _vdb = get_faiss_OpenAI(_vdb_name)
     _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
     end_time = time.time()
