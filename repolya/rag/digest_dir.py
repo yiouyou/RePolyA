@@ -24,7 +24,7 @@ import re
 import hashlib
 
 
-text_chunk_size = 1000
+text_chunk_size = 500
 text_chunk_overlap = 50
 
 
@@ -84,6 +84,7 @@ def dir_to_faiss_openai(_dir: str, _vdb_name: str, _clean_txt_dir: str):
         _DOCs.extend(_doc)
     for i in _docx_files:
         _doc = load_docx_to_docs(i)
+        # print(f"'{_doc[0].page_content}'")
         _DOCs.extend(_doc)
     for i in _pptx_files:
         _doc = load_pptx_to_docs(i)
@@ -112,11 +113,12 @@ def dir_to_faiss_openai(_dir: str, _vdb_name: str, _clean_txt_dir: str):
         _new_metadata['description'] = ''
         _DOCs[i].page_content = _new_page_content
         _DOCs[i].metadata = _new_metadata
-        _clean_file = str_to_sha256(_new_page_content.split('\n')[0]) + ".txt"
+        # _clean_file = str_to_sha256(_new_page_content.split('\n')[0]) + ".txt"
+        _clean_file = _new_metadata['title'] + ".txt"
         # logger_rag.info(f"write '{_clean_file}'")
         _clean_out = os.path.join(_clean_txt_dir, _clean_file)
         with open(_clean_out, 'w') as f:
-            f.write(_new_page_content)
+            f.write(f"{_new_metadata['title']}\n\n'{_new_page_content}'")
     _splited_docs = split_docs_recursive(_DOCs, text_chunk_size, text_chunk_overlap)
     if _vdb_name.endswith('_openai'):
         embedding_to_faiss_OpenAI(_splited_docs, _vdb_name)

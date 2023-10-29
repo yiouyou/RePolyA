@@ -19,7 +19,11 @@ from repolya.app.bshr.prompt import (
     SYS_REFINE_ZH,
 )
 
+from repolya.rag.load_rag_vdb import _vdb
+from repolya.rag.qa_chain import qa_vdb_multi_query
+
 # from halo import Halo
+import concurrent.futures as cf
 import requests
 import json
 import re
@@ -46,7 +50,32 @@ def _chain(_sys: str, _human: str):
     return _re, _token_cost
 
 
-def search_wikipedia(query: str) -> (str, str):
+def calc_token_cost(_tc: list):
+    total_tokens = 0
+    total_prompt = 0
+    total_completion = 0
+    total_cost = 0.0
+    # 对于列表中的每个字符串，使用正则表达式解析出需要的数字
+    for entry in _tc:
+        tokens_match = re.search(r"Tokens: (\d+)", entry)
+        prompt_match = re.search(r"Prompt (\d+)", entry)
+        completion_match = re.search(r"Completion (\d+)", entry)
+        cost_match = re.search(r"Cost: \$([\d.]+)", entry)
+        if tokens_match:
+            total_tokens += int(tokens_match.group(1))
+        if prompt_match:
+            total_prompt += int(prompt_match.group(1))
+        if completion_match:
+            total_completion += int(completion_match.group(1))
+        if cost_match:
+            total_cost += float(cost_match.group(1))
+    # 格式化并输出结果
+    output = f"Tokens: {total_tokens} = (Prompt {total_prompt} + Completion {total_completion}) Cost: ${total_cost:.5f}"
+    return output
+
+
+##### brainstorm
+def search_wiki(query: str) -> (str, str):
     # spinner = Halo(text='Information Foraging...', spinner='dots')
     # spinner.start()
     url = 'https://en.wikipedia.org/w/api.php'
@@ -75,32 +104,7 @@ def search_wikipedia(query: str) -> (str, str):
     # spinner.stop()
     return content, url
 
-
-def calc_token_cost(_tc: list):
-    total_tokens = 0
-    total_prompt = 0
-    total_completion = 0
-    total_cost = 0.0
-    # 对于列表中的每个字符串，使用正则表达式解析出需要的数字
-    for entry in _tc:
-        tokens_match = re.search(r"Tokens: (\d+)", entry)
-        prompt_match = re.search(r"Prompt (\d+)", entry)
-        completion_match = re.search(r"Completion (\d+)", entry)
-        cost_match = re.search(r"Cost: \$([\d.]+)", entry)
-        if tokens_match:
-            total_tokens += int(tokens_match.group(1))
-        if prompt_match:
-            total_prompt += int(prompt_match.group(1))
-        if completion_match:
-            total_completion += int(completion_match.group(1))
-        if cost_match:
-            total_cost += float(cost_match.group(1))
-    # 格式化并输出结果
-    output = f"Tokens: {total_tokens} = (Prompt {total_prompt} + Completion {total_completion}) Cost: ${total_cost:.5f}"
-    return output
-
-
-def brainstorm(_query: str, _notes: str, _queries: str):
+def brainstorm_wiki(_query: str, _notes: str, _queries: str):
     _tc = []
     _sys = SYS_BRAINSTORM
     _spr = SYS_REFINE
@@ -121,9 +125,46 @@ def brainstorm(_query: str, _notes: str, _queries: str):
     logger_toolset.info(f"new questions: {_re}")
     _questions = json.loads(_re)
     for _q in _questions:
-        content, url = search_wikipedia(_q)
-        compressed_content, spr_tokens = _chain(_spr, content)
-        _tc.append(spr_tokens)
+        content, url = search_wiki(_q)
+        compressed_content, _spc_tc = _chain(_spr, content)
+        _tc.append(_spc_tc)
+        _notes = f"{_notes}\n\nURL: {url}\nNOTE: {compressed_content}"
+        logger_toolset.info(_q)
+        logger_toolset.info(url)
+        # logger_toolset.info(content)
+        logger_toolset.info(compressed_content)
+        _queries = f"""
+{_queries}
+
+QUESTION: {_q}
+
+"""
+    return _queries, _notes, calc_token_cost(_tc)
+
+def brainstorm_wiki_zh(_query: str, _notes: str, _queries: str):
+    _tc = []
+    _sys = SYS_BRAINSTORM_ZH
+    _spr = SYS_REFINE_ZH
+    _human = f"""
+# USER QUERY
+{_query}
+
+
+# NOTES
+{_notes}
+
+
+# PREVIOUS QUERIES
+{_queries}
+"""
+    _re, _token_cost = _chain(_sys, _human)
+    _tc.append(_token_cost)
+    logger_toolset.info(f"new questions: {_re}")
+    _questions = json.loads(_re)
+    for _q in _questions:
+        content, url = search_wiki(_q)
+        compressed_content, _spc_tc = _chain(_spr, content)
+        _tc.append(_spc_tc)
         _notes = f"{_notes}\n\nURL: {url}\nNOTE: {compressed_content}"
         logger_toolset.info(_q)
         logger_toolset.info(url)
@@ -138,6 +179,86 @@ QUESTION: {_q}
     return _queries, _notes, calc_token_cost(_tc)
 
 
+def search_vdb(_query: str) -> str:
+    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
+    return _ans, _token_cost
+
+def brainstorm_vdb(_query: str, _notes: str, _queries: str):
+    _tc = []
+    _sys = SYS_BRAINSTORM
+    _spr = SYS_REFINE
+    _human = f"""
+# USER QUERY
+{_query}
+
+
+# NOTES
+{_notes}
+
+
+# PREVIOUS QUERIES
+{_queries}
+"""
+    _re, _token_cost = _chain(_sys, _human)
+    _tc.append(_token_cost)
+    logger_toolset.info(f"new questions: {_re}")
+    _questions = json.loads(_re)
+    for _q in _questions:
+        content, _vdb_tc = search_vdb(_q)
+        _tc.append(_vdb_tc)
+        compressed_content, _spc_tc = _chain(_spr, content)
+        _tc.append(_spc_tc)
+        _notes = f"{_notes}\n\nNOTE: {compressed_content}"
+        logger_toolset.info(_q)
+        # logger_toolset.info(content)
+        logger_toolset.info(compressed_content)
+        _queries = f"""
+{_queries}
+
+QUESTION: {_q}
+
+"""
+    return _queries, _notes, calc_token_cost(_tc)
+
+def brainstorm_vdb_zh(_query: str, _notes: str, _queries: str):
+    _tc = []
+    _sys = SYS_BRAINSTORM_ZH
+    _spr = SYS_REFINE_ZH
+    _human = f"""
+# USER QUERY
+{_query}
+
+
+# NOTES
+{_notes}
+
+
+# PREVIOUS QUERIES
+{_queries}
+"""
+    _re, _token_cost = _chain(_sys, _human)
+    _tc.append(_token_cost)
+    logger_toolset.info(f"new questions: {_re}")
+    _questions = json.loads(_re)
+    for _q in _questions:
+        content, _vdb_tc = search_vdb(_q)
+        _tc.append(_vdb_tc)
+        compressed_content, _spc_tc = _chain(_spr, content)
+        _tc.append(_spc_tc)
+        _notes = f"{_notes}\n\nNOTE: {compressed_content}"
+        # logger_toolset.info(_q)
+        # logger_toolset.info(content)
+        logger_toolset.info(compressed_content)
+        _queries = f"""
+{_queries}
+
+QUESTION: {_q}
+
+"""
+    return _queries, _notes, calc_token_cost(_tc)
+
+
+##### hypothesize
 def hypothesize(_query: str, _notes: str, _hypotheses: str):
     _sys = SYS_HYPOTHESIS
     _human = f"""
@@ -156,7 +277,26 @@ def hypothesize(_query: str, _notes: str, _hypotheses: str):
     # logger_toolset.info(f"new hypothesis: '{_re}'")
     return _re, _token_cost
 
+def hypothesize_zh(_query: str, _notes: str, _hypotheses: str):
+    _sys = SYS_HYPOTHESIS_ZH
+    _human = f"""
+# USER QUERY
+{_query}
 
+
+# NOTES
+{_notes}
+
+
+# PREVIOUS HYPOTHISES
+{_hypotheses}
+"""
+    _re, _token_cost = _chain(_sys, _human)
+    # logger_toolset.info(f"new hypothesis: '{_re}'")
+    return _re, _token_cost
+
+
+##### satisfice
 def satisfice(_query: str, _notes: str, _queries: str, _hypothesis: str):
     _sys = SYS_SATISFICE
     _human = f"""# USER QUERY
@@ -179,15 +319,45 @@ def satisfice(_query: str, _notes: str, _queries: str, _hypothesis: str):
     _feedback = json.loads(_re)
     return _feedback["satisficed"], _feedback["feedback"], _token_cost
 
+def satisfice_zh(_query: str, _notes: str, _queries: str, _hypothesis: str):
+    _sys = SYS_SATISFICE_ZH
+    _human = f"""# USER QUERY
+{_query}
 
+
+# NOTES
+{_notes}
+
+
+# QUERIES AND ANSWERS
+{_queries}
+
+
+# FINAL HYPOTHESIS
+{_hypothesis}
+
+"""
+    _re, _token_cost = _chain(_sys, _human)
+    _feedback = json.loads(_re)
+    return _feedback["satisficed"], _feedback["feedback"], _token_cost
+
+
+##### refine
 def refine(_notes: str):
     _sys = SYS_REFINE
     _human = _notes
     _re, _token_cost = _chain(_sys, _human)
     return _re, _token_cost
 
+def refine_zh(_notes: str):
+    _sys = SYS_REFINE_ZH
+    _human = _notes
+    _re, _token_cost = _chain(_sys, _human)
+    return _re, _token_cost
 
-def run_bshr(_query: str):
+
+##### bshr + wiki
+def bshr_wiki(_query: str):
     logger_toolset.info(f"query: '{_query}'")
     _tc = []
     notes = ""
@@ -198,7 +368,7 @@ def run_bshr(_query: str):
     while True:
         iteration += 1
         logger_toolset.info(f"iteration ({iteration}) started")
-        new_queries, notes, _token_cost = brainstorm(
+        new_queries, notes, _token_cost = brainstorm_wiki(
             _query=_query,
             _notes=notes, 
             _queries=queries,
@@ -239,13 +409,68 @@ def run_bshr(_query: str):
     _re = new_hypothesis.split("\n\n")[-1]
     return _re, calc_token_cost(_tc)
 
-
-def tool_bshr():
+def tool_bshr_wiki():
     tool = StructuredTool.from_function(
-        run_bshr,
+        bshr_wiki,
         name="BSHR with wikipedia (EN)",
         description="BSHR (Brainstorm, Hypothesize, Satisfice, Refine), information foraging with wikipedia.",
         verbose=True,
     )
     return tool
+
+
+##### bshr + vdb
+def bshr_vdb(_query: str):
+    logger_toolset.info(f"query: '{_query}'")
+    _tc = []
+    notes = ""
+    queries = ""
+    iteration = 0
+    max_iterations = 1
+    hypotheses_feedback = "# 对假设的反馈\n"
+    while True:
+        iteration += 1
+        logger_toolset.info(f"iteration ({iteration}) started")
+        if iteration == 1:
+            logger_toolset.info("+[vdb]")
+            new_queries, notes, _token_cost = brainstorm_vdb_zh(
+                _query=_query,
+                _notes=notes, 
+                _queries=queries,
+            )
+        queries += new_queries
+        _tc.append(_token_cost)
+        new_hypothesis, _token_cost = hypothesize_zh(
+            _query=_query,
+            _notes=notes,
+            _hypotheses=hypotheses_feedback,
+        )
+        _tc.append(_token_cost)
+        satisficed, feedback, _token_cost = satisfice_zh(
+            _query=_query,
+            _notes=notes,
+            _queries=queries,
+            _hypothesis=new_hypothesis,
+        )
+        _tc.append(_token_cost)
+        hypotheses_feedback = f"""
+{hypotheses_feedback}
+
+## HYPOTHESIS
+{new_hypothesis}
+
+## FEEDBACK
+{feedback}
+"""
+        logger_toolset.info(f"new_hypothesis: '{new_hypothesis}'")
+        logger_toolset.info(f"satisficed: '{satisficed}'")
+        logger_toolset.info(f"feedback: '{feedback}'")
+        if satisficed or max_iterations <= iteration:
+            logger_toolset.info(f"reached max iterations: {max_iterations <= iteration}")
+            break
+        notes, _token_cost = refine_zh(notes)
+        _tc.append(_token_cost)
+        logger_toolset.info(f"iteration ({iteration}) completed")
+    _re = new_hypothesis
+    return _re, calc_token_cost(_tc)
 

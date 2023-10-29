@@ -17,10 +17,8 @@ from repolya.rag.qa_chain import (
 )
 from repolya.rag.doc_loader import get_docs_from_pdf
 from repolya.rag.doc_splitter import split_pdf_docs_recursive
-
-from repolya.autogen.workflow import create_rag_task_list, search_faiss_openai
-from repolya.autogen.util import cost_usage
-from repolya.rag.qa_chain import qa_with_context, summerize_text
+from repolya.rag.doc_loader import clean_txt
+from repolya.rag.load_rag_vdb import _vdb
 # from autogen import ChatCompletion
 
 from repolya._log import logger_rag
@@ -29,6 +27,8 @@ _log_ans1 = LOG_ROOT / '_ans1.txt'
 _log_ref1 = LOG_ROOT / '_ref1.txt'
 _log_ans2 = LOG_ROOT / '_ans2.txt'
 _log_ref2 = LOG_ROOT / '_ref2.txt'
+
+from repolya.toolset.tool_bshr import bshr_vdb
 
 import time
 import concurrent.futures as cf
@@ -51,8 +51,8 @@ def write_log_ans(_log_ans, _txt, _status=None):
     with open(_log_ans, 'w', encoding='utf-8') as wf:
         if _status == "continue":
             _txt += "\n\n计算中，请稍候..."
-        elif _status == "done":
-            _txt += "\n\n完成！"
+        # elif _status == "done":
+        #     _txt += "\n\n[完成]"
         wf.write(_txt)
 
 def write_log_ref(_log_ref, _txt):
@@ -67,6 +67,7 @@ def clean_logs():
 
 def clean_all():
     clean_logs()
+    print('clean_logs()')
     return [gr.Textbox(value=""), gr.Button(variant="secondary")]
 
 clean_logs()
@@ -87,7 +88,7 @@ def chg_textbox_visible(_radio):
             fr_ans2: gr.Textbox(visible=False),
             fr_log2: gr.Textbox(visible=False),
         }
-    if _radio == '高级':
+    if _radio == '精细':
         return {
             fr_ans1: gr.Textbox(visible=False),
             fr_log1: gr.Textbox(visible=False),
@@ -99,23 +100,12 @@ def chg_textbox_visible(_radio):
 ##### RAG
 def qa_faiss_openai(_query):
     start_time = time.time()
-    _vdb_name = str(WORKSPACE_RAG / 'lj_rag_openai')
-    _vdb = get_faiss_OpenAI(_vdb_name)
     _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
     end_time = time.time()
     execution_time = end_time - start_time
     _time = f"Time: {execution_time:.1f} seconds"
     logger_rag.info(f"{_time}")
     return [_ans, _step, _token_cost, _time]
-
-def qa_sum(_txt_fp):
-    start_time = time.time()
-    _ans, _token_cost = qa_summerize(_txt_fp, 'stuff')
-    end_time = time.time()
-    execution_time = end_time - start_time
-    _time = f"Time: {execution_time:.1f} seconds"
-    logger_rag.info(f"{_time}")
-    return [_ans, _token_cost, _time]
 
 def sum_token_cost_from_text(text):
     """Extract and sum tokens, cost, and time from a given text."""
@@ -129,68 +119,34 @@ def sum_token_cost_from_text(text):
     _out = f"Tokens: {total_tokens}\nCost: ${format(total_cost, '.3f')}\nTime: {total_time:.1f} seconds"
     return _out
 
-def frank_doc_helper_fast(_query, _radio):
+def rag_helper_fast(_query, _radio):
     _ans, _ref = "", ""
     write_log_ans(_log_ans1,'')
     write_log_ref(_log_ref1,'')
-    results = {}
     if _radio == "快速":
         with cf.ProcessPoolExecutor() as executor:
             write_log_ans(_log_ans1, '', 'continue')
-            futures = {
-                executor.submit(qa_faiss_openai, _query): "openai",
-            }
-            for future in cf.as_completed(futures):
-                name = futures[future]
-                data = future.result()
-                results[name] = data
-                # Update the Textbox components
-                _ans += f"{data[0]}\n\n"
-                _ref += f"{data[2]}\n{data[3]}\n\n"
-                write_log_ans(_log_ans1, _ans, 'continue')
-                write_log_ref(_log_ref1, _ref)
-            _sum, _c, _t = qa_sum(_log_ans1)
-            _ans = f"{_sum}\n\n" + "-"*20 + " references\n" + _ans
-            _ref += f"{_c}\n{_t}\n\n"
-            _sum_ref = sum_token_cost_from_text(_ref)
-            _ref = f"{_sum_ref}\n\n" + "-"*20 + " references\n" + _ref
-            # write_log_ans(_ans, 'done')
-            # write_log_ref(_ref)
-            write_log_ans(_log_ans1, _sum, 'done')
-            write_log_ref(_log_ref1, _sum_ref)
+            _ans, _step, _token_cost, _time = qa_faiss_openai(_query)
+            _ref = f"{_token_cost}\n{_time}\n\n{_step}"
+            write_log_ans(_log_ans1, clean_txt(_ans), 'done')
+            write_log_ref(_log_ref1, _ref)
     return
 
-def frank_doc_helper_advanced(_query, _radio):
+def rag_helper_advanced(_query, _radio):
     _ans, _ref = "", ""
     write_log_ans(_log_ans2,'')
     write_log_ref(_log_ref2,'')
-    results = {}
-    if _radio == "高级":
-        start_time = time.time()
+    if _radio == "精细":
         write_log_ans(_log_ans2, '', 'continue')
-        # ChatCompletion.start_logging(reset_counter=True, compact=False)
-        ### task list
-        _task_list = create_rag_task_list(_query)
-        write_log_ans(_log_ans2, f"Generated sub-questions list:\n\n{_task_list}", 'continue')
+        start_time = time.time()
+        _ans, _token_cost = bshr_vdb(_query)
+        print(_ans)
         end_time = time.time()
         execution_time = end_time - start_time
         _time = f"Time: {execution_time:.1f} seconds"
-        write_log_ref(_log_ref2, f"\n\n{_time}")
-        # print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")
-        ### context
-        _context = search_faiss_openai(_task_list)
-        write_log_ans(_log_ans2, f"Generated QA context:\n\n{_context}", 'continue')
-        end_time = time.time()
-        execution_time = end_time - start_time
-        _time = f"Time: {execution_time:.1f} seconds"
-        write_log_ref(_log_ref2, f"\n\n{_time}")
-        ### qa
-        _qa, _tc = qa_with_context(_query, _context)
-        write_log_ans(_log_ans2, f"Generated final answer:\n\n{_qa}", 'done')
-        end_time = time.time()
-        execution_time = end_time - start_time
-        _time = f"Time: {execution_time:.1f} seconds"
-        write_log_ref(_log_ref2, f"\n\n{_time}\n\n{'='*40}\n\n{_context}")
+        _ref = f"{_token_cost}\n{_time}"
+        write_log_ans(_log_ans2, clean_txt(_ans), 'done')
+        write_log_ref(_log_ref2, _ref)
     return
 
 
@@ -208,7 +164,7 @@ with gr.Blocks(title=_description) as demo:
     with gr.Tab(label = "提问"):
         fr_query = gr.Textbox(label="提问", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
         fr_radio = gr.Radio(
-            ["快速", "高级"],
+            ["快速", "精细"],
             label="",
             info="",
             type="value",
@@ -218,10 +174,10 @@ with gr.Blocks(title=_description) as demo:
         fr_clean_btn = gr.Button("清空", variant="secondary", visible=True)
         with gr.Row():
             fr_ans1 = gr.Textbox(label="回答 (快速)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
-            fr_ans2 = gr.Textbox(label="回答 (高级)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
+            fr_ans2 = gr.Textbox(label="回答 (精细)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
         with gr.Row():
             fr_log1 = gr.Textbox(label="日志 (快速)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
-            fr_log2 = gr.Textbox(label="日志 (高级)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
+            fr_log2 = gr.Textbox(label="日志 (精细)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
         fr_radio.change(
             chg_textbox_visible,
             [fr_radio],
@@ -239,12 +195,12 @@ with gr.Blocks(title=_description) as demo:
             every=1
         )
         fr_start_btn.click(
-            frank_doc_helper_fast,
+            rag_helper_fast,
             [fr_query, fr_radio],
             []
         )
         fr_start_btn.click(
-            frank_doc_helper_advanced,
+            rag_helper_advanced,
             [fr_query, fr_radio],
             []
         )
