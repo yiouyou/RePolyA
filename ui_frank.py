@@ -20,7 +20,7 @@ from repolya.rag.doc_splitter import split_pdf_docs_recursive
 
 from repolya.autogen.workflow import create_rag_task_list, search_faiss_openai
 from repolya.autogen.util import cost_usage
-from repolya.rag.qa_chain import qa_with_context, summerize_text
+from repolya.rag.qa_chain import qa_with_context_as_lawyer
 from autogen import ChatCompletion
 
 from repolya._log import logger_rag
@@ -41,6 +41,8 @@ _splited_docs = split_pdf_docs_recursive(_docs, 1000, 50)
 _splited_docs_list = []
 for doc in _splited_docs:
     _splited_docs_list.append(doc.page_content)
+_vdb_oai = get_faiss_OpenAI(str(WORKSPACE_RAG / 'frank_doc_openai'))
+_vdb_hf = get_faiss_HuggingFace(str(WORKSPACE_RAG / 'frank_doc_huggingface'))
 
 
 def chg_btn_color_if_input(_topic):
@@ -68,9 +70,7 @@ def chg_textbox_visible(_radio):
 
 def qa_faiss_openai(_query):
     start_time = time.time()
-    _vdb_name = str(WORKSPACE_RAG / 'frank_doc_openai')
-    _vdb = get_faiss_OpenAI(_vdb_name)
-    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
+    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb_oai, 'stuff')
     end_time = time.time()
     execution_time = end_time - start_time
     _time = f"Time: {execution_time:.1f} seconds"
@@ -79,9 +79,7 @@ def qa_faiss_openai(_query):
 
 def qa_faiss_huggingface(_query):
     start_time = time.time()
-    _vdb_name = str(WORKSPACE_RAG / 'frank_doc_huggingface')
-    _vdb = get_faiss_HuggingFace(_vdb_name)
-    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
+    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb_hf, 'stuff')
     end_time = time.time()
     execution_time = end_time - start_time
     _time = f"Time: {execution_time:.1f} seconds"
@@ -243,14 +241,14 @@ def frank_doc_helper_advanced(_query, _radio):
         write_log_ref(_log_ref2, f"\n\n{_time}")
         # print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")
         ### context
-        _context = search_faiss_openai(_task_list)
+        _context = search_faiss_openai(_task_list, _vdb_oai)
         write_log_ans(_log_ans2, f"Generated QA context:\n\n{_context}", 'continue')
         end_time = time.time()
         execution_time = end_time - start_time
         _time = f"Time: {execution_time:.1f} seconds"
         write_log_ref(_log_ref2, f"\n\n{_time}")
         ### qa
-        _qa, _tc = qa_with_context(_query, _context)
+        _qa, _tc = qa_with_context_as_lawyer(_query, _context)
         write_log_ans(_log_ans2, f"Generated final answer:\n\n{_qa}", 'done')
         end_time = time.time()
         execution_time = end_time - start_time

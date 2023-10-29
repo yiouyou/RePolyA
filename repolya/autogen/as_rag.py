@@ -170,6 +170,36 @@ RAG_task_critic = AssistantAgent(
 )
 
 
+##### Organizer
+USER_PROMPT_ZH = "作为'用户'，你向'规划师'提出问题并分配任务。"
+RAG_task_user_zh = UserProxyAgent(
+    name="RAG_task_用户",
+    code_execution_config=False,
+    human_input_mode="NEVER",
+    is_termination_msg=is_termination_msg,
+    system_message=USER_PROMPT_ZH,
+)
+
+
+PLANNER_PROMPT_ZH = "作为'规划师'，你为了帮助'用户'收集相关信息，需要将复杂的问题分解为更简单的子问题（不超过3个），以便更轻松地从互联网或者数据库中搜集信息。你将子问题列表发送给'评判者'进行审查。并根据'评判者'的反馈调整列表，保持问题数量在5个左右。只输出子问题列表，不用注释，没其他任何内容。"
+RAG_task_planner_zh = AssistantAgent(
+    name="RAG_task_规划师",
+    llm_config=base_config,
+    code_execution_config=False,
+    is_termination_msg=is_termination_msg,
+    system_message=PLANNER_PROMPT_ZH,
+)
+
+
+CRITIC_PROMPT_ZH = "作为'评判者'，你仔细检查'规划师'提供的子问题列表并提供反馈。"
+RAG_task_critic_zh = AssistantAgent(
+    name="RAG_task_评判者",
+    llm_config=base_config,
+    is_termination_msg=is_termination_msg,
+    system_message=CRITIC_PROMPT_ZH,
+)
+
+
 # SEARCHER_PROMPT = "Searcher. You use given function to search for information in the database."
 # RAG_task_searcher = AssistantAgent(
 #     name="RAG_task_searcher",

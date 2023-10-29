@@ -19,7 +19,7 @@ from repolya.app.bshr.prompt import (
     SYS_REFINE_ZH,
 )
 
-from repolya.rag.load_rag_vdb import _vdb
+from repolya.rag.load_rag_vdb import _vdb_oai
 from repolya.rag.qa_chain import qa_vdb_multi_query
 
 # from halo import Halo
@@ -180,7 +180,7 @@ QUESTION: {_q}
 
 
 def search_vdb(_query: str) -> str:
-    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
+    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb_oai, 'stuff')
     return _ans, _token_cost
 
 def brainstorm_vdb(_query: str, _notes: str, _queries: str):

@@ -18,7 +18,7 @@ from repolya.rag.qa_chain import (
 from repolya.rag.doc_loader import get_docs_from_pdf
 from repolya.rag.doc_splitter import split_pdf_docs_recursive
 from repolya.rag.doc_loader import clean_txt
-from repolya.rag.load_rag_vdb import _vdb
+from repolya.rag.load_rag_vdb import _vdb_oai
 # from autogen import ChatCompletion
 
 from repolya._log import logger_rag
@@ -27,8 +27,13 @@ _log_ans1 = LOG_ROOT / '_ans1.txt'
 _log_ref1 = LOG_ROOT / '_ref1.txt'
 _log_ans2 = LOG_ROOT / '_ans2.txt'
 _log_ref2 = LOG_ROOT / '_ref2.txt'
+_log_ans3 = LOG_ROOT / '_ans3.txt'
+_log_ref3 = LOG_ROOT / '_ref3.txt'
 
 from repolya.toolset.tool_bshr import bshr_vdb
+
+from repolya.autogen.workflow import create_rag_task_list_zh, search_faiss_openai
+from repolya.rag.qa_chain import qa_with_context_as_mio
 
 import time
 import concurrent.futures as cf
@@ -45,7 +50,11 @@ def read_logs():
         _ans2 = f.read()
     with open(_log_ref2, "r") as f:
         _ref2 = f.read()
-    return [_ans1, _ref1, _ans2, _ref2]
+    with open(_log_ans3, "r") as f:
+        _ans3 = f.read()
+    with open(_log_ref3, "r") as f:
+        _ref3 = f.read()
+    return [_ans1, _ref1, _ans2, _ref2, _ans3, _ref3]
 
 def write_log_ans(_log_ans, _txt, _status=None):
     with open(_log_ans, 'w', encoding='utf-8') as wf:
@@ -64,6 +73,8 @@ def clean_logs():
     write_log_ref(_log_ref1,'')
     write_log_ans(_log_ans2,'')
     write_log_ref(_log_ref2,'')
+    write_log_ans(_log_ans3,'')
+    write_log_ref(_log_ref3,'')
 
 def clean_all():
     clean_logs()
@@ -87,20 +98,33 @@ def chg_textbox_visible(_radio):
             fr_log1: gr.Textbox(visible=True),
             fr_ans2: gr.Textbox(visible=False),
             fr_log2: gr.Textbox(visible=False),
+            fr_ans3: gr.Textbox(visible=False),
+            fr_log3: gr.Textbox(visible=False),
         }
-    if _radio == '精细':
+    if _radio == '深思':
         return {
             fr_ans1: gr.Textbox(visible=False),
             fr_log1: gr.Textbox(visible=False),
             fr_ans2: gr.Textbox(visible=True),
             fr_log2: gr.Textbox(visible=True),
+            fr_ans3: gr.Textbox(visible=False),
+            fr_log3: gr.Textbox(visible=False),
+        }
+    if _radio == '多智':
+        return {
+            fr_ans1: gr.Textbox(visible=False),
+            fr_log1: gr.Textbox(visible=False),
+            fr_ans2: gr.Textbox(visible=False),
+            fr_log2: gr.Textbox(visible=False),
+            fr_ans3: gr.Textbox(visible=True),
+            fr_log3: gr.Textbox(visible=True),
         }
 
 
 ##### RAG
 def qa_faiss_openai(_query):
     start_time = time.time()
-    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
+    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb_oai, 'stuff')
     end_time = time.time()
     execution_time = end_time - start_time
     _time = f"Time: {execution_time:.1f} seconds"
@@ -136,7 +160,7 @@ def rag_helper_advanced(_query, _radio):
     _ans, _ref = "", ""
     write_log_ans(_log_ans2,'')
     write_log_ref(_log_ref2,'')
-    if _radio == "精细":
+    if _radio == "深思":
         write_log_ans(_log_ans2, '', 'continue')
         start_time = time.time()
         _ans, _token_cost = bshr_vdb(_query)
@@ -148,6 +172,49 @@ def rag_helper_advanced(_query, _radio):
         write_log_ans(_log_ans2, clean_txt(_ans), 'done')
         write_log_ref(_log_ref2, _ref)
     return
+
+def rag_helper_autogen(_query, _radio):
+    _ans, _ref = "", ""
+    write_log_ans(_log_ans3,'')
+    write_log_ref(_log_ref3,'')
+    if _radio == "多智":
+        start_time = time.time()
+        write_log_ans(_log_ans3, '', 'continue')
+        # ChatCompletion.start_logging(reset_counter=True, compact=False)
+        ### task list
+        _task_list = create_rag_task_list_zh(_query)
+        write_log_ans(_log_ans3, f"生成的子问题列表：\n\n{_task_list}", 'continue')
+        end_time = time.time()
+        execution_time = end_time - start_time
+        _time = f"Time: {execution_time:.1f} seconds"
+        write_log_ref(_log_ref3, f"\n\n{_time}")
+        # print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")
+        ### context
+        _context = search_faiss_openai(_task_list, _vdb_oai)
+        write_log_ans(_log_ans3, f"生成的 QA 上下文：\n\n{_context}", 'continue')
+        end_time = time.time()
+        execution_time = end_time - start_time
+        _time = f"Time: {execution_time:.1f} seconds"
+        write_log_ref(_log_ref3, f"\n\n{_time}")
+        ### qa
+        _qa, _tc = qa_with_context_as_mio(_query, _context)
+        write_log_ans(_log_ans3, f"生成的最终答案：\n\n{_qa}", 'done')
+        end_time = time.time()
+        execution_time = end_time - start_time
+        _time = f"Time: {execution_time:.1f} seconds"
+        write_log_ref(_log_ref3, f"\n\n{_time}\n\n{'='*40}\n\n{_context}")
+    return
+
+def rag_helper(_query, _radio):
+    if _radio == "快速":
+        logger_rag.info("[快速]")
+        rag_helper_fast(_query, _radio)
+    if _radio == "深思":
+        logger_rag.info("[深思]")
+        rag_helper_advanced(_query, _radio)
+    if _radio == "多智":
+        logger_rag.info("[多智]")
+        rag_helper_autogen(_query, _radio)
 
 
 ##### UI
@@ -164,7 +231,7 @@ with gr.Blocks(title=_description) as demo:
     with gr.Tab(label = "提问"):
         fr_query = gr.Textbox(label="提问", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
         fr_radio = gr.Radio(
-            ["快速", "精细"],
+            ["快速", "深思", "多智"],
             label="",
             info="",
             type="value",
@@ -174,14 +241,16 @@ with gr.Blocks(title=_description) as demo:
         fr_clean_btn = gr.Button("清空", variant="secondary", visible=True)
         with gr.Row():
             fr_ans1 = gr.Textbox(label="回答 (快速)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
-            fr_ans2 = gr.Textbox(label="回答 (精细)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
+            fr_ans2 = gr.Textbox(label="回答 (深思)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
+            fr_ans3 = gr.Textbox(label="回答 (多智)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
         with gr.Row():
             fr_log1 = gr.Textbox(label="日志 (快速)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
-            fr_log2 = gr.Textbox(label="日志 (精细)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
+            fr_log2 = gr.Textbox(label="日志 (深思)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
+            fr_log3 = gr.Textbox(label="日志 (多智)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
         fr_radio.change(
             chg_textbox_visible,
             [fr_radio],
-            [fr_ans1, fr_ans2, fr_log1, fr_log2]
+            [fr_ans1, fr_ans2, fr_log1, fr_log2, fr_ans3, fr_log3]
         )
         fr_query.change(
             chg_btn_color_if_input,
@@ -191,16 +260,11 @@ with gr.Blocks(title=_description) as demo:
         fr_start_btn.click(
             read_logs,
             [],
-            [fr_ans1, fr_log1, fr_ans2, fr_log2],
+            [fr_ans1, fr_log1, fr_ans2, fr_log2, fr_ans3, fr_log3],
             every=1
         )
         fr_start_btn.click(
-            rag_helper_fast,
-            [fr_query, fr_radio],
-            []
-        )
-        fr_start_btn.click(
-            rag_helper_advanced,
+            rag_helper,
             [fr_query, fr_radio],
             []
         )

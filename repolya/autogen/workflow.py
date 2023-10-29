@@ -11,17 +11,24 @@ from repolya.autogen.as_rag import (
     RAG_CODE_user, RAG_DOC_user, RAG_assist,
     RAG_boss, RAG_boss_aid, RAG_pm, RAG_engineer, RAG_reviewer,
     RAG_task_user, RAG_task_planner, RAG_task_critic,
+    RAG_task_user_zh, RAG_task_planner_zh, RAG_task_critic_zh,
 )
 from repolya.autogen.as_rd import RD_user, RD_researcher
 from repolya.autogen.as_research import RES_user, RES_engineer, RES_scientist, RES_planner, RES_executor, RES_critic
 from repolya.autogen.as_draw import DRAW_user, DRAW_artist, DRAW_critic
 from repolya.autogen.as_postgre import POSTGRE_user, POSTGRE_engineer, POSTGRE_analyst, POSTGRE_pm
 from repolya.autogen.as_util import text_report_analyst, json_report_analyst, yaml_report_analyst
-
 from repolya.autogen.db_postgre import (
     PostgresManager,
     add_cap_ref,
 )
+from repolya.autogen.organizer import Organizer
+from autogen import (
+    GroupChat,
+    GroupChatManager,
+    config_list_from_json,
+)
+
 from repolya.rag.vdb_faiss import (
     get_faiss_OpenAI,
     get_faiss_HuggingFace,
@@ -33,14 +40,7 @@ from repolya.rag.qa_chain import (
     qa_summerize,
     summerize_text,
 )
-
-from repolya.autogen.organizer import Organizer
-
-from autogen import (
-    GroupChat,
-    GroupChatManager,
-    config_list_from_json,
-)
+from repolya.rag.doc_loader import clean_txt
 
 import os
 import re
@@ -225,7 +225,7 @@ def create_rag_task_list(msg):
         RAG_task_planner,
     ]
     _organizer = Organizer(
-        name="Ask for Frank ::: RAG Task Team",
+        name="RAG Task Team",
         agents=_agents,
     )
     success, _messages = _organizer.sequential_conversation(msg)
@@ -235,13 +235,30 @@ def create_rag_task_list(msg):
     return _task_list
 
 
-def search_faiss_openai(text):
-    _vdb_name = str(WORKSPACE_RAG / 'frank_doc_openai')
-    _vdb = get_faiss_OpenAI(_vdb_name)
+def create_rag_task_list_zh(msg):
+    _agents = [
+        RAG_task_user_zh,
+        RAG_task_planner_zh,
+        RAG_task_critic_zh,
+        RAG_task_planner_zh,
+    ]
+    _organizer = Organizer(
+        name="RAG Task Team",
+        agents=_agents,
+    )
+    success, _messages = _organizer.sequential_conversation(msg)
+    # print(success)
+    # print(_messages)
+    _task_list = _messages[-1]
+    return _task_list
+
+
+def search_faiss_openai(text, _vdb):
     _re = []
     questions = [re.sub(r"^\d+\.\s*", "", line) for line in text.split("\n") if re.match(r"^\d+\.", line)]
     for i in questions:
         _ans, _step, _token_cost = qa_vdb_multi_query(i, _vdb, 'stuff')
+        _ans = clean_txt(_ans)
         _re.append(f"Q: {i}\nA: {_ans}")
     return '\n\n'.join(_re)
 
