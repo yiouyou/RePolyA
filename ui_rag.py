@@ -31,7 +31,6 @@ from repolya.rag.digest_dir import (
     calculate_md5,
     dir_to_faiss_openai,
 )
-from repolya.rag.load_rag_vdb import _vdb_oai
 # from autogen import ChatCompletion
 
 from repolya._log import logger_rag
@@ -140,9 +139,9 @@ def chg_textbox_visible(_radio):
 
 
 ##### RAG
-def qa_faiss_openai(_query):
+def qa_faiss_openai(_query, _vdb):
     start_time = time.time()
-    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb_oai, 'stuff')
+    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
     end_time = time.time()
     execution_time = end_time - start_time
     _time = f"Time: {execution_time:.1f} seconds"
@@ -163,13 +162,14 @@ def sum_token_cost_from_text(text):
 
 
 def rag_helper_fast(_query, _radio):
+    _vdb = get_faiss_OpenAI(_db_name)
     _ans, _ref = "", ""
     write_log_ans(_log_ans1,'')
     write_log_ref(_log_ref1,'')
     if _radio == "快速":
         with cf.ProcessPoolExecutor() as executor:
             write_log_ans(_log_ans1, '', 'continue')
-            _ans, _step, _token_cost, _time = qa_faiss_openai(_query)
+            _ans, _step, _token_cost, _time = qa_faiss_openai(_query, _vdb)
             _ref = f"{_token_cost}\n{_time}\n\n{_step}"
             write_log_ans(_log_ans1, clean_txt(_ans), 'done')
             write_log_ref(_log_ref1, _ref)
@@ -182,7 +182,7 @@ def rag_helper_advanced(_query, _radio):
     if _radio == "深思":
         write_log_ans(_log_ans2, '', 'continue')
         start_time = time.time()
-        _ans, _token_cost = bshr_vdb(_query)
+        _ans, _token_cost = bshr_vdb(_query, _db_name)
         print(_ans)
         end_time = time.time()
         execution_time = end_time - start_time
@@ -193,6 +193,7 @@ def rag_helper_advanced(_query, _radio):
     return
 
 def rag_helper_autogen(_query, _radio):
+    _vdb = get_faiss_OpenAI(_db_name)
     _ans, _ref = "", ""
     write_log_ans(_log_ans3,'')
     write_log_ref(_log_ref3,'')
@@ -209,7 +210,7 @@ def rag_helper_autogen(_query, _radio):
         write_log_ref(_log_ref3, f"\n\n{_time}")
         # print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")
         ### context
-        _context = search_faiss_openai(_task_list, _vdb_oai)
+        _context = search_faiss_openai(_task_list, _vdb)
         write_log_ans(_log_ans3, f"生成的 QA 上下文：\n\n{_context}", 'continue')
         end_time = time.time()
         execution_time = end_time - start_time
@@ -238,6 +239,7 @@ def rag_helper(_query, _radio):
 
 def rag_handle_upload(_tmp_path):
     _tmp_files = []
+    _out = []
     for i in _tmp_path:
         i_fp = i.name
         _tmp_files.append(i_fp)
@@ -254,12 +256,14 @@ def rag_handle_upload(_tmp_path):
             logger_rag.info(f"upload {i_fn} to {i_fn_new}")
             dir_to_faiss_openai(i_dir, i_db_name, _clean_txt_dir)
             shutil.move(i_fp, i_fp_new)
-            merge_faiss_openai(_db_name, i_db_name, _db_name_new)
+            merge_faiss_openai(_db_name, i_db_name)
             shutil.rmtree(i_db_name)
             logger_rag.info(f"done upload process")
+            _out.append(f"upload {i_fn} to {i_fn_new}")
         else:
             logger_rag.info(f"{i_fn} ({i_fn_new}) exists")
-    return "\n".join(_tmp_files)
+            _out.append(f"{i_fn} ({i_fn_new}) exists")
+    return "\n".join(_out)
 
 
 ##### UI
@@ -275,11 +279,11 @@ with gr.Blocks(title=_description) as demo:
 
     with gr.Tab(label = "问答"):
         rag_upload = gr.File(label="上传文件", file_count="multiple", type="file", interactive=True, visible=True)
-        rag_tmp_files = gr.Textbox(label="rag_tmp_files", visible=True)
+        rag_tmp_files = gr.Textbox(label="上传日志", visible=True)
         rag_query = gr.Textbox(label="提问", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
         rag_radio = gr.Radio(
-            ["快速", "深思", "多智"],
-            label="",
+            ["快速", "多智", "深思"],
+            label="快速(约半分钟), 多智(约2分钟), 深思(约4分钟)",
             info="",
             type="value",
             value="快速",

@@ -18,7 +18,8 @@ _db_name = str(WORKSPACE_RAG / 'lj_rag_openai')
 _clean_txt_dir = str(WORKSPACE_RAG / 'lj_rag_clean_txt')
 
 show_faiss(get_faiss_OpenAI(_db_name))
-exit()
+
+# exit()
 
 import shutil
 if os.path.exists(_db_name):
@@ -27,4 +28,6 @@ if os.path.exists(_clean_txt_dir):
     shutil.rmtree(_clean_txt_dir)
 
 dir_to_faiss_openai(_dir, _db_name, _clean_txt_dir)
+
+show_faiss(get_faiss_OpenAI(_db_name))
 

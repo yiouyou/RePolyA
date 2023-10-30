@@ -7,6 +7,7 @@ from langchain.schema import StrOutputParser
 from langchain.schema.runnable import RunnablePassthrough
 from langchain.callbacks import get_openai_callback
 
+from repolya._const import WORKSPACE_RAG
 from repolya._log import logger_toolset
 from repolya.app.bshr.prompt import (
     SYS_BRAINSTORM,
@@ -19,8 +20,8 @@ from repolya.app.bshr.prompt import (
     SYS_REFINE_ZH,
 )
 
-from repolya.rag.load_rag_vdb import _vdb_oai
 from repolya.rag.qa_chain import qa_vdb_multi_query
+from repolya.rag.vdb_faiss import get_faiss_OpenAI
 
 # from halo import Halo
 import concurrent.futures as cf
@@ -179,11 +180,11 @@ QUESTION: {_q}
     return _queries, _notes, calc_token_cost(_tc)
 
 
-def search_vdb(_query: str) -> str:
-    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb_oai, 'stuff')
+def search_vdb(_query, _vdb):
+    _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
     return _ans, _token_cost
 
-def brainstorm_vdb(_query: str, _notes: str, _queries: str):
+def brainstorm_vdb(_query, _notes, _queries, _vdb):
     _tc = []
     _sys = SYS_BRAINSTORM
     _spr = SYS_REFINE
@@ -204,7 +205,7 @@ def brainstorm_vdb(_query: str, _notes: str, _queries: str):
     logger_toolset.info(f"new questions: {_re}")
     _questions = json.loads(_re)
     for _q in _questions:
-        content, _vdb_tc = search_vdb(_q)
+        content, _vdb_tc = search_vdb(_q, _vdb)
         _tc.append(_vdb_tc)
         compressed_content, _spc_tc = _chain(_spr, content)
         _tc.append(_spc_tc)
@@ -220,7 +221,7 @@ QUESTION: {_q}
 """
     return _queries, _notes, calc_token_cost(_tc)
 
-def brainstorm_vdb_zh(_query: str, _notes: str, _queries: str):
+def brainstorm_vdb_zh(_query, _notes, _queries, _vdb):
     _tc = []
     _sys = SYS_BRAINSTORM_ZH
     _spr = SYS_REFINE_ZH
@@ -241,7 +242,7 @@ def brainstorm_vdb_zh(_query: str, _notes: str, _queries: str):
     logger_toolset.info(f"new questions: {_re}")
     _questions = json.loads(_re)
     for _q in _questions:
-        content, _vdb_tc = search_vdb(_q)
+        content, _vdb_tc = search_vdb(_q, _vdb)
         _tc.append(_vdb_tc)
         compressed_content, _spc_tc = _chain(_spr, content)
         _tc.append(_spc_tc)
@@ -420,7 +421,8 @@ def tool_bshr_wiki():
 
 
 ##### bshr + vdb
-def bshr_vdb(_query: str):
+def bshr_vdb(_query, _db_name):
+    _vdb = get_faiss_OpenAI(_db_name)
     logger_toolset.info(f"query: '{_query}'")
     _tc = []
     notes = ""
@@ -437,6 +439,7 @@ def bshr_vdb(_query: str):
                 _query=_query,
                 _notes=notes, 
                 _queries=queries,
+                _vdb=_vdb,
             )
         queries += new_queries
         _tc.append(_token_cost)

@@ -90,8 +90,8 @@ Original question: {question}""",
         prompt=QUERY_PROMPT,
         output_parser=output_parser
     )
-    _db = get_faiss_OpenAI(_db_name)
-    _base_retriever = _db.as_retriever()
+    _vdb = get_faiss_OpenAI(_db_name)
+    _base_retriever = _vdb.as_retriever()
     ##### Remove redundant results from the merged retrievers
     _filter = EmbeddingsRedundantFilter(embeddings=OpenAIEmbeddings())
     ##### Re-order results to avoid performance degradation
