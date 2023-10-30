@@ -21,16 +21,16 @@ from repolya.rag.qa_chain import (
 import os
 
 
-def rag_vdb_multi_query(_query: str, _vdb_name: str, _chain_type: str) -> str:
-    if 'openai' in _vdb_name:
-        _vdb = get_faiss_OpenAI(_vdb_name)
+def rag_vdb_multi_query(_query: str, _db_name: str, _chain_type: str) -> str:
+    if 'openai' in _db_name:
+        _vdb = get_faiss_OpenAI(_db_name)
     else:
-        _vdb = get_faiss_HuggingFace(_vdb_name)
+        _vdb = get_faiss_HuggingFace(_db_name)
     _ans, _steps, _token_cost = qa_vdb_multi_query(_query, _vdb, _chain_type)
     return _ans
 
-def tool_rag_vdb_multi_query(_vdb_name: str):
-    _info_type = '_'.join(_vdb_name.split('_')[:-1])
+def tool_rag_vdb_multi_query(_db_name: str):
+    _info_type = '_'.join(_db_name.split('_')[:-1])
     tool = StructuredTool.from_function(
         rag_vdb_multi_query,
         name=f"QA {_info_type} with 'MultiQuery' method",

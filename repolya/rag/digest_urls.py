@@ -16,7 +16,7 @@ text_chunk_size = 1000
 text_chunk_overlap = 50
 
 
-def urls_to_faiss(_urls: list, _vdb_name: str, _clean_txt_dir: str):
+def urls_to_faiss(_urls: list, _db_name: str, _clean_txt_dir: str):
     if not os.path.exists(_clean_txt_dir):
         os.makedirs(_clean_txt_dir)
     _docs = load_urls_to_docs(_urls)
@@ -37,9 +37,9 @@ def urls_to_faiss(_urls: list, _vdb_name: str, _clean_txt_dir: str):
         with open(_clean_out, 'w') as f:
             f.write(_new_page_content)
     _splited_docs = split_docs_recursive(_docs, text_chunk_size, text_chunk_overlap)
-    if _vdb_name.endswith('_openai'):
-        embedding_to_faiss_OpenAI(_splited_docs, _vdb_name)
+    if _db_name.endswith('_openai'):
+        embedding_to_faiss_OpenAI(_splited_docs, _db_name)
     else:
-        logger_rag.info(f"vdb_name '{_vdb_name}' is not ends with '_openai'")
+        logger_rag.info(f"db_name '{_db_name}' is not ends with '_openai'")
 
 

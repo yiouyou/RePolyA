@@ -28,6 +28,22 @@ text_chunk_size = 500
 text_chunk_overlap = 50
 
 
+def calculate_md5(_fp):
+    hash_md5 = hashlib.md5()
+    with open(_fp, "rb") as f:
+        # 以块为单位读取文件，以便适应大文件
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+
+def str_to_sha256(_str):
+    """Convert a string to its SHA-256 hash."""
+    sha256_hash = hashlib.sha256()
+    sha256_hash.update(_str.encode('utf-8'))
+    return sha256_hash.hexdigest()
+
+
 def get_files_from_dir(_dir, _ext):
     """递归从指定目录中获取具有给定扩展名的文件的路径。
     Args:
@@ -47,14 +63,7 @@ def get_files_from_dir(_dir, _ext):
     return _files
 
 
-def str_to_sha256(_str):
-    """Convert a string to its SHA-256 hash."""
-    sha256_hash = hashlib.sha256()
-    sha256_hash.update(_str.encode('utf-8'))
-    return sha256_hash.hexdigest()
-
-
-def dir_to_faiss_openai(_dir: str, _vdb_name: str, _clean_txt_dir: str):
+def dir_to_faiss_openai(_dir: str, _db_name: str, _clean_txt_dir: str):
     if not os.path.exists(_clean_txt_dir):
         os.makedirs(_clean_txt_dir)
     _DOCs = []
@@ -96,7 +105,8 @@ def dir_to_faiss_openai(_dir: str, _vdb_name: str, _clean_txt_dir: str):
     if len(_DOCs) == 0:
         logger_rag.error(f"NO docs found in dir '{_dir}'")
         return
-    logger_rag.info(f"Find {len(_DOCs)} docs in dir '{_dir}'")
+    logger_rag.info(f"load {len(_DOCs)} docs from '{_dir}'")
+    _clean_DOCs = []
     for i in range(len(_DOCs)):
         _d = _DOCs[i].to_json()
         _page_content = _d['kwargs']['page_content']
@@ -106,7 +116,7 @@ def dir_to_faiss_openai(_dir: str, _vdb_name: str, _clean_txt_dir: str):
         _new_metadata['source'] = _metadata['source']
         _source_fn = os.path.splitext(os.path.basename(_metadata['source']))[0]
         ### title: 前10个非空字符
-        _new_metadata['title'] = f"{_source_fn}, " + re.sub('\s', '', _new_page_content)[:10]
+        _new_metadata['title'] = f"{_source_fn}, " + re.sub(r'[\s/]', '', _new_page_content)[:10]
         # print(_new_metadata['source'])
         # print(_source_fn)
         # print(_new_metadata['title'])
@@ -117,11 +127,15 @@ def dir_to_faiss_openai(_dir: str, _vdb_name: str, _clean_txt_dir: str):
         _clean_file = _new_metadata['title'] + ".txt"
         # logger_rag.info(f"write '{_clean_file}'")
         _clean_out = os.path.join(_clean_txt_dir, _clean_file)
-        with open(_clean_out, 'w') as f:
-            f.write(f"{_new_metadata['title']}\n\n'{_new_page_content}'")
-    _splited_docs = split_docs_recursive(_DOCs, text_chunk_size, text_chunk_overlap)
-    if _vdb_name.endswith('_openai'):
-        embedding_to_faiss_OpenAI(_splited_docs, _vdb_name)
+        if _new_page_content != '':
+            with open(_clean_out, 'w') as f:
+                f.write(f"{_new_metadata['title']}\n\n'{_new_page_content}'")
+            _clean_DOCs.append(_DOCs[i])
+        else:
+            logger_rag.info(f"empty doc '{_clean_file}'")
+    _splited_docs = split_docs_recursive(_clean_DOCs, text_chunk_size, text_chunk_overlap)
+    if _db_name.endswith('_openai'):
+        embedding_to_faiss_OpenAI(_splited_docs, _db_name)
     else:
-        logger_rag.info(f"vdb_name '{_vdb_name}' is not ends with '_openai'")
+        logger_rag.info(f"db_name '{_db_name}' is not ends with '_openai'")
 

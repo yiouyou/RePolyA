@@ -44,10 +44,12 @@ def get_MarkdownHeaderTextSplitter():
 def split_docs_recursive(_docs, text_chunk_size, text_chunk_overlap):
     text_splitter = get_RecursiveCharacterTextSplitter(text_chunk_size, text_chunk_overlap)
     splited_docs = text_splitter.split_documents(_docs)
-    # for doc in splited_docs:
-    #     doc.page_content = clean_txt(doc.page_content)
-    logger_rag.info(f"split {len(_docs)} docs to {len(splited_docs)} splited_docs")
-    return splited_docs
+    _clean_splited_docs = []
+    for doc in splited_docs:
+        if doc.page_content.strip() != '':
+            _clean_splited_docs.append(doc)
+    logger_rag.info(f"split {len(_docs)} docs to {len(_clean_splited_docs)} splited_docs")
+    return _clean_splited_docs
 
 
 ##### split pdf

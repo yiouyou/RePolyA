@@ -3,21 +3,34 @@ import urllib3
 urllib3.disable_warnings()
 import gradio as gr
 # from functools import partial
+import concurrent.futures as cf
+import threading
+import time
+import shutil
+import os
 
 from repolya.chat import chat_predict_openai
 from repolya.rag.vdb_faiss import (
     get_faiss_OpenAI,
     get_faiss_HuggingFace,
+    merge_faiss_openai,
 )
 from repolya.rag.qa_chain import (
     qa_vdb_multi_query,
     qa_docs_ensemble_query,
     qa_docs_parent_query,
     qa_summerize,
+    qa_with_context_as_mio,
 )
-from repolya.rag.doc_loader import get_docs_from_pdf
+from repolya.rag.doc_loader import (
+    get_docs_from_pdf,
+    clean_txt,
+)
 from repolya.rag.doc_splitter import split_pdf_docs_recursive
-from repolya.rag.doc_loader import clean_txt
+from repolya.rag.digest_dir import (
+    calculate_md5,
+    dir_to_faiss_openai,
+)
 from repolya.rag.load_rag_vdb import _vdb_oai
 # from autogen import ChatCompletion
 
@@ -31,14 +44,19 @@ _log_ans3 = LOG_ROOT / '_ans3.txt'
 _log_ref3 = LOG_ROOT / '_ref3.txt'
 
 from repolya.toolset.tool_bshr import bshr_vdb
+from repolya.autogen.workflow import (
+    create_rag_task_list_zh,
+    search_faiss_openai,
+)
 
-from repolya.autogen.workflow import create_rag_task_list_zh, search_faiss_openai
-from repolya.rag.qa_chain import qa_with_context_as_mio
 
-import time
-import concurrent.futures as cf
-import threading
-
+##### upload dir
+_upload_dir = WORKSPACE_RAG / 'lj_rag_upload'
+if not os.path.exists(_upload_dir):
+    os.makedirs(_upload_dir)
+_db_name = str(WORKSPACE_RAG / 'lj_rag_openai')
+_db_name_new = str(WORKSPACE_RAG / 'lj_rag_new_openai')
+_clean_txt_dir = str(WORKSPACE_RAG / 'lj_rag_clean_txt')
 
 ##### log
 def read_logs():
@@ -94,30 +112,30 @@ def chg_btn_color_if_input(_topic):
 def chg_textbox_visible(_radio):
     if _radio == '快速':
         return {
-            fr_ans1: gr.Textbox(visible=True),
-            fr_log1: gr.Textbox(visible=True),
-            fr_ans2: gr.Textbox(visible=False),
-            fr_log2: gr.Textbox(visible=False),
-            fr_ans3: gr.Textbox(visible=False),
-            fr_log3: gr.Textbox(visible=False),
+            rag_ans1: gr.Textbox(visible=True),
+            rag_log1: gr.Textbox(visible=True),
+            rag_ans2: gr.Textbox(visible=False),
+            rag_log2: gr.Textbox(visible=False),
+            rag_ans3: gr.Textbox(visible=False),
+            rag_log3: gr.Textbox(visible=False),
         }
     if _radio == '深思':
         return {
-            fr_ans1: gr.Textbox(visible=False),
-            fr_log1: gr.Textbox(visible=False),
-            fr_ans2: gr.Textbox(visible=True),
-            fr_log2: gr.Textbox(visible=True),
-            fr_ans3: gr.Textbox(visible=False),
-            fr_log3: gr.Textbox(visible=False),
+            rag_ans1: gr.Textbox(visible=False),
+            rag_log1: gr.Textbox(visible=False),
+            rag_ans2: gr.Textbox(visible=True),
+            rag_log2: gr.Textbox(visible=True),
+            rag_ans3: gr.Textbox(visible=False),
+            rag_log3: gr.Textbox(visible=False),
         }
     if _radio == '多智':
         return {
-            fr_ans1: gr.Textbox(visible=False),
-            fr_log1: gr.Textbox(visible=False),
-            fr_ans2: gr.Textbox(visible=False),
-            fr_log2: gr.Textbox(visible=False),
-            fr_ans3: gr.Textbox(visible=True),
-            fr_log3: gr.Textbox(visible=True),
+            rag_ans1: gr.Textbox(visible=False),
+            rag_log1: gr.Textbox(visible=False),
+            rag_ans2: gr.Textbox(visible=False),
+            rag_log2: gr.Textbox(visible=False),
+            rag_ans3: gr.Textbox(visible=True),
+            rag_log3: gr.Textbox(visible=True),
         }
 
 
@@ -142,6 +160,7 @@ def sum_token_cost_from_text(text):
     total_time = sum(float(time) for time in time_matches[-2:])
     _out = f"Tokens: {total_tokens}\nCost: ${format(total_cost, '.3f')}\nTime: {total_time:.1f} seconds"
     return _out
+
 
 def rag_helper_fast(_query, _radio):
     _ans, _ref = "", ""
@@ -217,6 +236,32 @@ def rag_helper(_query, _radio):
         rag_helper_autogen(_query, _radio)
 
 
+def rag_handle_upload(_tmp_path):
+    _tmp_files = []
+    for i in _tmp_path:
+        i_fp = i.name
+        _tmp_files.append(i_fp)
+        i_fn = os.path.basename(i_fp)
+        i_dir = os.path.dirname(i_fp)
+        # print(i_dir)
+        i_md5 = calculate_md5(i_fp)
+        # print(i_md5)
+        i_fn_new = f"{i_md5}" + os.path.splitext(os.path.basename(i_fp))[1]
+        i_fp_new = os.path.join(_upload_dir, i_fn_new)
+        i_db_name = os.path.join(_upload_dir, f"{i_md5}_openai")
+        # print(i_fp_new)
+        if not os.path.exists(i_fp_new):
+            logger_rag.info(f"upload {i_fn} to {i_fn_new}")
+            dir_to_faiss_openai(i_dir, i_db_name, _clean_txt_dir)
+            shutil.move(i_fp, i_fp_new)
+            merge_faiss_openai(_db_name, i_db_name, _db_name_new)
+            shutil.rmtree(i_db_name)
+            logger_rag.info(f"done upload process")
+        else:
+            logger_rag.info(f"{i_fn} ({i_fn_new}) exists")
+    return "\n".join(_tmp_files)
+
+
 ##### UI
 _description = """
 # 问答-知识库
@@ -228,50 +273,57 @@ with gr.Blocks(title=_description) as demo:
     dh_user_question = gr.State("")
     gr.Markdown(_description)
 
-    with gr.Tab(label = "提问"):
-        fr_query = gr.Textbox(label="提问", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
-        fr_radio = gr.Radio(
+    with gr.Tab(label = "问答"):
+        rag_upload = gr.File(label="上传文件", file_count="multiple", type="file", interactive=True, visible=True)
+        rag_tmp_files = gr.Textbox(label="rag_tmp_files", visible=True)
+        rag_query = gr.Textbox(label="提问", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
+        rag_radio = gr.Radio(
             ["快速", "深思", "多智"],
             label="",
             info="",
             type="value",
             value="快速",
         )
-        fr_start_btn = gr.Button("开始", variant="secondary", visible=True)
-        fr_clean_btn = gr.Button("清空", variant="secondary", visible=True)
+        rag_start_btn = gr.Button("开始", variant="secondary", visible=True)
+        rag_clean_btn = gr.Button("清空", variant="secondary", visible=True)
         with gr.Row():
-            fr_ans1 = gr.Textbox(label="回答 (快速)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
-            fr_ans2 = gr.Textbox(label="回答 (深思)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
-            fr_ans3 = gr.Textbox(label="回答 (多智)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
+            rag_ans1 = gr.Textbox(label="回答 (快速)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
+            rag_ans2 = gr.Textbox(label="回答 (深思)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
+            rag_ans3 = gr.Textbox(label="回答 (多智)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
         with gr.Row():
-            fr_log1 = gr.Textbox(label="日志 (快速)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
-            fr_log2 = gr.Textbox(label="日志 (深思)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
-            fr_log3 = gr.Textbox(label="日志 (多智)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
-        fr_radio.change(
+            rag_log1 = gr.Textbox(label="日志 (快速)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
+            rag_log2 = gr.Textbox(label="日志 (深思)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
+            rag_log3 = gr.Textbox(label="日志 (多智)", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
+        rag_upload.upload(
+            rag_handle_upload,
+            [rag_upload],
+            [rag_tmp_files]
+        )
+        rag_radio.change(
             chg_textbox_visible,
-            [fr_radio],
-            [fr_ans1, fr_ans2, fr_log1, fr_log2, fr_ans3, fr_log3]
+            [rag_radio],
+            [rag_ans1, rag_ans2, rag_log1, rag_log2, rag_ans3, rag_log3]
         )
-        fr_query.change(
+        rag_query.change(
             chg_btn_color_if_input,
-            [fr_query],
-            [fr_start_btn]
+            [rag_query],
+            [rag_start_btn]
         )
-        fr_start_btn.click(
+        rag_start_btn.click(
             read_logs,
             [],
-            [fr_ans1, fr_log1, fr_ans2, fr_log2, fr_ans3, fr_log3],
+            [rag_ans1, rag_log1, rag_ans2, rag_log2, rag_ans3, rag_log3],
             every=1
         )
-        fr_start_btn.click(
+        rag_start_btn.click(
             rag_helper,
-            [fr_query, fr_radio],
+            [rag_query, rag_radio],
             []
         )
-        fr_clean_btn.click(
+        rag_clean_btn.click(
             clean_all,
             [],
-            [fr_query, fr_start_btn]
+            [rag_query, rag_start_btn]
         )
     
     with gr.Tab(label = "聊天"):

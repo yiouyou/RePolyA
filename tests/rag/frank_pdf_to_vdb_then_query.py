@@ -22,8 +22,8 @@ import time
 
 
 _pdf = str(WORKSPACE_RAG / "frank_doc.pdf")
-_vdb_name_openai = str(WORKSPACE_RAG / "frank_doc_openai")
-_vdb_name_huggingface = str(WORKSPACE_RAG / "frank_doc_huggingface")
+_db_name_openai = str(WORKSPACE_RAG / "frank_doc_openai")
+_db_name_huggingface = str(WORKSPACE_RAG / "frank_doc_huggingface")
 text_chunk_size = 1000
 text_chunk_overlap = 50
 
@@ -34,15 +34,15 @@ _splited_docs_list = []
 for doc in _splited_docs:
     _splited_docs_list.append(doc.page_content)
 
-if not os.path.exists(_vdb_name_openai):
-    embedding_to_faiss_OpenAI(_splited_docs, _vdb_name_openai)
-if not os.path.exists(_vdb_name_huggingface):
-    embedding_to_faiss_HuggingFace(_splited_docs, _vdb_name_huggingface)
+if not os.path.exists(_db_name_openai):
+    embedding_to_faiss_OpenAI(_splited_docs, _db_name_openai)
+if not os.path.exists(_db_name_huggingface):
+    embedding_to_faiss_HuggingFace(_splited_docs, _db_name_huggingface)
 
 _query = sys.argv[1]
 
 # start_time = time.time()
-# _vdb_openai = get_faiss_OpenAI(_vdb_name_openai)
+# _vdb_openai = get_faiss_OpenAI(_db_name_openai)
 # _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb_openai, 'stuff')
 # print(f"ans_openai: {_ans}")
 # # print(_token_cost)
@@ -53,7 +53,7 @@ _query = sys.argv[1]
 
 
 # start_time = time.time()
-# _vdb_huggingface = get_faiss_HuggingFace(_vdb_name_huggingface)
+# _vdb_huggingface = get_faiss_HuggingFace(_db_name_huggingface)
 # _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb_huggingface, 'stuff')
 # print(f"ans_huggingface: {_ans}")
 # # print(_token_cost)

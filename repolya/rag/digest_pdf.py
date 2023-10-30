@@ -1,6 +1,7 @@
 from repolya._const import RAG_PDF, PAPER_QLIST
 from repolya._log import logger_rag
 
+from repolya.rag.digest_dir import calculate_md5
 from repolya.rag.doc_splitter import (
   split_pdf_docs_recursive,
   split_text_recursive,
@@ -35,7 +36,6 @@ from PIL import Image
 import os
 import io
 import re
-import hashlib
 import asyncio
 
 
@@ -43,14 +43,6 @@ img_min_width = 120
 img_min_height = 120
 
 ##### md5
-def calculate_md5(_fp):
-    hash_md5 = hashlib.md5()
-    with open(_fp, "rb") as f:
-        # 以块为单位读取文件，以便适应大文件
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
-
 def get_md5_out_dir(_fp):
     _md5 = calculate_md5(_fp)
     _f = os.path.basename(_fp)

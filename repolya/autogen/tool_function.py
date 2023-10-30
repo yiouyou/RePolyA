@@ -372,8 +372,8 @@ _def_qa_faiss_openai_frank = {
 }
 def qa_faiss_openai_frank(query):
     time.sleep(random.uniform(1, 2))
-    _vdb_name = str(WORKSPACE_RAG / 'frank_doc_openai')
-    _vdb = get_faiss_OpenAI(_vdb_name)
+    _db_name = str(WORKSPACE_RAG / 'frank_doc_openai')
+    _vdb = get_faiss_OpenAI(_db_name)
     _ans, _step, _token_cost = qa_vdb_multi_query(query, _vdb, 'stuff')
     return _ans
 

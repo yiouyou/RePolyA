@@ -125,9 +125,9 @@ def extract_questions(text):
     return flat_list
 
 
-def qa_faiss_openai(_query, _vdb_name):
+def qa_faiss_openai(_query, _db_name):
     start_time = time.time()
-    _vdb = get_faiss_OpenAI(_vdb_name)
+    _vdb = get_faiss_OpenAI(_db_name)
     _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
     end_time = time.time()
     execution_time = end_time - start_time
@@ -144,7 +144,7 @@ def clean_txt(_txt):
     return _txt
 
 
-def qlist_to_ans(_dir, _vdb_name):
+def qlist_to_ans(_dir, _db_name):
     _files = find_file_ext(_dir, '.qlist')
     for i in _files:
         _topic = os.path.basename(i).split('.')[0]
@@ -157,7 +157,7 @@ def qlist_to_ans(_dir, _vdb_name):
         _questions = extract_questions(_qlist)
         for j in _questions:
             _q = f"{j}" + "如果未找到相关答案，仅输出'无'。"
-            _ans, _step, _token_cost, _time = qa_faiss_openai(_q, _vdb_name)
+            _ans, _step, _token_cost, _time = qa_faiss_openai(_q, _db_name)
             logger_toolset.info(f"'{_ans}'")
             # logger_toolset.info(f"{_step}")
             logger_toolset.info(f"{_token_cost}")
