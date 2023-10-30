@@ -284,7 +284,7 @@ with gr.Blocks(title=_description) as demo:
         rag_query = gr.Textbox(label="提问", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
         rag_radio = gr.Radio(
             ["快速", "多智", "深思"],
-            label="快速(约半分钟), 多智(约2分钟), 深思(约4分钟)",
+            label="快速(<半分钟), 多智(约2分钟), 深思(约4分钟)",
             info="",
             type="value",
             value="快速",
