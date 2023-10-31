@@ -1,5 +1,10 @@
 import psycopg2
 from psycopg2.sql import SQL, Identifier
+import tiktoken
+import json
+from datetime import datetime
+from sklearn.metrics.pairwise import cosine_similarity
+from transformers import BertTokenizer, BertModel
 
 
 class PostgresManager:
@@ -54,9 +59,24 @@ class PostgresManager:
         self.cur.execute(select_all_stmt)
         return self.cur.fetchall()
 
-    def run_postgre(self, sql):
+    def run_postgre(self, sql) -> str:
         self.cur.execute(sql)
-        return self.cur.fetchall()
+        columns = [desc[0] for desc in self.cur.description]
+        res = self.cur.fetchall()
+        list_of_dicts = [dict(zip(columns, row)) for row in res]
+        json_result = json.dumps(list_of_dicts, indent=4, default=self.datetime_handler)
+        # dump these results to a file
+        with open("results.json", "w") as f:
+            f.write(json_result)
+        return "Successfully delivered results to json file"
+
+    def datetime_handler(obj):
+        """
+        Handle datetime objects when serializing to JSON.
+        """
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return str(obj)  # or just return the object unchanged, or another default value
 
     def get_table_definition(self, table_name):
         get_def_stmt = """
@@ -91,6 +111,66 @@ class PostgresManager:
             definitions.append(self.get_table_definition(table_name))
         return "\n\n".join(definitions)
 
+    def get_table_definition_map_for_embeddings(self):
+        table_names = self.get_all_table_names()
+        definitions = {}
+        for table_name in table_names:
+            definitions[table_name] = self.get_table_definition(table_name)
+        return definitions
+
+
+class DatabaseEmbedder:
+    def __init__(self):
+        self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        self.model = BertModel.from_pretrained("bert-base-uncased")
+        self.map_name_to_embeddings = {}
+        self.map_name_to_table_def = {}
+
+    def add_table(self, table_name: str, text_representation: str):
+        self.map_name_to_embeddings[table_name] = self.compute_embeddings(text_representation)
+        self.map_name_to_table_def[table_name] = text_representation
+
+    def compute_embeddings(self, text):
+        inputs = self.tokenizer(
+            text,
+            return_tensors="pt",
+            truncation=True,
+            padding=True,
+            max_length=512
+        )
+        outputs = self.model(**inputs)
+        return outputs["pooler_output"].detach().numpy()
+
+    def get_similar_tables_via_embeddings(self, query, n=3):
+        query_embedding = self.compute_embeddings(query)
+        similarities = {}
+        for table_name, table_embedding in self.map_name_to_embeddings.items():
+            similarities[table_name] = cosine_similarity(
+                query_embedding, table_embedding
+            )[0][0]
+        return sorted(similarities.items(), key=lambda x: x[1], reverse=True)[:n]
+    
+    def get_similar_table_names_via_word_match(self, query: str):
+        """
+        If any word in our query is a table name, add the table to a list
+        """
+        tables = []
+        for table_name in self.map_name_to_table_def.keys():
+            if table_name.lower() in query.lower():
+                tables.append(table_name)
+        return tables
+
+    def get_similar_tables(self, query: str, n=3):
+        """
+        Combines results from get_similar_tables_via_embeddings and get_similar_table_names_via_word_match
+        """
+        similar_tables_via_embeddings = self.get_similar_tables_via_embeddings(query, n)
+        similar_tables_via_word_match = self.get_similar_table_names_via_word_match(query)
+        return similar_tables_via_embeddings + similar_tables_via_word_match
+
+    def get_table_definitions_from_names(self, table_names: list) -> list:
+        return [self.map_name_to_table_def[table_name] for table_name in table_names]
+
 
 def add_cap_ref(
     prompt: str, 
@@ -100,4 +180,18 @@ def add_cap_ref(
 ) -> str:
     new_prompt = f"""{prompt} {prompt_suffix}\n{cap_ref}\n\n{cap_ref_content}"""
     return new_prompt
+
+
+def count_tokens(text: str):
+    enc = tiktoken.get_encoding("cl100k_base")
+    return len(enc.encode(text))
+
+
+def estimate_price_and_tokens(text):
+    COST_PER_1k_TOKENS = 0.06
+    tokens = count_tokens(text)
+    estimated_cost = (tokens / 1000) * COST_PER_1k_TOKENS
+    # round up to the output tokens
+    estimated_cost = round(estimated_cost, 2)
+    return estimated_cost, tokens
 

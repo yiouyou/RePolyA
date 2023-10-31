@@ -263,11 +263,6 @@ _def_run_postgre = {
     "required": ["sql"],
     },
 }
-def run_postgre(sql):
-    DB_URL = os.environ.get("POSTGRE_URL")
-    with PostgresManager() as db:
-        db.connect_with_url(DB_URL)
-        return db.run_postgre(sql)
 
 
 ##### write_file

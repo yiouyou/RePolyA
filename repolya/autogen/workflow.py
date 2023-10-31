@@ -16,10 +16,11 @@ from repolya.autogen.as_rag import (
 from repolya.autogen.as_rd import RD_user, RD_researcher
 from repolya.autogen.as_research import RES_user, RES_engineer, RES_scientist, RES_planner, RES_executor, RES_critic
 from repolya.autogen.as_draw import DRAW_user, DRAW_artist, DRAW_critic
-from repolya.autogen.as_postgre import POSTGRE_user, POSTGRE_engineer, POSTGRE_analyst, POSTGRE_pm
+from repolya.autogen.as_postgre import POSTGRE_user, POSTGRE_engineer, POSTGRE_analyst, POSTGRE_pm, build_sr_data_analyst_agent
 from repolya.autogen.as_util import text_report_analyst, json_report_analyst, yaml_report_analyst
 from repolya.autogen.db_postgre import (
     PostgresManager,
+    DatabaseEmbedder,
     add_cap_ref,
 )
 from repolya.autogen.organizer import Organizer
@@ -457,57 +458,70 @@ def do_postgre_organizer(msg):
     _prompt = f"Fulfill this database query: {msg}. "
     with PostgresManager() as db:
         db.connect_with_url(DB_URL)
+        map_table_name_to_table_def = db.get_table_definition_map_for_embeddings()
+        database_embedder = DatabaseEmbedder()
+        for name, table_def in map_table_name_to_table_def.items():
+            database_embedder.add_table(name, table_def)
+        similar_tables = database_embedder.get_similar_tables(msg, n=5)
+        table_definitions = database_embedder.get_table_definitions_from_names(similar_tables)
         # users_table = db.get_all("users")
-        table_definitions = db.get_table_definitions_for_prompt()
-    prompt = add_cap_ref(
-        _prompt,
-        f"Use these {POSTGRES_TABLE_DEFINITIONS_CAP_REF} to satisfy the database query.",
-        POSTGRES_TABLE_DEFINITIONS_CAP_REF,
-        table_definitions,
-    )
-    data_eng_agents = [
-        POSTGRE_user,
-        POSTGRE_engineer,
-        POSTGRE_analyst,
-        POSTGRE_pm,
-    ]
-    data_eng_organizer = Organizer(
-        name="Postgres Data Analytics Multi-Agent ::: Data Engineering Team",
-        agents=data_eng_agents,
-    )
-    success, data_eng_messages = data_eng_organizer.sequential_conversation(prompt)
-    data_to_report = data_eng_messages[-2]["content"]
-    # data_to_report = [
-    #     {
-    #         "id": 1,
-    #         "created": "2023-09-28T10:00:00",
-    #         "updated": "2023-09-28T10:10:00",
-    #         "authed": True,
-    #         "plan": "Basic",
-    #         "name": "John Doe",
-    #         "email": "john.doe@outlook.com"
-    #     },
-    #     {
-    #         "id": 2,
-    #         "created": "2023-09-27T11:00:00",
-    #         "updated": "2023-09-28T11:15:00",
-    #         "authed": True,
-    #         "plan": "Premium",
-    #         "name": "Jane Smith",
-    #         "email": "jane.smith@outlook.com"
-    #     }
-    # ]
-    ##### write to txt, json, yaml
-    data_viz_agents = [
-        POSTGRE_user,
-        text_report_analyst,
-        json_report_analyst,
-        yaml_report_analyst,
-    ]
-    data_viz_organizer = Organizer(
-        name="Postgres Data Analytics Multi-Agent :::   Data Viz Team",
-        agents=data_viz_agents,
-    )
-    data_viz_prompt = f"Here is the data to report: {data_to_report}"
-    data_viz_organizer.broadcast_conversation(data_viz_prompt)
+        # table_definitions = db.get_table_definitions_for_prompt()
+        prompt = add_cap_ref(
+            _prompt,
+            f"Use these {POSTGRES_TABLE_DEFINITIONS_CAP_REF} to satisfy the database query.",
+            POSTGRES_TABLE_DEFINITIONS_CAP_REF,
+            table_definitions,
+        )
+        data_eng_agents = [
+            POSTGRE_user,
+            POSTGRE_engineer,
+            # POSTGRE_analyst,
+            build_sr_data_analyst_agent(db),
+            POSTGRE_pm,
+        ]
+        data_eng_organizer = Organizer(
+            name="Postgres Data Analytics Multi-Agent ::: Data Engineering Team",
+            agents=data_eng_agents,
+        )
+        success, data_eng_messages = data_eng_organizer.sequential_conversation(prompt)
+        data_eng_cost, data_eng_tokens = data_eng_organizer.get_cost_and_tokens()
+        print(f"Data Eng Cost: {data_eng_cost}, tokens: {data_eng_tokens}")
+        print(f"Organizer Cost: {data_eng_cost}, tokens: {data_eng_tokens}")
+        # data_to_report = data_eng_messages[-2]["content"]
+        # data_to_report = [
+        #     {
+        #         "id": 1,
+        #         "created": "2023-09-28T10:00:00",
+        #         "updated": "2023-09-28T10:10:00",
+        #         "authed": True,
+        #         "plan": "Basic",
+        #         "name": "John Doe",
+        #         "email": "john.doe@outlook.com"
+        #     },
+        #     {
+        #         "id": 2,
+        #         "created": "2023-09-27T11:00:00",
+        #         "updated": "2023-09-28T11:15:00",
+        #         "authed": True,
+        #         "plan": "Premium",
+        #         "name": "Jane Smith",
+        #         "email": "jane.smith@outlook.com"
+        #     }
+        # ]
+        ##### write to txt, json, yaml
+        # data_viz_agents = [
+        #     POSTGRE_user,
+        #     text_report_analyst,
+        #     json_report_analyst,
+        #     yaml_report_analyst,
+        # ]
+        # data_viz_organizer = Organizer(
+        #     name="Postgres Data Analytics Multi-Agent ::: Data Viz Team",
+        #     agents=data_viz_agents,
+        # )
+        # data_viz_prompt = f"Here is the data to report: {data_to_report}"
+        # data_viz_organizer.broadcast_conversation(data_viz_prompt)
+        # data_viz_cost, data_viz_tokens = data_viz_organizer.get_cost_and_tokens()
+        # print(f"Data Viz Cost: {data_viz_cost}, tokens: {data_viz_tokens}")
+        # print(f"Organizer Cost: {data_eng_cost + data_viz_cost}, tokens: {data_eng_tokens + data_viz_tokens}")
 

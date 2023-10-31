@@ -1,5 +1,6 @@
 from repolya._const import AUTOGEN_CONFIG
 from repolya._log import logger_autogen
+from repolya.autogen.db_postgre import estimate_price_and_tokens
 
 from typing import List, Optional, Tuple, Union
 from autogen import (
@@ -55,6 +56,26 @@ class Organizer:
         if not self.messages:
             return None
         return self.messages[-1]
+    
+    def get_message_as_str(self):
+        messages_as_str = ""
+        for message in self.messages:
+            if message is None:
+                continue
+            if isinstance(message, dict):
+                content_from_dict = message.get("content", None)
+                func_call_from_dict = message.get("function_call", None)
+                content = content_from_dict or func_call_from_dict
+                if not content:
+                    continue
+                messages_as_str += str(content)
+            else:
+                messages_as_str += str(message)
+        return messages_as_str
+
+    
+    def get_cost_and_tokens(self):
+        return estimate_price_and_tokens(self.get_message_as_str())
 
     def add_message(self, message: str):
         self.messages.append(message)
