@@ -8,6 +8,7 @@ import threading
 import time
 import shutil
 import os
+import ast
 
 from repolya.chat import chat_predict_openai
 from repolya.rag.vdb_faiss import (
@@ -48,7 +49,7 @@ from repolya.autogen.workflow import (
     search_faiss_openai,
 )
 
-from ui_rag_7P import P7_openai_tagging
+from ui_rag_JQ import JQ_openai_tagging
 
 
 ##### tagging
@@ -60,40 +61,46 @@ def read_file(file):
 
 def chg_btn_color_if_file(file):
     if file:
-        return gr.update(variant="primary")
+        return gr.Button(variant="primary")
     else:
-        return gr.update(variant="secondary")
+        return gr.Button(variant="secondary")
 
-def llm_7P(file_name):
+def llm_JQ(file_name):
     import os
     import re
     _log = ""
-    _7P_str = ""
+    _JQ_str = ""
     _total_cost_str = ""
     # print(f"file_name: {file_name}")
     if os.path.exists(file_name):
         left, right = os.path.splitext(os.path.basename(file_name))
-        global output_7P_file
-        output_7P_file = f"{left}_7P.txt"
+        global output_JQ_file
+        output_JQ_file = f"{left}_JQ.txt"
         with open(file_name, encoding='utf-8') as rf:
-            txt_lines = rf.readlines()
-        [_log, _7P_str, _total_cost_str, _sentences] = P7_openai_tagging(txt_lines)
-        with open(output_7P_file, "w", encoding='utf-8') as wf:
-            wf.write(_7P_str)
-    return _7P_str
+            _txt = rf.read()
+        txt_lines = clean_txt(_txt)
+        txt_lines = txt_lines.split('\n')
+        [_log, _JQ_str, _total_cost_str, _sentences] = JQ_openai_tagging(txt_lines)
+        with open(output_JQ_file, "w", encoding='utf-8') as wf:
+            wf.write(_JQ_str)
+        # _JQ = ast.literal_eval(_JQ_str)
+        # print(type(_JQ), _JQ)
+    return _log
 
-def run_llm_7P(file):
+def run_llm_JQ(file):
     if file:
-        return llm_7P(file.name)
+        return llm_JQ(file.name)
     else:
-        return ["ERROR: Please upload a TXT file first!"]
+        return ["错误: 请先上传一个TXT文件！"]
 
-def show_7P_file(text):
+def show_JQ_file(text):
     # print(f"text: {text}")
     if text:
-        return gr.update(value=output_7P_file, visible=True)
+        if output_JQ_file:
+            return gr.File(value=output_JQ_file, visible=True)
     else:
-        return gr.update(value=output_7P_file)
+        if output_JQ_file:
+            return gr.File(value=output_JQ_file)
 
 
 ##### upload dir
@@ -394,12 +401,10 @@ with gr.Blocks(title=_description) as demo:
             upload_box = gr.File(label="上传单个TXT", file_count="single", type="file", file_types=['.txt'], interactive=True)
             input_content = gr.Textbox(label="TXT文件内容", placeholder="...", lines=9, max_lines=9, interactive=False)
         start_btn = gr.Button("开始分析", variant="secondary")
-        output_7P = gr.Textbox(label="'7P营销'分析结果", placeholder="...", lines=10, interactive=False)    
+        output_JQ = gr.Textbox(label="分析结果", placeholder="...", lines=10, interactive=False)    
         with gr.Row():
-            # with gr.Column():
-            #     output_log = gr.Textbox(label="日志", placeholder="日志", lines=12, interactive=False)
-            with gr.Column():
-                download_7P = gr.File(label="下载7P", file_count="single", type="file", file_types=['.txt'], interactive=True, visible=False)
+            # output_log = gr.Textbox(label="日志", placeholder="日志", lines=12, interactive=False)
+            download_JQ = gr.File(label="下载分析", file_count="single", type="file", file_types=['.txt'], interactive=True, visible=False)
         upload_box.change(
             read_file,
             inputs=[upload_box],
@@ -411,14 +416,14 @@ with gr.Blocks(title=_description) as demo:
             outputs=[start_btn]
         )
         start_btn.click(
-            run_llm_7P,
+            run_llm_JQ,
             inputs=[upload_box],
-            outputs=[output_7P]
+            outputs=[output_JQ]
         )
-        output_7P.change(
-            show_7P_file,
-            inputs=[output_7P],
-            outputs=[download_7P]
+        output_JQ.change(
+            show_JQ_file,
+            inputs=[output_JQ],
+            outputs=[download_JQ]
         )
 
 
