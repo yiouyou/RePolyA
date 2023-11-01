@@ -2,6 +2,7 @@
 tmp*
 *_examples*
 *cache*
+*_7P.txt
 
 # gradio tmp
 gradio/
