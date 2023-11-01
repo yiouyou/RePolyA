@@ -1,1 +1,0 @@
-[{'Product': '', 'Price': '', 'Place': '', 'Promotion': '', 'People': '', 'Process': '', 'Physical evidence': ''}, {'Product': '', 'Price': '', 'Place': '道路, 清水河, 木姐, 据点', 'Promotion': '', 'People': '', 'Process': '', 'Physical evidence': ''}, {'Product': '', 'Price': '', 'Place': '', 'Promotion': '', 'People': '', 'Process': '', 'Physical evidence': ''}]
