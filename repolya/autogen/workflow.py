@@ -16,7 +16,7 @@ from repolya.autogen.as_rag import (
 from repolya.autogen.as_rd import RD_user, RD_researcher
 from repolya.autogen.as_research import RES_user, RES_engineer, RES_scientist, RES_planner, RES_executor, RES_critic
 from repolya.autogen.as_draw import DRAW_user, DRAW_artist, DRAW_critic
-from repolya.autogen.as_postgre import POSTGRE_user, POSTGRE_engineer, POSTGRE_analyst, POSTGRE_pm, build_sr_data_analyst_agent
+from repolya.autogen.as_postgre import POSTGRE_user, POSTGRE_engineer, POSTGRE_pm, build_sr_data_analyst_agent
 from repolya.autogen.as_util import text_report_analyst, json_report_analyst, yaml_report_analyst
 from repolya.autogen.db_postgre import (
     PostgresManager,

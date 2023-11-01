@@ -48,6 +48,53 @@ from repolya.autogen.workflow import (
     search_faiss_openai,
 )
 
+from ui_rag_7P import P7_openai_tagging
+
+
+##### tagging
+def read_file(file):
+    if file:
+        with open(file.name, encoding="utf-8") as f:
+            content = f.read()
+            return content
+
+def chg_btn_color_if_file(file):
+    if file:
+        return gr.update(variant="primary")
+    else:
+        return gr.update(variant="secondary")
+
+def llm_7P(file_name):
+    import os
+    import re
+    _log = ""
+    _7P_str = ""
+    _total_cost_str = ""
+    # print(f"file_name: {file_name}")
+    if os.path.exists(file_name):
+        left, right = os.path.splitext(os.path.basename(file_name))
+        global output_7P_file
+        output_7P_file = f"{left}_7P.txt"
+        with open(file_name, encoding='utf-8') as rf:
+            txt_lines = rf.readlines()
+        [_log, _7P_str, _total_cost_str, _sentences] = P7_openai_tagging(txt_lines)
+        with open(output_7P_file, "w", encoding='utf-8') as wf:
+            wf.write(_7P_str)
+    return _7P_str
+
+def run_llm_7P(file):
+    if file:
+        return llm_7P(file.name)
+    else:
+        return ["ERROR: Please upload a TXT file first!"]
+
+def show_7P_file(text):
+    # print(f"text: {text}")
+    if text:
+        return gr.update(value=output_7P_file, visible=True)
+    else:
+        return gr.update(value=output_7P_file)
+
 
 ##### upload dir
 _upload_dir = WORKSPACE_RAG / 'lj_rag_upload'
@@ -340,6 +387,38 @@ with gr.Blocks(title=_description) as demo:
             retry_btn="🔄 重试",
             undo_btn="↩️ 撤消",
             clear_btn="🗑️ 清除",
+        )
+    
+    with gr.Tab(label = "标签"):
+        with gr.Row():
+            upload_box = gr.File(label="上传单个TXT", file_count="single", type="file", file_types=['.txt'], interactive=True)
+            input_content = gr.Textbox(label="TXT文件内容", placeholder="...", lines=9, max_lines=9, interactive=False)
+        start_btn = gr.Button("开始分析", variant="secondary")
+        output_7P = gr.Textbox(label="'7P营销'分析结果", placeholder="...", lines=10, interactive=False)    
+        with gr.Row():
+            # with gr.Column():
+            #     output_log = gr.Textbox(label="日志", placeholder="日志", lines=12, interactive=False)
+            with gr.Column():
+                download_7P = gr.File(label="下载7P", file_count="single", type="file", file_types=['.txt'], interactive=True, visible=False)
+        upload_box.change(
+            read_file,
+            inputs=[upload_box],
+            outputs=[input_content]
+        )
+        upload_box.change(
+            chg_btn_color_if_file,
+            inputs=[upload_box],
+            outputs=[start_btn]
+        )
+        start_btn.click(
+            run_llm_7P,
+            inputs=[upload_box],
+            outputs=[output_7P]
+        )
+        output_7P.change(
+            show_7P_file,
+            inputs=[output_7P],
+            outputs=[download_7P]
         )
 
 
