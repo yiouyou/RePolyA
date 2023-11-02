@@ -13,6 +13,9 @@ from repolya.autogen.as_rag import (
     RAG_task_user, RAG_task_planner, RAG_task_critic,
     RAG_task_user_zh, RAG_task_planner_zh, RAG_task_critic_zh,
 )
+from repolya.autogen.as_jdml import (
+    JDML_task_user_zh, JDML_task_planner_zh, JDML_task_critic_zh,
+)
 from repolya.autogen.as_rd import RD_user, RD_researcher
 from repolya.autogen.as_research import RES_user, RES_engineer, RES_scientist, RES_planner, RES_executor, RES_critic
 from repolya.autogen.as_draw import DRAW_user, DRAW_artist, DRAW_critic
@@ -245,6 +248,24 @@ def create_rag_task_list_zh(msg):
     ]
     _organizer = Organizer(
         name="RAG Task Team",
+        agents=_agents,
+    )
+    success, _messages = _organizer.sequential_conversation(msg)
+    # print(success)
+    # print(_messages)
+    _task_list = _messages[-1]
+    return _task_list
+
+
+def create_jdml_task_list_zh(msg):
+    _agents = [
+        JDML_task_user_zh,
+        JDML_task_planner_zh,
+        JDML_task_critic_zh,
+        JDML_task_planner_zh,
+    ]
+    _organizer = Organizer(
+        name="ML Task Team",
         agents=_agents,
     )
     success, _messages = _organizer.sequential_conversation(msg)

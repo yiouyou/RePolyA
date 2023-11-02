@@ -42,9 +42,12 @@ _log_ans2 = LOG_ROOT / '_ans2.txt'
 _log_ref2 = LOG_ROOT / '_ref2.txt'
 _log_ans3 = LOG_ROOT / '_ans3.txt'
 _log_ref3 = LOG_ROOT / '_ref3.txt'
+_log_ans0 = LOG_ROOT / '_ans0.txt'
+_log_ref0 = LOG_ROOT / '_ref0.txt'
 
 from repolya.toolset.tool_bshr import bshr_vdb
 from repolya.autogen.workflow import (
+    create_jdml_task_list_zh,
     create_rag_task_list_zh,
     search_faiss_openai,
 )
@@ -112,7 +115,7 @@ _db_name_new = str(WORKSPACE_RAG / 'lj_rag_new_openai')
 _clean_txt_dir = str(WORKSPACE_RAG / 'lj_rag_clean_txt')
 
 ##### log
-def read_logs():
+def rag_read_logs():
     with open(_log_ans1, "r") as f:
         _ans1 = f.read()
     with open(_log_ref1, "r") as f:
@@ -127,6 +130,13 @@ def read_logs():
         _ref3 = f.read()
     return [_ans1, _ref1, _ans2, _ref2, _ans3, _ref3]
 
+def ml_read_logs():
+    with open(_log_ans0, "r") as f:
+        _ans0 = f.read()
+    with open(_log_ref0, "r") as f:
+        _ref0 = f.read()
+    return [_ans0, _ref0]
+
 def write_log_ans(_log_ans, _txt, _status=None):
     with open(_log_ans, 'w', encoding='utf-8') as wf:
         if _status == "continue":
@@ -139,7 +149,7 @@ def write_log_ref(_log_ref, _txt):
     with open(_log_ref, 'w', encoding='utf-8') as wf:
         wf.write(_txt)
 
-def clean_logs():
+def rag_clean_logs():
     write_log_ans(_log_ans1,'')
     write_log_ref(_log_ref1,'')
     write_log_ans(_log_ans2,'')
@@ -147,12 +157,22 @@ def clean_logs():
     write_log_ans(_log_ans3,'')
     write_log_ref(_log_ref3,'')
 
-def clean_all():
-    clean_logs()
-    print('clean_logs()')
+def ml_clean_logs():
+    write_log_ans(_log_ans0,'')
+    write_log_ref(_log_ref0,'')
+
+rag_clean_logs()
+ml_clean_logs()
+
+def rag_clean_all():
+    rag_clean_logs()
+    print('rag_clean_logs()')
     return [gr.Textbox(value=""), gr.Button(variant="secondary")]
 
-clean_logs()
+def ml_clean_all():
+    ml_clean_logs()
+    print('ml_clean_logs()')
+    return [gr.Textbox(value=""), gr.Button(variant="secondary")]
 
 
 ##### btn, textbox
@@ -193,6 +213,35 @@ def chg_textbox_visible(_radio):
 
 
 ##### RAG
+def rag_handle_upload(_tmp_path):
+    _tmp_files = []
+    _out = []
+    for i in _tmp_path:
+        i_fp = i.name
+        _tmp_files.append(i_fp)
+        i_fn = os.path.basename(i_fp)
+        i_dir = os.path.dirname(i_fp)
+        # print(i_dir)
+        i_md5 = calculate_md5(i_fp)
+        # print(i_md5)
+        i_fn_new = f"{i_md5}" + os.path.splitext(os.path.basename(i_fp))[1]
+        i_fp_new = os.path.join(_upload_dir, i_fn_new)
+        i_db_name = os.path.join(_upload_dir, f"{i_md5}_openai")
+        # print(i_fp_new)
+        if not os.path.exists(i_fp_new):
+            logger_rag.info(f"upload {i_fn} to {i_fn_new}")
+            dir_to_faiss_openai(i_dir, i_db_name, _clean_txt_dir)
+            shutil.move(i_fp, i_fp_new)
+            merge_faiss_openai(_db_name, i_db_name)
+            shutil.rmtree(i_db_name)
+            logger_rag.info(f"done upload process")
+            _out.append(f"upload {i_fn} to {i_fn_new}")
+        else:
+            logger_rag.info(f"{i_fn} ({i_fn_new}) exists")
+            _out.append(f"{i_fn} ({i_fn_new}) exists")
+    return "\n".join(_out)
+
+
 def qa_faiss_openai(_query, _vdb):
     start_time = time.time()
     _ans, _step, _token_cost = qa_vdb_multi_query(_query, _vdb, 'stuff')
@@ -291,38 +340,26 @@ def rag_helper(_query, _radio):
         rag_helper_autogen(_query, _radio)
 
 
-def rag_handle_upload(_tmp_path):
-    _tmp_files = []
-    _out = []
-    for i in _tmp_path:
-        i_fp = i.name
-        _tmp_files.append(i_fp)
-        i_fn = os.path.basename(i_fp)
-        i_dir = os.path.dirname(i_fp)
-        # print(i_dir)
-        i_md5 = calculate_md5(i_fp)
-        # print(i_md5)
-        i_fn_new = f"{i_md5}" + os.path.splitext(os.path.basename(i_fp))[1]
-        i_fp_new = os.path.join(_upload_dir, i_fn_new)
-        i_db_name = os.path.join(_upload_dir, f"{i_md5}_openai")
-        # print(i_fp_new)
-        if not os.path.exists(i_fp_new):
-            logger_rag.info(f"upload {i_fn} to {i_fn_new}")
-            dir_to_faiss_openai(i_dir, i_db_name, _clean_txt_dir)
-            shutil.move(i_fp, i_fp_new)
-            merge_faiss_openai(_db_name, i_db_name)
-            shutil.rmtree(i_db_name)
-            logger_rag.info(f"done upload process")
-            _out.append(f"upload {i_fn} to {i_fn_new}")
-        else:
-            logger_rag.info(f"{i_fn} ({i_fn_new}) exists")
-            _out.append(f"{i_fn} ({i_fn_new}) exists")
-    return "\n".join(_out)
+##### ml
+def ml_helper(_query):
+    _ans, _ref = "", ""
+    write_log_ans(_log_ans0,'')
+    write_log_ref(_log_ref0,'')
+    start_time = time.time()
+    write_log_ans(_log_ans0, '', 'continue')
+    # ChatCompletion.start_logging(reset_counter=True, compact=False)
+    ### task list
+    _task_list = create_jdml_task_list_zh(_query)
+    write_log_ans(_log_ans0, f"{_task_list}", 'done')
+    end_time = time.time()
+    execution_time = end_time - start_time
+    _time = f"Time: {execution_time:.1f} seconds"
+    write_log_ref(_log_ref0, f"\n\n{_time}")
 
 
 ##### UI
 _description = """
-# 问答-知识库
+# 命令解析 / 报文问答 / 标签提取
 """
 chat_ask = gr.Textbox(label="", placeholder="...", lines=5, max_lines=5, interactive=True, visible=True, scale=9)
 
@@ -331,14 +368,44 @@ with gr.Blocks(title=_description) as demo:
     dh_user_question = gr.State("")
     gr.Markdown(_description)
 
-    with gr.Tab(label = "问答"):
+    with gr.Tab(label = "命令解析"):
+        ml_query = gr.Textbox(label="命令", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
+        ml_start_btn = gr.Button("开始", variant="secondary", visible=True)
+        ml_clean_btn = gr.Button("清空", variant="secondary", visible=True)
+        ml_ans = gr.Textbox(label="解析", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
+        ml_log = gr.Textbox(label="日志", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
+        ml_query.change(
+            chg_btn_color_if_input,
+            [ml_query],
+            [ml_start_btn]
+        )
+        ml_start_btn.click(
+            ml_read_logs,
+            [],
+            [ml_ans, ml_log],
+            every=1
+        )
+        ml_start_btn.click(
+            ml_helper,
+            [ml_query],
+            []
+        )
+        ml_clean_btn.click(
+            ml_clean_all,
+            [],
+            [ml_query, ml_start_btn]
+        )
+
+    with gr.Tab(label = "报文问答"):
         with gr.Row():
-            rag_upload = gr.File(label="上传文件", file_count="multiple", type="file", interactive=True, visible=True)
+            rag_upload = gr.File(label="上传报文", file_count="multiple", type="file", interactive=True, visible=True)
             rag_tmp_files = gr.Textbox(label="上传日志", placeholder="...", lines=9, max_lines=9, interactive=False, visible=True)
         rag_query = gr.Textbox(label="提问", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
         rag_radio = gr.Radio(
-            ["快速", "多智", "深思"],
-            label="快速(<半分钟), 多智(~2分钟), 深思(~4分钟)",
+            # ["快速", "多智", "深思"],
+            # label="快速(<半分钟), 多智(~2分钟), 深思(~4分钟)",
+            ["快速", "多智"],
+            label="快速(<半分钟), 多智(~2分钟)",
             info="",
             type="value",
             value="快速",
@@ -369,7 +436,7 @@ with gr.Blocks(title=_description) as demo:
             [rag_start_btn]
         )
         rag_start_btn.click(
-            read_logs,
+            rag_read_logs,
             [],
             [rag_ans1, rag_log1, rag_ans2, rag_log2, rag_ans3, rag_log3],
             every=1
@@ -380,23 +447,23 @@ with gr.Blocks(title=_description) as demo:
             []
         )
         rag_clean_btn.click(
-            clean_all,
+            rag_clean_all,
             [],
             [rag_query, rag_start_btn]
         )
     
-    with gr.Tab(label = "聊天"):
-        gr.ChatInterface(
-            fn=chat_predict_openai,
-            textbox=chat_ask,
-            submit_btn="提交",
-            stop_btn="停止",
-            retry_btn="🔄 重试",
-            undo_btn="↩️ 撤消",
-            clear_btn="🗑️ 清除",
-        )
+    # with gr.Tab(label = "聊天"):
+    #     gr.ChatInterface(
+    #         fn=chat_predict_openai,
+    #         textbox=chat_ask,
+    #         submit_btn="提交",
+    #         stop_btn="停止",
+    #         retry_btn="🔄 重试",
+    #         undo_btn="↩️ 撤消",
+    #         clear_btn="🗑️ 清除",
+    #     )
     
-    with gr.Tab(label = "标签"):
+    with gr.Tab(label = "标签提取"):
         with gr.Row():
             upload_box = gr.File(label="上传单个TXT", file_count="single", type="file", file_types=['.txt'], interactive=True)
             input_content = gr.Textbox(label="TXT文件内容", placeholder="...", lines=9, max_lines=9, interactive=False)
