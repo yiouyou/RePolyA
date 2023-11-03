@@ -44,7 +44,7 @@ def is_termination_msg(content):
         return True
     return False
 
-COMPLETION_PROMPT = "If everything looks good, respond with APPROVED."
+COMPLETION_PROMPT = "If everything looks good, respond with 'APPROVED'."
 
 
 # takes in the prompt and manages the group chat
@@ -173,7 +173,7 @@ def build_team_organizer(
     team: str,
     agent_instruments: PostgresAgentInstruments,
     # db: PostgresManager,
-    validate_results: callable = None
+    validate_results_func: callable = None
 ) -> Organizer:
     if team == "data_eng":
         return Organizer(
@@ -186,7 +186,7 @@ def build_team_organizer(
             # ],
             agents=build_data_eng_team(agent_instruments),
             agent_instruments=agent_instruments,
-            validate_results_func=validate_results,
+            validate_results_func=validate_results_func,
         )
     # elif team == "data_viz":
     #     return Organizer(
@@ -198,7 +198,7 @@ def build_team_organizer(
     #         #     yaml_report_analyst,
     #         # ],
     #         agents=build_data_viz_team(agent_instruments),
-    #         validate_results_func=validate_results,
+    #         validate_results_func=validate_results_func,
     #     )
     raise Exception("Unknown team: " + team)
 

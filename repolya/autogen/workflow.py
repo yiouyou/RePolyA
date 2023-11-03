@@ -32,6 +32,7 @@ from repolya.autogen.db_postgre import (
     DatabaseEmbedder,
     add_cap_ref,
     generate_session_id,
+    ConversationResult,
     PostgresAgentInstruments,
 )
 from repolya.autogen.organizer import Organizer
@@ -236,9 +237,14 @@ def create_rag_task_list(msg):
         RAG_task_critic,
         RAG_task_planner,
     ]
+    def validate_results_func():
+        with open("results.json", "r") as f:
+            content = f.read()
+        return bool(content)
     _organizer = Organizer(
         name="RAG Task Team",
         agents=_agents,
+        validate_results_func=validate_results_func,
     )
     success, _messages = _organizer.sequential_conversation(msg)
     # print(success)
@@ -254,9 +260,14 @@ def create_rag_task_list_zh(msg):
         RAG_task_critic_zh,
         RAG_task_planner_zh,
     ]
+    def validate_results_func():
+        with open("results.json", "r") as f:
+            content = f.read()
+        return bool(content)
     _organizer = Organizer(
         name="RAG Task Team",
         agents=_agents,
+        validate_results_func=validate_results_func,
     )
     success, _messages = _organizer.sequential_conversation(msg)
     # print(success)
@@ -272,9 +283,14 @@ def create_jdml_task_list_zh(msg):
         JDML_task_critic_zh,
         JDML_task_planner_zh,
     ]
+    def validate_results_func():
+        with open("results.json", "r") as f:
+            content = f.read()
+        return bool(content)
     _organizer = Organizer(
         name="ML Task Team",
         agents=_agents,
+        validate_results_func=validate_results_func,
     )
     success, _messages = _organizer.sequential_conversation(msg)
     # print(success)

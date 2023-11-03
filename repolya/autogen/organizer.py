@@ -15,6 +15,7 @@ from autogen import (
 )
 
 from typing import List, Optional, Tuple, Union
+from dataclasses import asdict
 import json
 
 
@@ -25,8 +26,8 @@ class Organizer:
         self,
         name: str,
         agents: List[ConversableAgent],
-        agent_instruments: AgentInstruments,
-        validate_results_func: callable = None
+        agent_instruments: AgentInstruments = None,
+        validate_results_func: callable = None,
     ):
         self.name = name
         self.agents = agents
@@ -35,7 +36,7 @@ class Organizer:
         self.error_keyword = "ERROR"
         self.agent_instruments = agent_instruments
         self.chats: List[Chat] = []
-        self.validate_results_func: callable = validate_results_func
+        self.validate_results_func = validate_results_func
         if len(self.agents) < 2:
             raise Exception("Organizer needs at least 2 agents.")
 
@@ -163,7 +164,7 @@ class Organizer:
     def spy_on_agents(self, append_to_file: bool = True):
         conversations = []
         for chat in self.chats:
-            conversations.append(dataclasses.asdict(chat))
+            conversations.append(asdict(chat))
         if append_to_file:
             file_name = "organizer_conversations.json"
             with open(file_name, "w", encoding='utf-8') as f:
@@ -191,7 +192,8 @@ class Organizer:
                 if self.has_functions(agent_b):
                     self.self_function_chat(agent_b, self.latest_message)
                 print(f"---------- Organizer Complete ----------\n")
-                success = self.validate_results_func()
+                success = self.completed_keyword in self.latest_message
+                # success = self.validate_results_func()
                 if success:
                     print(f"✅ Organizer was successful")
                 else:
@@ -227,7 +229,8 @@ class Organizer:
             if self.last_message_is_func_call and self.has_functions(agent_iterate):
                 self.function_chat(agent_iterate, agent_iterate, self.latest_message)
         print(f"---------- Organizer Complete ----------\n")
-        success = self.validate_results_func()
+        success = self.completed_keyword in self.latest_message
+        # success = self.validate_results_func()
         if success:
             print(f"✅ Organizer was successful")
         else:
