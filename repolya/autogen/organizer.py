@@ -2,7 +2,6 @@ from repolya._const import AUTOGEN_CONFIG
 from repolya._log import logger_autogen
 from repolya.autogen.db_postgre import estimate_price_and_tokens
 
-from typing import List, Optional, Tuple, Union
 from autogen import (
     ConversableAgent,
     AssistantAgent,
@@ -10,22 +9,30 @@ from autogen import (
     config_list_from_json,
 )
 
+from typing import List, Optional, Tuple, Union
+import json
+
 
 config_list = config_list_from_json(env_or_file=str(AUTOGEN_CONFIG))
 
 class Organizer:
     def __init__(
         self,
+        name: str,
         agents: List[ConversableAgent],
-        name: Optional[str] = "Orchestractor",
+        agent_instruments: AgentInstruments,
+        validate_results_func: callable = None
     ):
         self.name = name
         self.agents = agents
         self.messages = []
         self.completed_keyword = "APPROVED"
         self.error_keyword = "ERROR"
+        self.agent_instruments = agent_instruments
+        self.chats: List[Chat] = []
+        self.validate_results_func: callable = validate_results_func
         if len(self.agents) < 2:
-            raise Exception("Orchestractor needs at least 2 agents.")
+            raise Exception("Organizer needs at least 2 agents.")
 
     @property
     def total_agents(self):
@@ -57,6 +64,29 @@ class Organizer:
             return None
         return self.messages[-1]
     
+    @property
+    def last_message_always_string(self):
+        if not self.messages:
+            return ""
+        if self.last_message_is_content:
+            return self.latest_message.get("content", "")
+        return str(self.messages[-1])
+    
+    def send_message(
+        self,
+        from_agent: ConversableAgent,
+        to_agent: ConversableAgent,
+        message: str
+    ):
+        from_agent.send(message, to_agent)
+        self.chats.append(
+            Chat(
+                from_name=from_agent.name,
+                to_name=to_agent.name,
+                message=str(message),
+            )
+        )
+    
     def get_message_as_str(self):
         messages_as_str = ""
         for message in self.messages:
@@ -73,7 +103,6 @@ class Organizer:
                 messages_as_str += str(message)
         return messages_as_str
 
-    
     def get_cost_and_tokens(self):
         return estimate_price_and_tokens(self.get_message_as_str())
 
@@ -90,7 +119,8 @@ class Organizer:
         message: str,
     ):
         print(f"basic_chat(): {agent_a.name} -> {agent_b.name}")
-        agent_a.send(message, agent_b)
+        # agent_a.send(message, agent_b)
+        self.send_message(agent_a, agent_b, message)
         reply = agent_b.generate_reply(sender=agent_a)
         self.add_message(reply)
         print(f"basic_chat(): replied with '{reply}'")
@@ -117,13 +147,29 @@ class Organizer:
         self.basic_chat(agent_a, agent_a, message)
         assert self.last_message_is_content
         self.basic_chat(agent_a, agent_b, self.latest_message)
+    
+    def self_function_chat(self, agent: ConversableAgent, message: str):
+        print(f"self_function_chat(): {agent.name}")
+        self.send_message(agent, agent, message)
+        reply = agent.generate_reply(sender=agent)
+        self.send_message(agent, agent, message)
+        self.add_message(reply)
+    
+    def spy_on_agents(self, append_to_file: bool = True):
+        conversations = []
+        for chat in self.chats:
+            conversations.append(dataclasses.asdict(chat))
+        if append_to_file:
+            file_name = "organizer_conversations.json"
+            with open(file_name, "w", encoding='utf-8') as f:
+                f.write(json.dumps(conversations, indent=4))
 
-    def sequential_conversation(self, prompt: str) -> Tuple[bool, List[str]]:
+    def sequential_conversation(self, prompt: str) -> ConversationResult:
         """ Runs a sequential conversation with the agents.
         For example:
             "Agent A" -> "Agent B" -> "Agent C" -> "Agent D" -> "Agent E"
         """
-        print(f"\n---------- {self.name} Orchestrator Starting ----------\n")
+        print(f"\n---------- {self.name} Organizer Starting ----------\n")
         self.add_message(prompt)
         for idx, agent_iterate in enumerate(self.agents[:-1]):
             agent_a = self.agents[idx]
@@ -135,16 +181,28 @@ class Organizer:
             # agent_a -> func() -> agent_b
             if self.last_message_is_func_call and self.has_functions(agent_a):
                 self.function_chat(agent_a, agent_b, self.latest_message)
+            self.spy_on_agents()
             if idx == self.total_agents - 2:
-                print(f"---------- Orchestrator Complete ----------\n")
-                was_successful = self.completed_keyword in self.latest_message
-                if was_successful:
-                    print(f"✅ Orchestrator was successful")
+                if self.has_functions(agent_b):
+                    self.self_function_chat(agent_b, self.latest_message)
+                print(f"---------- Organizer Complete ----------\n")
+                success = self.validate_results_func()
+                if success:
+                    print(f"✅ Organizer was successful")
                 else:
-                    print(f"✅ NO 'APPROVED'(completed_keyword) OR ❌ Orchestrator failed")
-                return was_successful, self.messages
+                    print(f"✅ NO 'APPROVED'(completed_keyword) OR ❌ Organizer failed")
+                self.spy_on_agents()
+                cost, tokens = self.get_cost_and_tokens()
+                return ConversationResult(
+                    success=success,
+                    messages=self.messages,
+                    cost=cost,
+                    tokens=tokens,
+                    last_message_str=self.last_message_always_string,
+                )
 
-    def broadcast_conversation(self, prompt: str) -> Tuple[bool, List[str]]:
+
+    def broadcast_conversation(self, prompt: str) -> ConversationResult:
         """ Broadcast a message from agent_a to all agents.
         For example:
             "Agent A" -> "Agent B"
@@ -152,7 +210,7 @@ class Organizer:
             "Agent A" -> "Agent D"
             "Agent A" -> "Agent E"
         """
-        print(f"\n---------- {self.name} Orchestrator Starting ----------\n")
+        print(f"\n---------- {self.name} Organizer Starting ----------\n")
         self.add_message(prompt)
         broadcast_agent = self.agents[0]
         for idx, agent_iterate in enumerate(self.agents[1:]):
@@ -163,7 +221,18 @@ class Organizer:
             # agent_a -> func() -> agent_b
             if self.last_message_is_func_call and self.has_functions(agent_iterate):
                 self.function_chat(agent_iterate, agent_iterate, self.latest_message)
-        print(f"---------- Orchestrator Complete ----------\n")
-        print(f"✅ Orchestrator was successful")
-        return True, self.messages
+        print(f"---------- Organizer Complete ----------\n")
+        success = self.validate_results_func()
+        if success:
+            print(f"✅ Organizer was successful")
+        else:
+            print(f"✅ NO 'APPROVED'(completed_keyword) OR ❌ Organizer failed")
+        cost, tokens = self.get_cost_and_tokens()
+        return ConversationResult(
+            success=success,
+            messages=self.messages,
+            cost=cost,
+            tokens=tokens,
+            last_message_str=self.last_message_always_string,
+        )
 

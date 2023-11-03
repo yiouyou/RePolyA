@@ -1,9 +1,20 @@
 from repolya._const import AUTOGEN_CONFIG
 from repolya._log import logger_autogen
 
-from repolya.autogen.db_postgre import PostgresManager
+from repolya.autogen.db_postgre import (
+    PostgresManager,
+    PostgresAgentInstruments,
+)
 from repolya.autogen.tool_function import (
     _def_run_postgre,
+)
+from repolya.autogen.as_util import (
+    text_report_analyst,
+    json_report_analyst,
+    yaml_report_analyst,
+)
+from repolya.autogen.organizer import (
+    Organizer,
 )
 
 from autogen import(
@@ -113,4 +124,81 @@ POSTGRE_pm = AssistantAgent(
     llm_config=base_config,
     system_message=PM_PROMPT,
 )
+
+
+def build_data_eng_team(agent_instruments: PostgresAgentInstruments):
+    # create a set of agents with specific roles
+    # admin user proxy agent - takes in the prompt and manages the group chat
+    POSTGRE_user = UserProxyAgent(
+        name="Admin",
+        code_execution_config=False,
+        human_input_mode="NEVER",
+        system_message=USER_PROMPT,
+    )
+
+    # data engineer agent - generates the sql query
+    POSTGRE_engineer = AssistantAgent(
+        name="Engineer",
+        code_execution_config=False,
+        human_input_mode="NEVER",
+        llm_config=base_config,
+        system_message=ENGINEER_PROMPT,
+    )
+
+    POSTGRE_analyst = AssistantAgent(
+        name="Sr_Data_Analyst",
+        code_execution_config=False,
+        human_input_mode="NEVER",
+        llm_config={
+            **base_config,
+            "functions": [_def_run_postgre],
+        },
+        function_map={
+            'run_postgre': agent_instruments.run_postgre,
+        },
+        system_message=ANALYST_PROMPT,
+    )
+
+    # product manager – validate the response to make sure it's correct
+    POSTGRE_pm = AssistantAgent(
+        name="Product_Manager",
+        code_execution_config=False,
+        human_input_mode="NEVER",
+        llm_config=base_config,
+        system_message=PM_PROMPT,
+    )
+
+
+def build_team_organizer(
+    team: str,
+    agent_instruments: PostgresAgentInstruments,
+    # db: PostgresManager,
+    validate_results: callable = None
+) -> Organizer:
+    if team == "data_eng":
+        return Organizer(
+            name="Postgres Data Analytics Multi-Agent ::: Data Engineering Team",
+            # agents=[
+            #     POSTGRE_user,
+            #     POSTGRE_engineer,
+            #     build_sr_data_analyst_agent(db),
+            #     # POSTGRE_pm,
+            # ],
+            agents=build_data_eng_team(agent_instruments),
+            agent_instruments=agent_instruments,
+            validate_results_func=validate_results,
+        )
+    # elif team == "data_viz":
+    #     return Organizer(
+    #         name="Postgres Data Analytics Multi-Agent ::: Data Viz Team",
+    #         # agents=[
+    #         #     POSTGRE_user,
+    #         #     text_report_analyst,
+    #         #     json_report_analyst,
+    #         #     yaml_report_analyst,
+    #         # ],
+    #         agents=build_data_viz_team(agent_instruments),
+    #         validate_results_func=validate_results,
+    #     )
+    raise Exception("Unknown team: " + team)
 

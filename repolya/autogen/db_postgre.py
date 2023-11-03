@@ -1,10 +1,21 @@
+from repolya._const import WORKSPACE_AUTOGEN
+
 import psycopg2
 from psycopg2.sql import SQL, Identifier
-import tiktoken
-import json
-from datetime import datetime
 from sklearn.metrics.pairwise import cosine_similarity
 from transformers import BertTokenizer, BertModel
+from repolya.autogen.tool_function import (
+    write_file,
+    write_json_file,
+    write_yaml_file,
+)
+from dataclasses import dataclass
+from datetime import datetime
+from typing import List
+import tiktoken
+import json
+import uuid
+import os
 
 
 class PostgresManager:
@@ -194,4 +205,172 @@ def estimate_price_and_tokens(text):
     # round up to the output tokens
     estimated_cost = round(estimated_cost, 2)
     return estimated_cost, tokens
+
+
+@dataclass
+class Chat:
+    from_name: str
+    to_name: str
+    message: str
+
+@dataclass
+class ConversationResult:
+    success: bool
+    messages: List[Chat]
+    cost: float
+    tokens: int
+    last_message_str: str
+
+
+class AgentInstruments:
+    """
+    Base class for multi-agent instruments. Instruments are tools, state, and functions that an agent can use across the lifecycle of conversations
+    """
+
+    def __init__(self) -> None:
+        self.session_id = None
+        self.messages = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
+
+    def sync_messages(self, messages: list):
+        """
+        Syncs messages with the organizer
+        """
+        raise NotImplementedError
+
+    @property
+    def root_dir(self):
+        return os.path.join(str(WORKSPACE_AUTOGEN / "agent_results"), self.session_id)
+
+    @property
+    def agent_chat_file(self):
+        return os.path.join(self.root_dir, "agent_chats.json")
+
+
+class PostgresAgentInstruments(AgentInstruments):
+    """
+    Unified Toolset for the Postgres Data Analytics Multi-Agent System
+    --------------------------
+    Advantages:
+    - All agents have access to the same state and functions
+    - Gives agent functions awareness of changing context
+    - Clear and concise capabilities for agents
+    - Clean database connection management
+    
+    Guidelines:
+    - Agent Functions should not call other agent functions directly
+      - Instead Agent Functions should call external lower level modules
+    - Prefer 1 to 1 mapping of agents and their functions (controversial)
+    - The state lifecycle lives between all agent orchestrations
+    """
+    
+    def __init__(self, db_url: str, session_id: str) -> None:
+        super().__init__()
+        self.db_url = db_url
+        self.db = None
+        self.session_id = session_id
+        self.messages = []
+        self.complete_keyword = "APPROVED"
+        self.invocation_index = 0
+
+    def __enter__(self):
+        self.reset_files()
+        self.db = PostgresManager()
+        self.db.connect_with_url(self.db_url)
+        return self, self.db
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.db.close()
+
+    def sync_messages(self, messages: list):
+        self.messages = messages
+
+    def reset_files(self):
+        pass
+
+    def get_file_path(self, fname: str):
+        pass
+
+    # --------------------- Agent Properties --------------------- #
+    @property
+    def run_postgre_results_file(self):
+        return self.get_file_path("run_postgre_results.json")
+
+    # --------------------- Agent Functions --------------------- #
+    def run_postgre(self, sql: str) -> str:
+        """
+        Run a SQL query against the postgres database
+        """
+        results_as_json = self.db.run_postgre(sql)
+        fname = self.run_postgre_results_file
+        # dump these results to a file
+        with open(fname, "w") as f:
+            f.write(results_as_json)
+        return "Successfully delivered results to json file"
+
+    def validate_run_postgre(self):
+        """
+        Validate that the run_sql results file exists and has content
+        """
+        fname = self.run_postgre_results_file
+        with open(fname, "r") as f:
+            content = f.read()
+        if not content:
+            return False
+        return True
+
+    def write_file(self, content: str):
+        fname = self.get_file_path("write_file.txt")
+        return write_file(fname, content)
+
+    def write_json_file(self, json_str: str):
+        fname = self.get_file_path("write_json_file.json")
+        return write_json_file(fname, json_str)
+
+    def write_yml_file(self, json_str: str):
+        fname = self.get_file_path("write_yml_file.yml")
+        return write_yml_file(fname, json_str)
+
+    def write_innovation_file(self, content: str):
+        fname = self.get_file_path(f"{self.innovation_index}_innovation_file.txt")
+        write_file(fname, content)
+        self.innovation_index += 1
+        return "Successfully wrote innovation file. You can check my work."
+
+    def validate_innovation_files(self):
+        """
+        Loop from 0 to innovation_index and verify file exists with content
+        """
+        for i in range(self.innovation_index):
+            fname = self.get_file_path(f"{i}_innovation_file.txt")
+            with open(fname, "r") as f:
+                content = f.read()
+                if not content:
+                    return False
+        return True
+
+
+def generate_session_id(raw_prompt: str):
+    """
+    Example:
+    "get jobs with 'Completed' or 'Started' status"
+    ->
+    "get_jobs_with_Completed_or_Started_status_12_22_22"
+    """
+    now = datetime.now()
+    hours = now.hour
+    minutes = now.minute
+    seconds = now.second
+    short_time_mm_ss = f"{hours:02}_{minutes:02}_{seconds:02}"
+    lower_case = raw_prompt.lower()
+    no_spaces = lower_case.replace(" ", "_")
+    no_quotes = no_spaces.replace("'", "")
+    shorter = no_quotes[:30]
+    with_uuid = shorter + "_" + short_time_mm_ss
+    return with_uuid
 
