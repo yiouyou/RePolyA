@@ -332,9 +332,9 @@ class PostgresAgentInstruments(AgentInstruments):
         fname = self.get_file_path("write_json_file.json")
         return write_json_file(fname, json_str)
 
-    def write_yml_file(self, json_str: str):
-        fname = self.get_file_path("write_yml_file.yml")
-        return write_yml_file(fname, json_str)
+    def write_yaml_file(self, yaml_str: str):
+        fname = self.get_file_path("write_yaml_file.yml")
+        return write_yaml_file(fname, yaml_str)
 
     def write_innovation_file(self, content: str):
         fname = self.get_file_path(f"{self.innovation_index}_innovation_file.txt")
