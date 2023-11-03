@@ -1,6 +1,11 @@
 from repolya._const import AUTOGEN_CONFIG
 from repolya._log import logger_autogen
-from repolya.autogen.db_postgre import estimate_price_and_tokens
+from repolya.autogen.db_postgre import (
+    Chat,
+    ConversationResult,
+    AgentInstruments,
+    estimate_price_and_tokens,
+)
 
 from autogen import (
     ConversableAgent,

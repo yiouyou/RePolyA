@@ -1,9 +1,7 @@
 from repolya._const import AUTOGEN_IMG, WORKSPACE_RAG
 from repolya._log import logger_rag
 from repolya.autogen.as_planner import PLANNER_user, PLANNER_planner
-from repolya.autogen.db_postgre import PostgresManager
 
-import os
 import json
 import yaml
 import time
