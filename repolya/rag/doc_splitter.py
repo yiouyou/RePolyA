@@ -6,14 +6,6 @@ from langchain.text_splitter import MarkdownHeaderTextSplitter
 import re
 
 
-def clean_txt(_txt):
-    _txt = re.sub(r"\n+", "\n", _txt)
-    _txt = re.sub(r"\t+", "\t", _txt)
-    _txt = re.sub(r' +', ' ', _txt)
-    _txt = re.sub(r'^\s+', '', _txt, flags=re.MULTILINE)
-    return _txt
-
-
 ##### RecursiveCharacterTextSplitter
 def get_RecursiveCharacterTextSplitter(text_chunk_size=3000, text_chunk_overlap=300):
     ##### default list is ["\n\n", "\n", " ", ""]
