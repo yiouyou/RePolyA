@@ -51,7 +51,7 @@ def search_all_fetch(_query):
     _re = loader.scrape_all(_all_link)
     for i in range(len(_re)):
         print(_all_link[i])
-        with open(f"{i}.txt", "w") as wf:
+        with open(str(WORKSPACE_TOOLSET / f"{i}.txt"), "w") as wf:
             # _txt = _re[i].get_text()
             _txt = clean_txt(_re[i].get_text())
             wf.write(_txt)
