@@ -171,9 +171,9 @@ def build_data_eng_team(agent_instruments: PostgresAgentInstruments):
 
 def build_team_organizer(
     team: str,
-    agent_instruments: PostgresAgentInstruments,
     # db: PostgresManager,
-    validate_results_func: callable = None
+    agent_instruments: PostgresAgentInstruments,
+    validate_results_func: callable,
 ) -> Organizer:
     if team == "data_eng":
         return Organizer(

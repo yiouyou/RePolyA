@@ -30,12 +30,14 @@ from repolya.autogen.as_util import text_report_analyst, json_report_analyst, ya
 from repolya.autogen.db_postgre import (
     PostgresManager,
     DatabaseEmbedder,
+    PostgresAgentInstruments,
+)
+from repolya.autogen.organizer import (
+    Organizer,
     add_cap_ref,
     generate_session_id,
     ConversationResult,
-    PostgresAgentInstruments,
 )
-from repolya.autogen.organizer import Organizer
 from autogen import (
     GroupChat,
     GroupChatManager,

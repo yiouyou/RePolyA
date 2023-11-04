@@ -1,5 +1,7 @@
 from repolya._const import WORKSPACE_AUTOGEN
 
+from repolya.autogen.organizer import AgentInstruments
+
 import psycopg2
 from psycopg2.sql import SQL, Identifier
 from sklearn.metrics.pairwise import cosine_similarity
@@ -11,11 +13,7 @@ from repolya.autogen.tool_function import (
 )
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List
-import tiktoken
 import json
-import uuid
-import os
 
 
 class PostgresManager:
@@ -183,75 +181,6 @@ class DatabaseEmbedder:
         return [self.map_name_to_table_def[table_name] for table_name in table_names]
 
 
-def add_cap_ref(
-    prompt: str, 
-    prompt_suffix: str, 
-    cap_ref: str, 
-    cap_ref_content: str
-) -> str:
-    new_prompt = f"""{prompt} {prompt_suffix}\n{cap_ref}\n\n{cap_ref_content}"""
-    return new_prompt
-
-
-def count_tokens(text: str):
-    enc = tiktoken.get_encoding("cl100k_base")
-    return len(enc.encode(text))
-
-
-def estimate_price_and_tokens(text):
-    COST_PER_1k_TOKENS = 0.06
-    tokens = count_tokens(text)
-    estimated_cost = (tokens / 1000) * COST_PER_1k_TOKENS
-    # round up to the output tokens
-    estimated_cost = round(estimated_cost, 2)
-    return estimated_cost, tokens
-
-
-@dataclass
-class Chat:
-    from_name: str
-    to_name: str
-    message: str
-
-@dataclass
-class ConversationResult:
-    success: bool
-    messages: List[Chat]
-    cost: float
-    tokens: int
-    last_message_str: str
-
-
-class AgentInstruments:
-    """
-    Base class for multi-agent instruments. Instruments are tools, state, and functions that an agent can use across the lifecycle of conversations
-    """
-
-    def __init__(self) -> None:
-        self.session_id = None
-        self.messages = []
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        pass
-
-    def sync_messages(self, messages: list):
-        """
-        Syncs messages with the organizer
-        """
-        raise NotImplementedError
-
-    @property
-    def root_dir(self):
-        return os.path.join(str(WORKSPACE_AUTOGEN / "agent_results"), self.session_id)
-
-    @property
-    def agent_chat_file(self):
-        return os.path.join(self.root_dir, "agent_chats.json")
-
-
 class PostgresAgentInstruments(AgentInstruments):
     """
     Unified Toolset for the Postgres Data Analytics Multi-Agent System
@@ -353,24 +282,4 @@ class PostgresAgentInstruments(AgentInstruments):
                 if not content:
                     return False
         return True
-
-
-def generate_session_id(raw_prompt: str):
-    """
-    Example:
-    "get jobs with 'Completed' or 'Started' status"
-    ->
-    "get_jobs_with_Completed_or_Started_status_12_22_22"
-    """
-    now = datetime.now()
-    hours = now.hour
-    minutes = now.minute
-    seconds = now.second
-    short_time_mm_ss = f"{hours:02}_{minutes:02}_{seconds:02}"
-    lower_case = raw_prompt.lower()
-    no_spaces = lower_case.replace(" ", "_")
-    no_quotes = no_spaces.replace("'", "")
-    shorter = no_quotes[:30]
-    with_uuid = shorter + "_" + short_time_mm_ss
-    return with_uuid
 
