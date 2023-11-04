@@ -262,6 +262,6 @@ def fix_msg_ascii(_str):
         return _zh
     elif isinstance(_str, OpenAIObject): #<class 'openai.openai_object.OpenAIObject'>
         return _str.to_dict()
-    else: 
+    else:
         return _str
 
