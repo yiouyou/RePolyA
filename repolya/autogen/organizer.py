@@ -128,6 +128,7 @@ class Organizer:
         # agent_a.send(message, agent_b)
         self.send_message(agent_a, agent_b, message)
         reply = agent_b.generate_reply(sender=agent_a)
+        # reply = json_str_zh(reply)
         self.add_message(reply)
         print(f"basic_chat(): replied with '{reply}'")
 
@@ -242,4 +243,21 @@ class Organizer:
             tokens=tokens,
             last_message_str=self.last_message_always_string,
         )
+
+
+def is_valid_json(json_str):
+    try:
+        json.loads(json_str)
+        return True
+    except json.JSONDecodeError:
+        return False
+
+
+def json_str_zh(_str):
+    if isinstance(_str, str) and is_valid_json(_str):
+        data = json.loads(_str)
+        _zh = json.dumps(data, ensure_ascii=False, indent=4)
+        return _zh
+    else:
+        return _str
 
