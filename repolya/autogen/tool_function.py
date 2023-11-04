@@ -1,4 +1,4 @@
-from repolya._const import AUTOGEN_IMG, WORKSPACE_RAG
+from repolya._const import AUTOGEN_IMG, WORKSPACE_RAG, WORKSPACE_AUTOGEN
 from repolya._log import logger_rag
 from repolya.autogen.as_planner import PLANNER_user, PLANNER_planner
 
@@ -390,4 +390,25 @@ def qa_summerize(text):
     time.sleep(random.uniform(1, 2))
     _sum, _token_cost = summerize_text(text, 'stuff')
     return _sum
+
+
+##### save_output
+_def_save_output = {
+    "name": "save_output",
+    "description": "save output to disk",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "output": {
+                "type": "string",
+                "description": "output to save",
+            }
+        },
+        "required": ["output"],
+    },
+}
+def save_output(output):
+    _out = str(WORKSPACE_AUTOGEN / "organizer_output.txt")
+    with open(_out, "w") as f:
+        f.write(output)
 

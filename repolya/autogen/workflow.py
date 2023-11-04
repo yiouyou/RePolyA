@@ -1,4 +1,4 @@
-from repolya._const import AUTOGEN_CONFIG, WORKSPACE_RAG
+from repolya._const import AUTOGEN_CONFIG, WORKSPACE_RAG, WORKSPACE_AUTOGEN
 from repolya._log import logger_autogen
 
 from repolya.autogen.as_basic import A_user, A_assist
@@ -237,8 +237,9 @@ def create_rag_task_list(msg):
         RAG_task_critic,
         RAG_task_planner,
     ]
+    _out = str(WORKSPACE_AUTOGEN / "organizer_output.txt")
     def validate_results_func():
-        with open("results.json", "r") as f:
+        with open(_out, "r") as f:
             content = f.read()
         return bool(content)
     _organizer = Organizer(
@@ -246,11 +247,16 @@ def create_rag_task_list(msg):
         agents=_agents,
         validate_results_func=validate_results_func,
     )
-    success, _messages = _organizer.sequential_conversation(msg)
-    # print(success)
-    # print(_messages)
-    _task_list = _messages[-1]
-    return _task_list
+    _organizer_conversation_result = _organizer.sequential_conversation(msg)
+    match _organizer_conversation_result:
+        case ConversationResult(success=True, cost=_cost, tokens=_tokens):
+            print(f"✅ Organizer was successful. Team: {_organizer.name}")
+            print(f"📊 Name: {_organizer.name} Cost: {_cost}, tokens: {_tokens}")
+            with open(_out, "r") as f:
+                content = f.read()
+            return content
+        case _:
+            print(f"❌ Organizer failed. Team: {_organizer.name}")
 
 
 def create_rag_task_list_zh(msg):
@@ -260,8 +266,9 @@ def create_rag_task_list_zh(msg):
         RAG_task_critic_zh,
         RAG_task_planner_zh,
     ]
+    _out = str(WORKSPACE_AUTOGEN / "organizer_output.txt")
     def validate_results_func():
-        with open("results.json", "r") as f:
+        with open(_out, "r") as f:
             content = f.read()
         return bool(content)
     _organizer = Organizer(
@@ -269,11 +276,16 @@ def create_rag_task_list_zh(msg):
         agents=_agents,
         validate_results_func=validate_results_func,
     )
-    success, _messages = _organizer.sequential_conversation(msg)
-    # print(success)
-    # print(_messages)
-    _task_list = _messages[-1]
-    return _task_list
+    _organizer_conversation_result = _organizer.sequential_conversation(msg)
+    match _organizer_conversation_result:
+        case ConversationResult(success=True, cost=_cost, tokens=_tokens):
+            print(f"✅ Organizer was successful. Team: {_organizer.name}")
+            print(f"📊 Name: {_organizer.name} Cost: {_cost}, tokens: {_tokens}")
+            with open(_out, "r") as f:
+                content = f.read()
+            return content
+        case _:
+            print(f"❌ Organizer failed. Team: {_organizer.name}")
 
 
 def create_jdml_task_list_zh(msg):
@@ -283,20 +295,31 @@ def create_jdml_task_list_zh(msg):
         JDML_task_critic_zh,
         JDML_task_planner_zh,
     ]
+    _out = str(WORKSPACE_AUTOGEN / "organizer_output.txt")
     def validate_results_func():
-        with open("results.json", "r") as f:
+        with open(_out, "r") as f:
             content = f.read()
         return bool(content)
     _organizer = Organizer(
-        name="ML Task Team",
+        name="JDML Task Team",
         agents=_agents,
         validate_results_func=validate_results_func,
     )
-    success, _messages = _organizer.sequential_conversation(msg)
-    # print(success)
-    # print(_messages)
-    _task_list = _messages[-1]
-    return _task_list
+    _organizer_conversation_result = _organizer.sequential_conversation(msg)
+    match _organizer_conversation_result:
+        case ConversationResult(success=True, cost=_cost, tokens=_tokens):
+            print(f"✅ Organizer was successful. Team: {_organizer.name}")
+            print(f"📊 Name: {_organizer.name} Cost: {_cost}, tokens: {_tokens}")
+            with open(_out, "r") as f:
+                content = f.read()
+            return content
+        case _:
+            print(f"❌ Organizer failed. Team: {_organizer.name}")
+    # success, _messages = _organizer.sequential_conversation(msg)
+    # # print(success)
+    # # print(_messages)
+    # _task_list = _messages[-1]
+    # return _task_list
 
 
 def search_faiss_openai(text, _vdb):
@@ -518,7 +541,7 @@ def do_postgre_organizer(msg):
         data_eng_organizer = build_team_organizer(
             "data-eng",
             agent_instruments,
-            validate_results=agent_instruments.validate_run_postgre,
+            validate_results_func=agent_instruments.validate_run_postgre,
         )
         data_eng_conversation_result: ConversationResult = (
             data_eng_organizer.sequential_conversation(prompt)
@@ -554,14 +577,14 @@ def do_postgre_organizer(msg):
     #         POSTGRES_TABLE_DEFINITIONS_CAP_REF,
     #         table_definitions,
     #     )
-    #     def validate_results() -> bool:
+    #     def validate_results_func() -> bool:
     #         with open("results.json", "r") as f:
     #             content = f.read()
     #         return bool(content)
     #     # data_eng_organizer = build_team_organizer(
     #     #     "data_eng",
     #     #     db,
-    #     #     validate_results
+    #     #     validate_results_func
     #     # )
     #     data_eng_organizer = Organizer(
     #         name="Postgres Data Analytics Multi-Agent ::: Data Engineering Team",
@@ -571,7 +594,7 @@ def do_postgre_organizer(msg):
     #             build_sr_data_analyst_agent(db),
     #             # POSTGRE_pm,
     #         ],
-    #         validate_results_func=validate_results,
+    #         validate_results_func=validate_results_func,
     #     )
     #     data_eng_conversation_result: ConversationResult = (
     #         data_eng_organizer.sequential_conversation(prompt)
@@ -620,7 +643,7 @@ def do_postgre_organizer(msg):
     #     #         json_report_analyst,
     #     #         yaml_report_analyst,
     #     #     ],
-    #     #     validate_results_func=validate_results,
+    #     #     validate_results_func=validate_results_func,
     #     # )
     #     # data_viz_prompt = f"Here is the data to report: {data_to_report}"
     #     # data_viz_organizer.broadcast_conversation(data_viz_prompt)

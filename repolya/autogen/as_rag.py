@@ -1,6 +1,11 @@
 from repolya._const import AUTOGEN_CONFIG
 from repolya._log import logger_autogen
 
+from repolya.autogen.tool_function import (
+    _def_save_output,
+    save_output,
+)
+
 from autogen import (
     AssistantAgent,
     UserProxyAgent,
@@ -19,6 +24,8 @@ from repolya.autogen.tool_function import (
 
 
 config_list = config_list_from_json(env_or_file=str(AUTOGEN_CONFIG))
+
+
 is_termination_msg = lambda x: isinstance(x, dict) and "TERMINATE" == str(x.get("content", ""))[-9:].upper()
 # lambda x: x.get("content", "") and x.get("content", "").rstrip().endswith("TERMINATE")
 # lambda x: True if "TERMINATE" in x.get("content") else False
@@ -151,12 +158,22 @@ RAG_task_user = UserProxyAgent(
 )
 
 
-PLANNER_PROMPT = "Planner. To help the User to collect information and evidence out of a personal information database, you need to break down complex questions into simpler sub-questions (no more than THREE) for easier answer retrieval from the database. Send the list to the the Critic for review. And adjust the list based on the Critic's feedback, keep the number of questions around FIVE. Output the list only, no comments, nothing else."
+PLANNER_PROMPT = """Planner. To help the User to collect information and evidence out of a personal information database, you need to break down complex questions into simpler sub-questions (no more than THREE) for easier answer retrieval from the database. Send the list to the the Critic for review. And adjust the list based on the Critic's feedback, keep the number of questions around FIVE. Output the list only, no comments, nothing else.
+
+You will use the 'save_output' function to save the list of sub-questions locally.
+Do not use the 'save_output' function to save Critic's feedback.
+"""
 RAG_task_planner = AssistantAgent(
     name="RAG_task_planner",
-    llm_config=base_config,
     code_execution_config=False,
     is_termination_msg=is_termination_msg,
+    llm_config={
+        **base_config,
+        "functions": [_def_save_output],
+    },
+    function_map={
+        'save_output': save_output,
+    },
     system_message=PLANNER_PROMPT,
 )
 
@@ -164,8 +181,14 @@ RAG_task_planner = AssistantAgent(
 CRITIC_PROMPT = "Critic. Double check the list of sub-questions from Planner and provide feedback."
 RAG_task_critic = AssistantAgent(
     name="RAG_task_critic",
-    llm_config=base_config,
     is_termination_msg=is_termination_msg,
+    llm_config={
+        **base_config,
+        "functions": [_def_save_output],
+    },
+    function_map={
+        'save_output': save_output,
+    },
     system_message=CRITIC_PROMPT,
 )
 
@@ -181,12 +204,21 @@ RAG_task_user_zh = UserProxyAgent(
 )
 
 
-PLANNER_PROMPT_ZH = "作为'规划师'，你为了帮助'用户'收集相关信息，需要将复杂的问题分解为更简单的子问题（不超过3个），以便更轻松地从互联网或者数据库中搜集信息。你将子问题列表发送给'评判者'进行审查。并根据'评判者'的反馈调整列表，保持问题数量在5个左右。只输出子问题列表，不用注释，没其他任何内容。"
+PLANNER_PROMPT_ZH = """作为'规划师'，你为了帮助'用户'收集相关信息，需要将复杂的问题分解为更简单的子问题（不超过3个），以便更轻松地从互联网或者数据库中搜集信息。你将子问题列表发送给'评判者'进行审查。并根据'评判者'的反馈调整列表，保持问题数量在5个左右。只输出子问题列表，不用注释，没其他任何内容。
+你将使用'save_output'函数将子问题列表保存到本地。
+不要使用'save_output'函数保存'评判者'的反馈。
+"""
 RAG_task_planner_zh = AssistantAgent(
     name="RAG_task_规划师",
-    llm_config=base_config,
     code_execution_config=False,
     is_termination_msg=is_termination_msg,
+    llm_config={
+        **base_config,
+        "functions": [_def_save_output],
+    },
+    function_map={
+        'save_output': save_output,
+    },
     system_message=PLANNER_PROMPT_ZH,
 )
 
@@ -194,8 +226,14 @@ RAG_task_planner_zh = AssistantAgent(
 CRITIC_PROMPT_ZH = "作为'评判者'，你仔细检查'规划师'提供的子问题列表并提供反馈。"
 RAG_task_critic_zh = AssistantAgent(
     name="RAG_task_评判者",
-    llm_config=base_config,
     is_termination_msg=is_termination_msg,
+    llm_config={
+        **base_config,
+        "functions": [_def_save_output],
+    },
+    function_map={
+        'save_output': save_output,
+    },
     system_message=CRITIC_PROMPT_ZH,
 )
 

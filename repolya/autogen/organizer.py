@@ -1,4 +1,4 @@
-from repolya._const import AUTOGEN_CONFIG
+from repolya._const import AUTOGEN_CONFIG, WORKSPACE_AUTOGEN
 from repolya._log import logger_autogen
 from repolya.autogen.db_postgre import (
     Chat,
@@ -166,9 +166,9 @@ class Organizer:
         for chat in self.chats:
             conversations.append(asdict(chat))
         if append_to_file:
-            file_name = "organizer_conversations.json"
+            file_name = str(WORKSPACE_AUTOGEN / "organizer_conversations.json")
             with open(file_name, "w", encoding='utf-8') as f:
-                f.write(json.dumps(conversations, indent=4))
+                f.write(json.dumps(conversations, ensure_ascii=False, indent=4))
 
     def sequential_conversation(self, prompt: str) -> ConversationResult:
         """ Runs a sequential conversation with the agents.
@@ -192,8 +192,8 @@ class Organizer:
                 if self.has_functions(agent_b):
                     self.self_function_chat(agent_b, self.latest_message)
                 print(f"---------- Organizer Complete ----------\n")
-                success = self.completed_keyword in self.latest_message
-                # success = self.validate_results_func()
+                # success = self.completed_keyword in self.latest_message
+                success = self.validate_results_func()
                 if success:
                     print(f"✅ Organizer was successful")
                 else:
@@ -207,7 +207,6 @@ class Organizer:
                     tokens=tokens,
                     last_message_str=self.last_message_always_string,
                 )
-
 
     def broadcast_conversation(self, prompt: str) -> ConversationResult:
         """ Broadcast a message from agent_a to all agents.
@@ -229,8 +228,8 @@ class Organizer:
             if self.last_message_is_func_call and self.has_functions(agent_iterate):
                 self.function_chat(agent_iterate, agent_iterate, self.latest_message)
         print(f"---------- Organizer Complete ----------\n")
-        success = self.completed_keyword in self.latest_message
-        # success = self.validate_results_func()
+        # success = self.completed_keyword in self.latest_message
+        success = self.validate_results_func()
         if success:
             print(f"✅ Organizer was successful")
         else:
