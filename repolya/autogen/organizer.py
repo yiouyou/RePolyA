@@ -18,6 +18,8 @@ from typing import List, Optional, Tuple, Union
 from dataclasses import asdict
 import json
 
+from openai.openai_object import OpenAIObject
+
 
 config_list = config_list_from_json(env_or_file=str(AUTOGEN_CONFIG))
 
@@ -113,6 +115,7 @@ class Organizer:
         return estimate_price_and_tokens(self.get_message_as_str())
 
     def add_message(self, message: str):
+        # message = fix_msg_ascii(message)
         self.messages.append(message)
 
     def has_functions(self, agent: ConversableAgent):
@@ -128,7 +131,6 @@ class Organizer:
         # agent_a.send(message, agent_b)
         self.send_message(agent_a, agent_b, message)
         reply = agent_b.generate_reply(sender=agent_a)
-        # reply = json_str_zh(reply)
         self.add_message(reply)
         print(f"basic_chat(): replied with '{reply}'")
 
@@ -253,11 +255,13 @@ def is_valid_json(json_str):
         return False
 
 
-def json_str_zh(_str):
+def fix_msg_ascii(_str):
     if isinstance(_str, str) and is_valid_json(_str):
         data = json.loads(_str)
         _zh = json.dumps(data, ensure_ascii=False, indent=4)
         return _zh
-    else:
+    elif isinstance(_str, OpenAIObject): #<class 'openai.openai_object.OpenAIObject'>
+        return _str.to_dict()
+    else: 
         return _str
 
