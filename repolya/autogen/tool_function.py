@@ -99,7 +99,7 @@ _def_scrape = {
         },
         "required": ["url"],
     },
-            }
+}
 def scrape(url: str):
     headers = {
         'Cache-Control': 'no-cache',
