@@ -31,7 +31,76 @@ from langchain.agents import Tool
 
 from tempfile import TemporaryDirectory
 
+from typing import List, Optional
+import requests
 import os
+from langchain.callbacks.manager import CallbackManagerForToolRun
+
+
+##### 重写
+# https://learn.microsoft.com/en-us/bing/search-apis/bing-web-search/reference/query-parameters
+class bing_search(BingSearchAPIWrapper):
+    mkt: str="zh-CN"
+    safeSearch: str="Strict"
+    # freshness: specify a date range in the form, YYYY-MM-DD..YYYY-MM-DD "2021-01-01..2021-12-31"
+    freshness: str = None
+    def _bing_search_results(self, search_term: str, count: int) -> List[dict]:
+        headers = {"Ocp-Apim-Subscription-Key": self.bing_subscription_key}
+        params = {
+            "q": search_term,
+            "count": count,
+            "textDecorations": False,
+            "textFormat": "HTML",
+            "safeSearch": self.safeSearch,
+            "mkt": self.mkt,
+            "freshness": self.freshness,
+        }
+        response = requests.get(
+            self.bing_search_url,
+            headers=headers,
+            params=params,
+        )
+        response.raise_for_status()
+        search_results = response.json()
+        return search_results["webPages"]["value"]
+
+# https://duckduckgo.com/duckduckgo-help-pages/settings/params/
+class ddg_search(DuckDuckGoSearchResults):
+    num_results: int = 3
+    api_wrapper: DuckDuckGoSearchAPIWrapper = DuckDuckGoSearchAPIWrapper(
+        region="zh-CN",
+        time="y",
+        max_results=num_results,
+        safesearch="Strict",
+    )
+    backend: str = "api"
+    def _run(
+        self,
+        query: str,
+        run_manager: Optional[CallbackManagerForToolRun] = None,
+    ) -> str:
+        """Use the tool."""
+        res = self.api_wrapper.results(query, self.num_results, backend=self.backend)
+        return res
+
+def bing(_query, n=3):
+    search = bing_search(k=n)
+    # _re = search.run(_query)
+    _re = search.results(_query, n)
+    return _re
+
+def ddg(_query, n=3):
+    search = ddg_search(num_results=n)
+    _re = search.run(_query)
+    return _re
+
+def google(_query, n=3):
+    search = GoogleSearchAPIWrapper(k=3)
+    search_params = {
+        # "safesearch": "on",
+    }
+    _re = search.results(_query, n, search_params)
+    return _re
 
 
 ##### get_all_tool_names()
@@ -167,7 +236,6 @@ search_ddg_news = Tool.from_function(
 )
 
 
-
 # def multiplier(a, b):
 #     return a * b
 # def parsing_multiplier(string):
@@ -187,13 +255,11 @@ search_ddg_news = Tool.from_function(
 # mrkl.run("What is 3 times 4")
 
 
-
 # def post_message(url: str, body: dict, parameters: Optional[dict] = None) -> str:
 #     """Sends a POST request to the given url with the given body and parameters."""
 #     result = requests.post(url, json=body, params=parameters)
 #     return f"Status: {result.status_code} - {result.text}"
 # tool = StructuredTool.from_function(post_message)
-
 
 
 # @tool("search", return_direct=True)
