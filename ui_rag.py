@@ -37,6 +37,7 @@ from repolya.autogen.wf_jd import (
     generate_vdb_for_search_query,
     generate_event_context,
     generate_event_plan,
+    clean_filename,
 )
 from repolya._const import LOG_ROOT, WORKSPACE_RAG, AUTOGEN_JD
 from repolya._log import logger_rag, logger_yj
@@ -121,7 +122,6 @@ _upload_dir = WORKSPACE_RAG / 'lj_rag_upload'
 if not os.path.exists(_upload_dir):
     os.makedirs(_upload_dir)
 _db_name = str(WORKSPACE_RAG / 'lj_rag_openai')
-_db_name_new = str(WORKSPACE_RAG / 'lj_rag_new_openai')
 _clean_txt_dir = str(WORKSPACE_RAG / 'lj_rag_clean_txt')
 
 ##### log
@@ -394,21 +394,20 @@ def ml_helper(_query):
 
 
 ##### yj
-_vdb_name = str(AUTOGEN_JD)
-
 def yj_sort_out_context(_event):
     write_log_ans(_log_ans_yj_context, '')
     start_time = time.time()
     write_log_ans(_log_ans_yj_context, '', 'continue')
     #####
+    _event_name = clean_filename(_event, 20)
     _query = generate_search_query_for_event(_event)
-    generate_vdb_for_search_query(_query, _vdb_name)
-    _context = generate_event_context(_event, _vdb_name)
+    generate_vdb_for_search_query(_query, _event_name)
+    _context = generate_event_context(_event, _event_name)
     write_log_ans(_log_ans_yj_context, _context, 'done')
     #####
     end_time = time.time()
     execution_time = end_time - start_time
-    _time = f"Time: {execution_time:.1f} seconds"
+    _time = f"'梳理脉络'耗时：{execution_time:.1f} seconds"
     logger_yj.info(_time)
     time.sleep(1)
     return gr.Button(variant="primary")
@@ -419,12 +418,13 @@ def yj_write_plan(_event, _context):
     start_time = time.time()
     write_log_ans(_log_ans_yj_plan, '', 'continue')
     #####
-    _plan = generate_event_plan(_event, _vdb_name, _context)
+    _event_name = clean_filename(_event, 20)
+    _plan = generate_event_plan(_event, _event_name, _context)
     write_log_ans(_log_ans_yj_plan, _plan, 'done')
     #####
     end_time = time.time()
     execution_time = end_time - start_time
-    _time = f"Time: {execution_time:.1f} seconds"
+    _time = f"'总结报告'耗时：{execution_time:.1f} seconds"
     logger_yj.info(_time)
 
 
@@ -442,7 +442,7 @@ with gr.Blocks(title=_description) as demo:
     with gr.Tab(label = "应急事件"):
         with gr.Row():
             with gr.Column(scale=1):
-                yj_query = gr.Textbox(label="任务", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
+                yj_query = gr.Textbox(label="专题", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
                 yj_start_btn = gr.Button("搜集信息", variant="secondary", visible=True)
                 yj_clean_btn = gr.Button("停止/清空", variant="secondary", visible=True)
             with gr.Column(scale=1):

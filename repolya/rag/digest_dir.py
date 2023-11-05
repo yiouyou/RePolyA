@@ -134,8 +134,11 @@ def dir_to_faiss_openai(_dir: str, _db_name: str, _clean_txt_dir: str):
         else:
             logger_rag.info(f"empty doc '{_clean_file}'")
     _splited_docs = split_docs_recursive(_clean_DOCs, text_chunk_size, text_chunk_overlap)
-    if _db_name.endswith('_openai'):
-        embedding_to_faiss_OpenAI(_splited_docs, _db_name)
+    if not os.path.exists(_db_name):
+        if _db_name.endswith('_openai'):
+            embedding_to_faiss_OpenAI(_splited_docs, _db_name)
+        else:
+            logger_rag.info(f"db_name '{_db_name}' is not ends with '_openai'")
     else:
-        logger_rag.info(f"db_name '{_db_name}' is not ends with '_openai'")
+        logger_rag.error(f"db_name '{_db_name}' exists already.")
 
