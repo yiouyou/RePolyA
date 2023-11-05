@@ -38,8 +38,8 @@ from repolya.autogen.wf_jd import (
     generate_event_context,
     generate_event_plan,
 )
-from repolya._log import logger_rag
-from repolya._const import LOG_ROOT, WORKSPACE_RAG, WORKSPACE_AUTOGEN
+from repolya._const import LOG_ROOT, WORKSPACE_RAG, AUTOGEN_JD
+from repolya._log import logger_rag, logger_yj
 # from autogen import ChatCompletion
 
 
@@ -136,10 +136,6 @@ def write_log_ans(_log_ans, _txt, _status=None):
 def write_log_ref(_log_ref, _txt):
     with open(_log_ref, 'w', encoding='utf-8') as wf:
         wf.write(_txt)
-
-def add_log_ref(_log_ref, _txt):
-    with open(_log_ref, 'a', encoding='utf-8') as wf:
-        wf.write(f"\n\n{_txt}")
 
 def rag_read_logs():
     with open(_log_ans1, "r") as f:
@@ -398,7 +394,7 @@ def ml_helper(_query):
 
 
 ##### yj
-_vdb_name = str(WORKSPACE_AUTOGEN / 'wf_jd')
+_vdb_name = str(AUTOGEN_JD)
 
 def yj_sort_out_context(_event):
     write_log_ans(_log_ans_yj_context, '')
@@ -413,7 +409,7 @@ def yj_sort_out_context(_event):
     end_time = time.time()
     execution_time = end_time - start_time
     _time = f"Time: {execution_time:.1f} seconds"
-    add_log_ref(_log_ref_yj, _time)
+    logger_yj.info(_time)
     time.sleep(1)
     return gr.Button(variant="primary")
     
@@ -429,7 +425,7 @@ def yj_write_plan(_event, _context):
     end_time = time.time()
     execution_time = end_time - start_time
     _time = f"Time: {execution_time:.1f} seconds"
-    add_log_ref(_log_ref_yj, _time)
+    logger_yj.info(_time)
 
 
 ##### UI
