@@ -42,8 +42,11 @@ _log_ans2 = LOG_ROOT / '_ans2.txt'
 _log_ref2 = LOG_ROOT / '_ref2.txt'
 _log_ans3 = LOG_ROOT / '_ans3.txt'
 _log_ref3 = LOG_ROOT / '_ref3.txt'
-_log_ans0 = LOG_ROOT / '_ans0.txt'
-_log_ref0 = LOG_ROOT / '_ref0.txt'
+_log_ans_ml = LOG_ROOT / '_ans_ml.txt'
+_log_ref_ml = LOG_ROOT / '_ref_ml.txt'
+_log_ans_yj_context = LOG_ROOT / '_ans_yj_context.txt'
+_log_ans_yj_plan = LOG_ROOT / '_ans_yj_plan.txt'
+_log_ref_yj = LOG_ROOT / '_ref_yj.txt'
 
 from repolya.toolset.tool_bshr import bshr_vdb
 from repolya.autogen.workflow import (
@@ -115,6 +118,22 @@ _db_name_new = str(WORKSPACE_RAG / 'lj_rag_new_openai')
 _clean_txt_dir = str(WORKSPACE_RAG / 'lj_rag_clean_txt')
 
 ##### log
+def write_log_ans(_log_ans, _txt, _status=None):
+    with open(_log_ans, 'w', encoding='utf-8') as wf:
+        if _status == "continue":
+            _txt += "\n\n计算中，请稍候..."
+        # elif _status == "done":
+        #     _txt += "\n\n[完成]"
+        wf.write(_txt)
+
+def write_log_ref(_log_ref, _txt):
+    with open(_log_ref, 'w', encoding='utf-8') as wf:
+        wf.write(_txt)
+
+def add_log_ref(_log_ref, _txt):
+    with open(_log_ref, 'a', encoding='utf-8') as wf:
+        wf.write(f"\n\n{_txt}")
+
 def rag_read_logs():
     with open(_log_ans1, "r") as f:
         _ans1 = f.read()
@@ -131,23 +150,20 @@ def rag_read_logs():
     return [_ans1, _ref1, _ans2, _ref2, _ans3, _ref3]
 
 def ml_read_logs():
-    with open(_log_ans0, "r") as f:
-        _ans0 = f.read()
-    with open(_log_ref0, "r") as f:
-        _ref0 = f.read()
-    return [_ans0, _ref0]
+    with open(_log_ans_ml, "r") as f:
+        _ans_ml = f.read()
+    with open(_log_ref_ml, "r") as f:
+        _ref_ml = f.read()
+    return [_ans_ml, _ref_ml]
 
-def write_log_ans(_log_ans, _txt, _status=None):
-    with open(_log_ans, 'w', encoding='utf-8') as wf:
-        if _status == "continue":
-            _txt += "\n\n计算中，请稍候..."
-        # elif _status == "done":
-        #     _txt += "\n\n[完成]"
-        wf.write(_txt)
-
-def write_log_ref(_log_ref, _txt):
-    with open(_log_ref, 'w', encoding='utf-8') as wf:
-        wf.write(_txt)
+def yj_read_logs():
+    with open(_log_ref_yj, "r") as f:
+        _ref_yj = f.read()
+    with open(_log_ans_yj_context, "r") as f:
+        _ans_yj_context = f.read()
+    with open(_log_ans_yj_plan, "r") as f:
+        _ans_yj_plan = f.read()
+    return [_ref_yj, _ans_yj_context, _ans_yj_plan]
 
 def rag_clean_logs():
     write_log_ans(_log_ans1,'')
@@ -158,11 +174,17 @@ def rag_clean_logs():
     write_log_ref(_log_ref3,'')
 
 def ml_clean_logs():
-    write_log_ans(_log_ans0,'')
-    write_log_ref(_log_ref0,'')
+    write_log_ans(_log_ans_ml,'')
+    write_log_ref(_log_ref_ml,'')
+
+def yj_clean_logs():
+    write_log_ref(_log_ref_yj,'')
+    write_log_ans(_log_ans_yj_context,'')
+    write_log_ans(_log_ans_yj_plan,'')
 
 rag_clean_logs()
 ml_clean_logs()
+yj_clean_logs()
 
 def rag_clean_all():
     rag_clean_logs()
@@ -173,6 +195,17 @@ def ml_clean_all():
     ml_clean_logs()
     print('ml_clean_logs()')
     return [gr.Textbox(value=""), gr.Button(variant="secondary")]
+
+def yj_clean_all():
+    yj_clean_logs()
+    print('yj_clean_logs()')
+    return [
+        gr.Textbox(value=""), # yj_query
+        gr.Button(variant="secondary"), # yj_start_btn
+        gr.Button(variant="secondary"), # yj_plan_btn
+        gr.Textbox(value=""), # yj_context
+        gr.Textbox(value=""), # yj_plan
+    ]
 
 
 ##### btn, textbox
@@ -343,23 +376,52 @@ def rag_helper(_query, _radio):
 ##### ml
 def ml_helper(_query):
     _ans, _ref = "", ""
-    write_log_ans(_log_ans0,'')
-    write_log_ref(_log_ref0,'')
+    write_log_ans(_log_ans_ml,'')
+    write_log_ref(_log_ref_ml,'')
     start_time = time.time()
-    write_log_ans(_log_ans0, '', 'continue')
+    write_log_ans(_log_ans_ml, '', 'continue')
     # ChatCompletion.start_logging(reset_counter=True, compact=False)
     ### task list
     _task_list = create_jdml_task_list_zh(_query)
-    write_log_ans(_log_ans0, f"{_task_list}", 'done')
+    write_log_ans(_log_ans_ml, f"{_task_list}", 'done')
     end_time = time.time()
     execution_time = end_time - start_time
     _time = f"Time: {execution_time:.1f} seconds"
-    write_log_ref(_log_ref0, f"\n\n{_time}")
+    write_log_ref(_log_ref_ml, f"\n\n{_time}")
+
+
+##### yj
+def yj_sort_out_context(_query):
+    write_log_ans(_log_ans_yj_context, '')
+    start_time = time.time()
+    write_log_ans(_log_ans_yj_context, '', 'continue')
+    time.sleep(1)
+
+    write_log_ans(_log_ans_yj_context, "yj_sort_out_context", 'done')
+    end_time = time.time()
+    execution_time = end_time - start_time
+    _time = f"Time: {execution_time:.1f} seconds"
+    add_log_ref(_log_ref_yj, _time)
+    time.sleep(1)
+    return gr.Button(variant="primary")
+    
+
+def yj_write_plan(_query, _context):
+    write_log_ans(_log_ans_yj_plan, '')
+    start_time = time.time()
+    write_log_ans(_log_ans_yj_plan, '', 'continue')
+    time.sleep(1)
+    
+    write_log_ans(_log_ans_yj_plan, "yj_write_plan", 'done')
+    end_time = time.time()
+    execution_time = end_time - start_time
+    _time = f"Time: {execution_time:.1f} seconds"
+    add_log_ref(_log_ref_yj, _time)
 
 
 ##### UI
 _description = """
-# 命令解析 / 报文问答 / 标签提取
+# 应急事件 / 报文问答 / 命令解析 / 标签提取
 """
 chat_ask = gr.Textbox(label="", placeholder="...", lines=5, max_lines=5, interactive=True, visible=True, scale=9)
 
@@ -368,33 +430,44 @@ with gr.Blocks(title=_description) as demo:
     dh_user_question = gr.State("")
     gr.Markdown(_description)
 
-    with gr.Tab(label = "命令解析"):
-        ml_query = gr.Textbox(label="命令", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
-        ml_start_btn = gr.Button("开始", variant="secondary", visible=True)
-        ml_clean_btn = gr.Button("清空", variant="secondary", visible=True)
-        ml_ans = gr.Textbox(label="解析", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
-        ml_log = gr.Textbox(label="日志", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
-        ml_query.change(
+    with gr.Tab(label = "应急事件"):
+        with gr.Row():
+            with gr.Column(scale=1):
+                yj_query = gr.Textbox(label="任务", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
+                yj_start_btn = gr.Button("搜集信息", variant="secondary", visible=True)
+                yj_clean_btn = gr.Button("停止/清空", variant="secondary", visible=True)
+            with gr.Column(scale=1):
+                yj_log = gr.Textbox(label="日志", placeholder="...", lines=16, max_lines=16, interactive=False, visible=True)
+        yj_context = gr.Textbox(label="事件脉络", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
+        yj_plan_btn = gr.Button("生成总结", variant="secondary", visible=True)
+        yj_plan = gr.Textbox(label="总结报告", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
+        yj_query.change(
             chg_btn_color_if_input,
-            [ml_query],
-            [ml_start_btn]
+            [yj_query],
+            [yj_start_btn]
         )
-        ml_start_btn.click(
-            ml_read_logs,
+        yj_start_btn.click(
+            yj_read_logs,
             [],
-            [ml_ans, ml_log],
+            [yj_log, yj_context, yj_plan],
             every=1
         )
-        ml_start_btn.click(
-            ml_helper,
-            [ml_query],
+        yj_start_btn.click(
+            yj_sort_out_context,
+            [yj_query],
+            [yj_plan_btn]
+        )
+        yj_clean_btn.click(
+            yj_clean_all,
+            [],
+            [yj_query, yj_start_btn, yj_plan_btn, yj_context, yj_plan]
+        )
+        yj_plan_btn.click(
+            yj_write_plan,
+            [yj_query, yj_context],
             []
         )
-        ml_clean_btn.click(
-            ml_clean_all,
-            [],
-            [ml_query, ml_start_btn]
-        )
+
 
     with gr.Tab(label = "报文问答"):
         with gr.Row():
@@ -451,18 +524,36 @@ with gr.Blocks(title=_description) as demo:
             [],
             [rag_query, rag_start_btn]
         )
-    
-    # with gr.Tab(label = "聊天"):
-    #     gr.ChatInterface(
-    #         fn=chat_predict_openai,
-    #         textbox=chat_ask,
-    #         submit_btn="提交",
-    #         stop_btn="停止",
-    #         retry_btn="🔄 重试",
-    #         undo_btn="↩️ 撤消",
-    #         clear_btn="🗑️ 清除",
-    #     )
-    
+ 
+
+    with gr.Tab(label = "命令解析"):
+        ml_query = gr.Textbox(label="命令", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
+        ml_start_btn = gr.Button("开始", variant="secondary", visible=True)
+        ml_clean_btn = gr.Button("清空", variant="secondary", visible=True)
+        ml_ans = gr.Textbox(label="解析", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
+        ml_log = gr.Textbox(label="日志", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
+        ml_query.change(
+            chg_btn_color_if_input,
+            [ml_query],
+            [ml_start_btn]
+        )
+        ml_start_btn.click(
+            ml_read_logs,
+            [],
+            [ml_ans, ml_log],
+            every=1
+        )
+        ml_start_btn.click(
+            ml_helper,
+            [ml_query],
+            []
+        )
+        ml_clean_btn.click(
+            ml_clean_all,
+            [],
+            [ml_query, ml_start_btn]
+        )
+
     with gr.Tab(label = "标签提取"):
         with gr.Row():
             upload_box = gr.File(label="上传单个TXT", file_count="single", type="file", file_types=['.txt'], interactive=True)
@@ -492,6 +583,18 @@ with gr.Blocks(title=_description) as demo:
             inputs=[output_JQ],
             outputs=[download_JQ]
         )
+
+    # with gr.Tab(label = "聊天"):
+    #     gr.ChatInterface(
+    #         fn=chat_predict_openai,
+    #         textbox=chat_ask,
+    #         submit_btn="提交",
+    #         stop_btn="停止",
+    #         retry_btn="🔄 重试",
+    #         undo_btn="↩️ 撤消",
+    #         clear_btn="🗑️ 清除",
+    #     )
+    
 
 
 # from fastapi import FastAPI, Response
