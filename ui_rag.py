@@ -32,10 +32,17 @@ from repolya.rag.digest_dir import (
     calculate_md5,
     dir_to_faiss_openai,
 )
+from repolya.autogen.wf_jd import (
+    generate_search_query_for_event,
+    generate_vdb_for_search_query,
+    generate_event_context,
+    generate_event_plan,
+)
+from repolya._log import logger_rag
+from repolya._const import LOG_ROOT, WORKSPACE_RAG, WORKSPACE_AUTOGEN
 # from autogen import ChatCompletion
 
-from repolya._log import logger_rag
-from repolya._const import LOG_ROOT, WORKSPACE_RAG
+
 _log_ans1 = LOG_ROOT / '_ans1.txt'
 _log_ref1 = LOG_ROOT / '_ref1.txt'
 _log_ans2 = LOG_ROOT / '_ans2.txt'
@@ -391,13 +398,18 @@ def ml_helper(_query):
 
 
 ##### yj
-def yj_sort_out_context(_query):
+_vdb_name = str(WORKSPACE_AUTOGEN / 'wf_jd')
+
+def yj_sort_out_context(_event):
     write_log_ans(_log_ans_yj_context, '')
     start_time = time.time()
     write_log_ans(_log_ans_yj_context, '', 'continue')
-    time.sleep(1)
-
-    write_log_ans(_log_ans_yj_context, "yj_sort_out_context", 'done')
+    #####
+    _query = generate_search_query_for_event(_event)
+    generate_vdb_for_search_query(_query, _vdb_name)
+    _context = generate_event_context(_event, _vdb_name)
+    write_log_ans(_log_ans_yj_context, _context, 'done')
+    #####
     end_time = time.time()
     execution_time = end_time - start_time
     _time = f"Time: {execution_time:.1f} seconds"
@@ -406,13 +418,14 @@ def yj_sort_out_context(_query):
     return gr.Button(variant="primary")
     
 
-def yj_write_plan(_query, _context):
+def yj_write_plan(_event, _context):
     write_log_ans(_log_ans_yj_plan, '')
     start_time = time.time()
     write_log_ans(_log_ans_yj_plan, '', 'continue')
-    time.sleep(1)
-    
-    write_log_ans(_log_ans_yj_plan, "yj_write_plan", 'done')
+    #####
+    _plan = generate_event_plan(_event, _vdb_name, _context)
+    write_log_ans(_log_ans_yj_plan, _plan, 'done')
+    #####
     end_time = time.time()
     execution_time = end_time - start_time
     _time = f"Time: {execution_time:.1f} seconds"
