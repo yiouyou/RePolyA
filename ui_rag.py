@@ -400,7 +400,7 @@ def yj_sort_out_context(_event):
     write_log_ans(_log_ans_yj_context, '', 'continue')
     #####
     _event_name = clean_filename(_event, 20)
-    _query = generate_search_query_for_event(_event)
+    _query = generate_search_query_for_event(_event, _event_name)
     generate_vdb_for_search_query(_query, _event_name)
     _context = generate_event_context(_event, _event_name)
     write_log_ans(_log_ans_yj_context, _context, 'done')

@@ -209,3 +209,22 @@ def qa_with_context_as_mio(_query, _context):
         logger_rag.info(f"{_token_cost}")
     return [_ans, _token_cost]
 
+
+##### qa with context as government officer
+def qa_with_context_as_go(_query, _context):
+    llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
+    template ="""给定下面信息：
+{_context}
+
+作为一名政府事务专家，请从各个角度完整清晰的回答以下问题：
+{_query}
+"""
+    prompt = PromptTemplate.from_template(template)
+    with get_openai_callback() as cb:
+        chain = prompt | llm | StrOutputParser()
+        _ans = chain.invoke({"_query": _query, "_context": _context})
+        _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
+        logger_rag.info(f"{_ans}")
+        logger_rag.info(f"{_token_cost}")
+    return [_ans, _token_cost]
+

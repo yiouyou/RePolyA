@@ -14,18 +14,31 @@ from langchain.prompts import (
 from langchain.schema import StrOutputParser
 from langchain.callbacks import get_openai_callback
 from langchain.document_loaders import WebBaseLoader
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import RetrievalQAWithSourcesChain
 
 from repolya.toolset.tool_langchain import (
     bing,
     ddg,
     google,
 )
-from repolya.rag.doc_loader import clean_txt
+from repolya.toolset.util import calc_token_cost
 from repolya.rag.digest_dir import (
     calculate_md5,
     dir_to_faiss_openai,
 )
+from repolya.rag.doc_loader import clean_txt
 from repolya.rag.digest_urls import urls_to_faiss
+from repolya.rag.vdb_faiss import get_faiss_OpenAI
+from repolya.rag.qa_chain import (
+    qa_vdb_multi_query,
+    qa_with_context_as_go,
+)
+
+from repolya.autogen.workflow import (
+    create_rag_task_list_zh,
+    search_faiss_openai,
+)
 
 import shutil
 import re
@@ -34,11 +47,11 @@ import os
 
 def clean_filename(text, max_length=10):
     # 移除非法文件名字符（例如: \ / : * ? " < > |）
-    clean_text = re.sub(r'[\\/*?:"<>|]', '', text)
+    _clean = re.sub(r'[\\/*?:"<>|]', '', text)
     # 替换操作系统敏感的字符
-    clean_text = clean_text.replace(' ', '_')  # 替换空格为下划线
+    _clean = _clean.replace(' ', '_')  # 替换空格为下划线
     # 取前 max_length 个字符作为文件名
-    return clean_text[:max_length]
+    return _clean[:max_length]
 
 
 def search_all(_query):
@@ -93,24 +106,22 @@ def task_with_context_template(_task, _context, template):
     return [_ans, _token_cost]
 
 
-gsqfe_template ="""假定你是领导秘书，需要针对下面的专题，利用搜索引擎收集相关信息：
-# 专题
-{_context}
-
-针对应急事件，通常需掌握事件各阶段的基本概况、整体处置过程、相关成效、后续影响及对该事件的深入反思。
-
-{_task}:
-"""
-def generate_search_query_for_event(_event: str) -> list[str]:
-    logger_yj.info("generate_search_query_for_event：开始")
+def generate_search_query_for_event(_event: str, _event_name: str) -> list[str]:
+    _event_dir = str(AUTOGEN_JD / _event_name)
     _query = []
-    _task = "请充分利用你的信息搜集专业能力和搜索引擎使用技巧，列出满足上面需求的搜索条目（仅输出条目列表，无任何其他）"
-    _ans, _tc = task_with_context_template(_task, _event, gsqfe_template)
-    _extracted = [re.sub(r'^\d+\.\s+', '', line) for line in _ans.strip().splitlines()]
-    logger_yj.info(f"\n{_extracted}")
-    logger_yj.info(_tc)
-    _query = _extracted
-    logger_yj.info("generate_search_query_for_event：完成")
+    if not os.path.exists(_event_dir):
+        logger_yj.info("generate_search_query_for_event：开始")
+        _task = "请生成关于'{_context}'的详细信息查询问题列表（一个问题一行）。确保只列出具体的问题，而不包括任何章节标题或编号。"
+        _ans, _tc = task_with_context_template(_task, _event, _gsqfe)
+        # logger_yj.info(f"\n{_ans}")
+        _extracted = re.findall(r'\s+-\s+(.*)\n', _ans)
+        for i in _extracted:
+            logger_yj.info(i)
+        logger_yj.info(_tc)
+        _query = _extracted
+        logger_yj.info("generate_search_query_for_event：完成")
+    else:
+        logger_yj.info(f"'{_event_name}'专题已存在，无需 generate_search_query_for_event")
     return _query
 
 
@@ -137,18 +148,71 @@ def generate_vdb_for_search_query(_query: list[str], _event_name: str):
         _psa = print_search_all(_all)
         logger_yj.info(_psa)
         _all_link = [i['link'] for i in _all]
-        urls_to_faiss(_all_link, _db_name, _clean_txt_dir)
+        _urls = list(set(_all_link))
+        urls_to_faiss(_urls, _db_name, _clean_txt_dir)
         logger_yj.info("generate_vdb_for_search_query：完成")
     else:
-        logger_yj.info(f"专题：'{_event_name}' 已存在")
+        logger_yj.info(f"'{_event_name}'专题已存在，无需 generate_vdb_for_search_query")
         # shutil.rmtree(_event_dir)
         # os.makedirs(_event_dir)
 
 
-def generate_event_context(_evnet: str, _event_name: str) -> str:
+def ask_vdb_with_source(_ask, _vdb):
+    llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k")
+    chain = RetrievalQAWithSourcesChain.from_chain_type(
+        llm=llm,
+        chain_type="stuff",
+        retriever=_vdb.as_retriever(),
+    )
+    with get_openai_callback() as cb:
+        _res = chain({"question": _ask}, return_only_outputs=True)
+        _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
+        logger_yj.info(_token_cost)
+    return _res['answer'], _res['sources'], _token_cost
+
+
+def generate_event_context(_event: str, _event_name: str) -> str:
     _db_name = str(AUTOGEN_JD / _event_name / f"yj_rag_openai")
     logger_yj.info("generate_event_context：开始")
-    _context = "【context】"
+    _task = "请生成关于'{_context}'的详细信息查询问题列表（一个问题一行）。确保只列出具体的问题，而不包括任何章节标题或编号。"
+    _ans, _tc = task_with_context_template(_task, _event, _gec_ask)
+    # logger_yj.info(f"\n{_ans}")
+    _extracted = re.findall(r'\s+-\s+(.*)\n', _ans)
+    for i in _extracted:
+        logger_yj.info(i)
+    logger_yj.info(_tc)
+    ### ask_vdb
+    logger_yj.info("ask_vdb：开始")
+    _vdb = get_faiss_OpenAI(_db_name)
+    _qas = []
+    _tc = []
+    for i in _extracted:
+        _ask = i + "如果找不到确切答案，请回答'无'。用简洁中文回答。"
+        ### with source
+        # i_ans, i_source, i_token_cost = ask_vdb_with_source(_ask, _vdb)
+        # i_qas = f"Q: {i}\nA: {i_ans.strip()}\nSource: {i_source}"
+        ### multi query
+        # i_ans, i_step, i_token_cost = qa_vdb_multi_query(_ask, _vdb, 'stuff')
+        ### autogen
+        _task_list = create_rag_task_list_zh(i)
+        _context = search_faiss_openai(_task_list, _vdb)
+        i_ans, i_token_cost = qa_with_context_as_go(_ask, _context)
+        ###
+        i_ans = clean_txt(i_ans)
+        i_ans = i_ans.strip()
+        if i_ans != '无':
+            i_qas = f"Q: {i}\nA: {i_ans}"
+            logger_yj.info(i_qas)
+            _qas.append(i_qas)
+        _tc.append(i_token_cost)
+    _token_cost = calc_token_cost(_tc)
+    logger_yj.info(_token_cost)
+    logger_yj.info("ask_vdb：完成")
+    _qas_str = "\n\n".join(_qas)
+    with open(str(AUTOGEN_JD / _event_name / 'ask_vdb.txt'), "w") as f:
+        f.write(_qas_str)
+    ### 
+    _context = "【_context】"
     logger_yj.info("generate_event_context：完成")
     return _context
 
@@ -160,6 +224,74 @@ def generate_event_plan(_event: str, _event_dir: str, _context:str) -> str:
     logger_yj.info("generate_event_plan：完成")
     return _plan
 
+
+_gsqfe = """你的任务是使用搜索引擎（例如谷歌）来搜集关于特定自然灾害事件的全面信息。你需要寻找的信息包括事件的基本概况、处置过程、军民协作、影响评估以及反思和启示。请按照以下指南生成详尽的查询：
+
+1. 基本概况：
+   - [_具体应急事件名称_] 发生时间和地点
+   - [_具体应急事件名称_] 直接原因和初步影响
+   - [_具体应急事件名称_] 初始公共反应和媒体报道
+
+2. 处置过程：
+   - [_具体应急事件名称_] 应急措施和时间线
+   - [_具体应急事件名称_] 政府和非政府组织角色
+   - [_具体应急事件名称_] 灾害响应物资和人员部署
+
+3. 军民协作：
+   - [_具体应急事件名称_] 军队救援行动和协作细节
+   - [_具体应急事件名称_] 军队与地方政府合作机制
+   - [_具体应急事件名称_] 军民合作中的挑战和克服
+
+4. 影响评估：
+   - [_具体应急事件名称_] 灾害对环境的长期影响
+   - [_具体应急事件名称_] 灾害对经济和社会的影响
+   - [_具体应急事件名称_] 受灾群体和地区的恢复进程
+
+5. 反思和启示：
+   - [_具体应急事件名称_] 灾害管理和应对的有效性评估
+   - [_具体应急事件名称_] 从灾害中学到的教训和改进措施
+   - [_具体应急事件名称_] 对未来灾害应急准备的建议和策略
+
+请确保替换[_具体应急事件名称_]为你正在研究的事件名称，以定位准确相关的资料。根据搜索结果的详尽程度，适时调整或细化你的查询关键词。
+[_具体应急事件名称_]: {_context}
+{_task}:
+"""
+
+_gec_ask = """面对'{_context}'的严峻挑战，国家和地方应急管理部门需迅速掌握全面而详尽的信息，以便形成有效的应对策略。现在，请你根据以下阶段性信息需求，生成一系列的查询问题，以帮助我们搜集有关该事件全程的关键信息：
+
+1. 灾害发生与初期响应：
+   - 该自然灾害确切的发生时间和地点是什么？
+   - 灾害的强度和规模？
+   - 灾害发生后，首批采取的应急响应措施包括哪些？
+
+2. 应急反应与处置经过：
+   - 灾害发展扩散的过程是怎样的？
+   - 灾害发展扩散的时间线如何？
+   - 实施的应急响应和救援措施具体包括哪些？
+   - 实施应急响应和救援措施的时间线如何？
+   - 灾害的关键转折点有哪些？
+   - 在灾害应对中，涉及的关键人物和组织扮演了何种角色？
+   - 响应过程中依据了哪些政策法规来指导行动？
+   - 灾害对环境、公共健康、经济以及社会秩序产生了哪些深远影响？
+
+3. 灾情控制与过渡性措施：
+   - 灾情得到控制的时间点及其标志性事件是什么？
+   - 控制灾情后采取了哪些关键措施和策略？
+   - 针对灾害受影响人群实施了哪些过渡性救助和支持？
+
+4. 恢复重建与法规政策实施：
+   - 灾后恢复和重建工作的起始时间和阶段性目标是什么？
+   - 重建期间，制定或修改了哪些相关法律法规？
+   - 恢复和重建措施的长期社会评价和生态影响如何？
+
+5. 整体评估与教训吸取：
+   - 如何系统评价本次自然灾害的处置效果和应急管理能力？
+   - 这次事件对未来灾害风险评估和预防计划有哪些启示？
+   - 为提高未来应急响应和灾害管理能力，提出哪些具体的建议和策略？
+
+通过回答这些详细的问题，我们希望能够建立一个关于'{_context}'的全方位、深入的事件报告。请为每个信息点生成具体的查询问题，以便我们对知识库进行详细的事实搜索和数据分析。
+{_task}:
+"""
 
 # def do_multi_search(msg):
 #     _agents = [

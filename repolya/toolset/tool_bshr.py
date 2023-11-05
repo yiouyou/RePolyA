@@ -19,9 +19,9 @@ from repolya.app.bshr.prompt import (
     SYS_REFINE,
     SYS_REFINE_ZH,
 )
-
 from repolya.rag.qa_chain import qa_vdb_multi_query
 from repolya.rag.vdb_faiss import get_faiss_OpenAI
+from repolya.toolset.util import calc_token_cost
 
 # from halo import Halo
 import concurrent.futures as cf
@@ -49,30 +49,6 @@ def _chain(_sys: str, _human: str):
         _re = runnable.invoke({"text": _human})
         _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
     return _re, _token_cost
-
-
-def calc_token_cost(_tc: list):
-    total_tokens = 0
-    total_prompt = 0
-    total_completion = 0
-    total_cost = 0.0
-    # 对于列表中的每个字符串，使用正则表达式解析出需要的数字
-    for entry in _tc:
-        tokens_match = re.search(r"Tokens: (\d+)", entry)
-        prompt_match = re.search(r"Prompt (\d+)", entry)
-        completion_match = re.search(r"Completion (\d+)", entry)
-        cost_match = re.search(r"Cost: \$([\d.]+)", entry)
-        if tokens_match:
-            total_tokens += int(tokens_match.group(1))
-        if prompt_match:
-            total_prompt += int(prompt_match.group(1))
-        if completion_match:
-            total_completion += int(completion_match.group(1))
-        if cost_match:
-            total_cost += float(cost_match.group(1))
-    # 格式化并输出结果
-    output = f"Tokens: {total_tokens} = (Prompt {total_prompt} + Completion {total_completion}) Cost: ${total_cost:.5f}"
-    return output
 
 
 ##### brainstorm
