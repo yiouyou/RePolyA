@@ -173,6 +173,9 @@ def ask_vdb_with_source(_ask, _vdb):
 
 def generate_event_context(_event: str, _event_name: str) -> str:
     _db_name = str(AUTOGEN_JD / _event_name / f"yj_rag_openai")
+    _ask_vdb = str(AUTOGEN_JD / _event_name / 'ask_vdb.txt')
+    if os.path.exists(_ask_vdb):
+        os.remove(_ask_vdb)
     logger_yj.info("generate_event_context：开始")
     _task = "请生成关于'{_context}'的详细信息查询问题列表（一个问题一行）。确保只列出具体的问题，而不包括任何章节标题或编号。"
     _ans, _tc = task_with_context_template(_task, _event, _gec_ask)
@@ -204,13 +207,12 @@ def generate_event_context(_event: str, _event_name: str) -> str:
             i_qas = f"Q: {i}\nA: {i_ans}"
             logger_yj.info(i_qas)
             _qas.append(i_qas)
+            with open(_ask_vdb, "a") as f:
+                f.write(f"{i_qas}\n\n")
         _tc.append(i_token_cost)
     _token_cost = calc_token_cost(_tc)
     logger_yj.info(_token_cost)
     logger_yj.info("ask_vdb：完成")
-    _qas_str = "\n\n".join(_qas)
-    with open(str(AUTOGEN_JD / _event_name / 'ask_vdb.txt'), "w") as f:
-        f.write(_qas_str)
     ### 
     _context = "【_context】"
     logger_yj.info("generate_event_context：完成")
