@@ -284,7 +284,7 @@ def create_rag_task_list_zh(msg):
         case ConversationResult(success=True, cost=_cost, tokens=_tokens):
             print(f"✅ Organizer was successful. Team: {_organizer.name}")
             print(f"📊 Name: {_organizer.name} Cost: {_cost}, tokens: {_tokens}")
-            _tk = int(_token/3)
+            _tk = int(_tokens/3)
             with open(_out, "r") as f:
                 content = f.read()
             return content, f"Tokens: {_tokens} = (Prompt {_tokens - _tk} + Completion {_tk}) Cost: ${_cost}"
