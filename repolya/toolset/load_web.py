@@ -13,8 +13,10 @@ from bs4 import BeautifulSoup
 def load_urls_to_docs(web_paths: list[str]):
     loader = WebBaseLoader(
         web_paths=web_paths,
-        requests_kwargs = {'verify': False},
+        verify_ssl=False,
+        continue_on_failure=True,
         requests_per_second = 2,
+        raise_for_status=False,
     )
     docs = loader.aload()
     return docs

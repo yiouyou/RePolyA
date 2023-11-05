@@ -25,6 +25,7 @@ from repolya.rag.digest_dir import (
     calculate_md5,
     dir_to_faiss_openai,
 )
+from repolya.rag.digest_urls import urls_to_faiss
 
 import shutil
 import re
@@ -120,13 +121,23 @@ def generate_vdb_for_search_query(_query: list[str], _event_name: str):
         _db_name = str(AUTOGEN_JD / _event_dir / f"yj_rag_openai")
         _clean_txt_dir = str(AUTOGEN_JD / _event_dir / f"yj_rag_clean_txt")
         logger_yj.info("generate_vdb_for_search_query：开始")
+        # ### search, fetch, vdb
+        # for i in _query:
+        #     i_all = search_all(i)
+        #     i_psa = print_search_all(i_all)
+        #     logger_yj.info(f"'{i}'")
+        #     logger_yj.info(i_psa)
+        #     fetch_all_link(i_all, _event_dir)
+        # handle_fetch(_event_dir, _db_name, _clean_txt_dir)
+        ### search, load, vdb
+        _all = []
         for i in _query:
-            _all = search_all(i)
-            _psa = print_search_all(_all)
-            logger_yj.info(f"'{i}'")
-            logger_yj.info(_psa)
-            fetch_all_link(_all, _event_dir)
-        handle_fetch(_event_dir, _db_name, _clean_txt_dir)
+            i_all = search_all(i)
+            _all.extend(i_all)
+        _psa = print_search_all(_all)
+        logger_yj.info(_psa)
+        _all_link = [i['link'] for i in _all]
+        urls_to_faiss(_all_link, _db_name, _clean_txt_dir)
         logger_yj.info("generate_vdb_for_search_query：完成")
     else:
         logger_yj.info(f"专题：'{_event_name}' 已存在")
