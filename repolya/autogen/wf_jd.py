@@ -197,18 +197,20 @@ def generate_event_context(_event: str, _event_name: str) -> str:
         ### multi query
         # i_ans, i_step, i_token_cost = qa_vdb_multi_query(_ask, _vdb, 'stuff')
         ### autogen
-        _task_list = create_rag_task_list_zh(i)
-        _context = search_faiss_openai(_task_list, _vdb)
+        _task_list, c_token_cost = create_rag_task_list_zh(i)
+        _context, s_token_cost = search_faiss_openai(_task_list, _vdb)
         i_ans, i_token_cost = qa_with_context_as_go(_ask, _context)
         ###
         i_ans = clean_txt(i_ans)
         i_ans = i_ans.strip()
-        if i_ans != '无':
+        if i_ans != '':
             i_qas = f"Q: {i}\nA: {i_ans}"
             logger_yj.info(i_qas)
             _qas.append(i_qas)
-            with open(_ask_vdb, "a") as f:
-                f.write(f"{i_qas}\n\n")
+            with open(_ask_vdb, "w") as f:
+                f.write("\n\n".join(_qas))
+        _tc.append(c_token_cost)
+        _tc.append(s_token_cost)
         _tc.append(i_token_cost)
     _token_cost = calc_token_cost(_tc)
     logger_yj.info(_token_cost)

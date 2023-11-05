@@ -241,7 +241,7 @@ def frank_doc_helper_advanced(_query, _radio):
         write_log_ref(_log_ref2, f"\n\n{_time}")
         # print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")
         ### context
-        _context = search_faiss_openai(_task_list, _vdb_oai)
+        _context, _token_cost = search_faiss_openai(_task_list, _vdb_oai)
         write_log_ans(_log_ans2, f"Generated QA context:\n\n{_context}", 'continue')
         end_time = time.time()
         execution_time = end_time - start_time

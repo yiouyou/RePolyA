@@ -341,7 +341,7 @@ def rag_helper_autogen(_query, _radio):
         write_log_ans(_log_ans3, '', 'continue')
         # ChatCompletion.start_logging(reset_counter=True, compact=False)
         ### task list
-        _task_list = create_rag_task_list_zh(_query)
+        _task_list, _token_cost = create_rag_task_list_zh(_query)
         write_log_ans(_log_ans3, f"生成的子问题列表：\n\n{_task_list}", 'continue')
         end_time = time.time()
         execution_time = end_time - start_time
@@ -349,7 +349,7 @@ def rag_helper_autogen(_query, _radio):
         write_log_ref(_log_ref3, f"\n\n{_time}")
         # print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")
         ### context
-        _context = search_faiss_openai(_task_list, _vdb)
+        _context, _token_cost = search_faiss_openai(_task_list, _vdb)
         write_log_ans(_log_ans3, f"生成的 QA 上下文：\n\n{_context}", 'continue')
         end_time = time.time()
         execution_time = end_time - start_time

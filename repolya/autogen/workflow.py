@@ -56,6 +56,7 @@ from repolya.rag.qa_chain import (
     summerize_text,
 )
 from repolya.rag.doc_loader import clean_txt
+from repolya.toolset.util import calc_token_cost
 
 import os
 import re
@@ -283,9 +284,10 @@ def create_rag_task_list_zh(msg):
         case ConversationResult(success=True, cost=_cost, tokens=_tokens):
             print(f"✅ Organizer was successful. Team: {_organizer.name}")
             print(f"📊 Name: {_organizer.name} Cost: {_cost}, tokens: {_tokens}")
+            _tk = int(_token/3)
             with open(_out, "r") as f:
                 content = f.read()
-            return content
+            return content, f"Tokens: {_tokens} = (Prompt {_tokens - _tk} + Completion {_tk}) Cost: ${_cost}"
         case _:
             print(f"❌ Organizer failed. Team: {_organizer.name}")
 
@@ -327,11 +329,14 @@ def create_jdml_task_list_zh(msg):
 def search_faiss_openai(text, _vdb):
     _re = []
     questions = [re.sub(r"^\d+\.\s*", "", line) for line in text.split("\n") if re.match(r"^\d+\.", line)]
+    _tc = []
     for i in questions:
-        _ans, _step, _token_cost = qa_vdb_multi_query(i, _vdb, 'stuff')
-        _ans = clean_txt(_ans)
-        _re.append(f"Q: {i}\nA: {_ans}")
-    return '\n\n'.join(_re)
+        i_ans, i_step, i_token_cost = qa_vdb_multi_query(i, _vdb, 'stuff')
+        i_ans = clean_txt(i_ans)
+        _re.append(f"Q: {i}\nA: {i_ans}")
+        _tc.append(i_token_cost)
+    _token_cost = calc_token_cost(_tc)
+    return '\n\n'.join(_re), _token_cost
 
 
 def do_rag_code_aid(msg, docs_path, collection_name):

@@ -20,7 +20,7 @@ _query = "who, when and why fired Frank from Cloudeon?"
 _task_list = create_rag_task_list(_query)
 print(f"\n\ntask_list:\n{_task_list}")
 
-_context = search_faiss_openai(_task_list)
+_context, _token_cost = search_faiss_openai(_task_list)
 print(f"\n\ncontext:\n{_context}")
 
 _qa, _tc = qa_with_context(_query, _context)
