@@ -33,8 +33,7 @@ from repolya.rag.digest_dir import (
     dir_to_faiss_openai,
 )
 from repolya.autogen.wf_jd import (
-    generate_search_query_for_event,
-    generate_vdb_for_search_query,
+    generate_search_dict_for_event,
     generate_event_context,
     generate_event_plan,
     clean_filename,
@@ -206,6 +205,7 @@ def yj_clean_all():
         gr.Textbox(value=""), # yj_query
         gr.Button(variant="secondary"), # yj_start_btn
         gr.Button(variant="secondary"), # yj_plan_btn
+        gr.Textbox(value=""), # yj_log
         gr.Textbox(value=""), # yj_context
         gr.Textbox(value=""), # yj_plan
     ]
@@ -399,10 +399,9 @@ def yj_sort_out_context(_event):
     start_time = time.time()
     write_log_ans(_log_ans_yj_context, '', 'continue')
     #####
-    _event_name = clean_filename(_event, 20)
-    _query = generate_search_query_for_event(_event, _event_name)
-    generate_vdb_for_search_query(_query, _event_name)
-    _context = generate_event_context(_event, _event_name)
+    _dict = generate_search_dict_for_event(_event)
+    global _content_fp
+    _context, _content_fp = generate_event_context(_event, _dict)
     write_log_ans(_log_ans_yj_context, _context, 'done')
     #####
     end_time = time.time()
@@ -418,14 +417,23 @@ def yj_write_plan(_event, _context):
     start_time = time.time()
     write_log_ans(_log_ans_yj_plan, '', 'continue')
     #####
-    _event_name = clean_filename(_event, 20)
-    _plan = generate_event_plan(_event, _event_name, _context)
+    _plan = generate_event_plan(_event, _context)
     write_log_ans(_log_ans_yj_plan, _plan, 'done')
     #####
     end_time = time.time()
     execution_time = end_time - start_time
     _time = f"'总结报告'耗时：{execution_time:.1f} seconds"
     logger_yj.info(_time)
+
+
+def show_YJ_context(text):
+    # print(f"text: {text}")
+    if text:
+        if _content_fp:
+            return gr.File(value=_content_fp, visible=True)
+    else:
+        if _content_fp:
+            return gr.File(value=_content_fp)
 
 
 ##### UI
@@ -442,14 +450,15 @@ with gr.Blocks(title=_description) as demo:
     with gr.Tab(label = "应急事件"):
         with gr.Row():
             with gr.Column(scale=1):
-                yj_query = gr.Textbox(label="专题", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
-                yj_start_btn = gr.Button("搜集信息", variant="secondary", visible=True)
-                yj_clean_btn = gr.Button("停止/清空", variant="secondary", visible=True)
+                yj_query = gr.Textbox(label="专题", placeholder="...", lines=8, max_lines=8, interactive=True, visible=True)
+                yj_start_btn = gr.Button("开始梳理", variant="secondary", visible=True)
+                yj_clean_btn = gr.Button("清空", variant="secondary", visible=True)
             with gr.Column(scale=1):
-                yj_log = gr.Textbox(label="日志", placeholder="...", lines=16, max_lines=16, interactive=False, visible=True)
-        yj_context = gr.Textbox(label="事件脉络", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
-        yj_plan_btn = gr.Button("生成总结", variant="secondary", visible=True)
-        yj_plan = gr.Textbox(label="总结报告", placeholder="...", lines=15, max_lines=15, interactive=False, visible=True)
+                yj_log = gr.Textbox(label="日志", placeholder="...", lines=14, max_lines=14, interactive=False, visible=True)
+        yj_context = gr.Textbox(label="事件脉络", placeholder="...", lines=18, max_lines=18, interactive=False, visible=True)
+        yj_plan_btn = gr.Button("生成总结", variant="secondary", visible=False)
+        yj_plan = gr.Textbox(label="总结报告", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
+        yj_download_context = gr.File(label="下载文件", file_count="single", type="file", file_types=['.md'], interactive=True, visible=False)
         yj_query.change(
             chg_btn_color_if_input,
             [yj_query],
@@ -469,12 +478,17 @@ with gr.Blocks(title=_description) as demo:
         yj_clean_btn.click(
             yj_clean_all,
             [],
-            [yj_query, yj_start_btn, yj_plan_btn, yj_context, yj_plan]
+            [yj_query, yj_start_btn, yj_plan_btn, yj_log, yj_context, yj_plan]
         )
         yj_plan_btn.click(
             yj_write_plan,
             [yj_query, yj_context],
             []
+        )
+        yj_context.change(
+            show_YJ_context,
+            inputs=[yj_context],
+            outputs=[yj_download_context]
         )
 
 
