@@ -1,6 +1,6 @@
-# _model = "llama2"
+_model = "llama2"
 # _model = "llama2-chinese:13b-chat-q4_K_M"
-_model = "yi:34b-q4_K_M"
+# _model = "yi:34b-q4_K_M"
 # Load web page
 import argparse
 
@@ -74,5 +74,5 @@ def main():
 if __name__ == "__main__":
     main()
 
-# python t3.py --url https://techcrunch.com/
+# python t3.py --url https://techcrunch.com/ --ask "what are the latest headlines on techcrunch?"
 
