@@ -1,6 +1,11 @@
+import os
+_RePolyA = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import sys
+sys.path.append(_RePolyA)
+
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
-from textgen import TextGen
+from repolya.local.textgen import TextGen
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.globals import set_debug
 
@@ -11,7 +16,7 @@ model_url = "http://127.0.0.1:5552"
 
 template = """Question: {question}
 
-Answer: Let's think step by step."""
+Answer: Let us think step by step."""
 prompt = PromptTemplate(template=template, input_variables=["question"])
 
 question = "What NFL team won the Super Bowl in the year Justin Bieber was born?"

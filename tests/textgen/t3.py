@@ -1,6 +1,11 @@
+import os
+_RePolyA = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import sys
+sys.path.append(_RePolyA)
+
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
-from textgen import TextGen
+from repolya.local.textgen import TextGen
 from langchain.globals import set_debug
 
 set_debug(True)
@@ -63,7 +68,9 @@ llm = TextGen(
 )
 
 llm_chain = LLMChain(prompt=prompt, llm=llm)
-llm_chain.run(_sentence)
+_res = llm_chain.run(_sentence)
+_tag = _res.replace("\n", '')
+print(f"'{_tag}'")
 
 
 import json

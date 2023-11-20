@@ -33,12 +33,12 @@ from repolya.rag.digest_dir import (
     calculate_md5,
     dir_to_faiss_openai,
 )
-from repolya.autogen.wf_jd import (
-    generate_search_dict_for_event,
-    generate_event_context,
-    generate_event_plan,
-    clean_filename,
-)
+# from repolya.autogen.wf_jd import (
+#     generate_search_dict_for_event,
+#     generate_event_context,
+#     generate_event_plan,
+#     clean_filename,
+# )
 from repolya._const import LOG_ROOT, WORKSPACE_RAG, AUTOGEN_JD
 from repolya._log import logger_rag, logger_yj
 # from autogen import ChatCompletion
@@ -60,18 +60,20 @@ def chg_btn_color_if_input(input):
         return gr.Button(variant="secondary")
 
 
-def call_yi(_sentence):
-    model_url = "http://127.0.0.1:4442"
+def call_yi_tag(_sentence):
+    model_url = "http://127.0.0.1:5552"
     from langchain.prompts import PromptTemplate
     from langchain.chains import LLMChain
-    from langchain.llms import TextGen
+    from repolya.local.textgen import TextGen
     # langchain.debug = True
     llm = TextGen(
         model_url=model_url,
         temperature=0.01,
-        max_new_tokens=250, # 250/2500
-        # stop=["\nHuman:", "\n```\n"],
-        # verbose=True,
+        top_p=0.9,
+        seed=10,
+        max_tokens=200,
+        streaming=False,
+        stopping_strings=["\n\n"]
     )
     _t1 = """### System:
 
@@ -110,13 +112,16 @@ def call_yi(_sentence):
     prompt = PromptTemplate.from_template(jinja2_template, template_format="jinja2")
     # prompt.format(_sentence="2023年6月3日20时10分，乌克兰防空预警检测外籍导弹入境，乌克兰军事指挥中心依据《军事入侵防御紧急方案》（乌-防空10586号），对该事件做出紧急应对措施，导弹途径基辅市、哈尔科夫市、奥德赛市、最终20时35分在顿涅茨克市发生爆炸，造成两座大楼炸毁，约160名平民伤亡，出动乌克兰防空1军和防空13军，共计10辆防空导弹装甲车，50枚防空导弹，150名士兵，对袭击时间做出紧急处理。")
     # print(prompt)
-
+    llm_chain = LLMChain(prompt=prompt, llm=llm)
+    _res = llm_chain.run(_sentence)
+    _tag = _res.replace("\n", '')
+    return _tag
 
 
 def tag_sentence(_sentence):
     if _sentence:
-        
-        return
+        _tag = call_yi_tag(_sentence)
+        return _tag
     else:
         return "Error: sentence is empty!"
 
@@ -144,10 +149,12 @@ def text_tagging(_txt):
         _log = "Error: len(sentences) != len(JQ)" + "\n"
     return _JQ_str, "\n\n".join(_log)
 
+
 def parse_txt(_txt):
     if _txt:
         _log = ""
         _JQ_str, _log = text_tagging(_txt)
+        global output_JQ_file
         output_JQ_file = f"_JQ.txt"
         with open(output_JQ_file, "w", encoding='utf-8') as wf:
             wf.write(_JQ_str)
@@ -155,21 +162,21 @@ def parse_txt(_txt):
     else:
         return ["错误: TXT不能为空！"]
 
-def parse_file(file):
-    if file:
-        _log = ""
-        if os.path.exists(file.name):
-            with open(file.name, encoding='utf-8') as rf:
-                _txt = rf.read()
-            _JQ_str, _log = text_tagging(_txt)
-            left, right = os.path.splitext(os.path.basename(file.name))
-            global output_JQ_file
-            output_JQ_file = f"{left}_JQ.txt"
-            with open(output_JQ_file, "w", encoding='utf-8') as wf:
-                wf.write(_JQ_str)
-        return _log
-    else:
-        return ["错误: 请先上传一个TXT文件！"]
+# def parse_file(file):
+#     if file:
+#         _log = ""
+#         if os.path.exists(file.name):
+#             with open(file.name, encoding='utf-8') as rf:
+#                 _txt = rf.read()
+#             _JQ_str, _log = text_tagging(_txt)
+#             left, right = os.path.splitext(os.path.basename(file.name))
+#             global output_JQ_file
+#             output_JQ_file = f"{left}_JQ.txt"
+#             with open(output_JQ_file, "w", encoding='utf-8') as wf:
+#                 wf.write(_JQ_str)
+#         return _log
+#     else:
+#         return ["错误: 请先上传一个TXT文件！"]
 
 def show_JQ_file(text):
     # print(f"text: {text}")
@@ -194,13 +201,13 @@ with gr.Blocks(title=_description) as demo:
 
     with gr.Tab(label = "标签提取"):
         with gr.Row():
-            upload_box = gr.File(label="上传TXT", file_count="single", type="file", file_types=['.txt'], interactive=True)
+            upload_box = gr.File(label="上传TXT", file_count="single", type="filepath", file_types=['.txt'], interactive=True)
             input_content = gr.Textbox(label="TXT内容", placeholder="...", lines=9, max_lines=9, interactive=True)
         start_btn = gr.Button("开始分析", variant="secondary")
         output_JQ = gr.Textbox(label="分析结果", placeholder="...", lines=10, interactive=False)    
         with gr.Row():
             # output_log = gr.Textbox(label="日志", placeholder="日志", lines=12, interactive=False)
-            download_JQ = gr.File(label="下载分析", file_count="single", type="file", file_types=['.txt'], interactive=True, visible=False)
+            download_JQ = gr.File(label="下载分析", file_count="single", type="filepath", file_types=['.txt'], interactive=True, visible=False)
         upload_box.change(
             read_file,
             inputs=[upload_box],
@@ -257,7 +264,7 @@ if __name__ == "__main__":
 
     while True:
         try:
-            demo.queue(concurrency_count=1).launch(
+            demo.queue().launch(
                 server_name="0.0.0.0",
                 server_port=_port,
                 share=False,
