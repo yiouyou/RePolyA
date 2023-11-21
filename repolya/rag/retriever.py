@@ -106,12 +106,7 @@ def get_vdb_multi_query_retriever_textgen(_vdb, _textgen_url):
     
     QUERY_PROMPT = PromptTemplate(
         input_variables=["question"],
-        template="""You are an AI language model assistant. Your task is to generate five 
-different versions of the given user question to retrieve relevant documents from a vector 
-database. By generating multiple perspectives on the user question, your goal is to help
-the user overcome some of the limitations of the distance-based similarity search. 
-Provide these alternative questions seperated by newlines.
-Original question: {question}""",
+        template="""你是一名AI语言模型助手。你的任务是生成五个给定用户问题的不同版本，用于从向量中检索相关文档数据库。通过对用户问题产生多种观点，您的目标是帮助用户克服了基于距离的相似性搜索的一些限制。提供这些替代问题，并用换行符分隔。原问题：{question}""",
     )
     llm = get_textgen_llm(_textgen_url)
     llm_chain = LLMChain(
