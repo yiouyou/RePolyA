@@ -95,6 +95,7 @@ _docs = _multi_retriever.get_relevant_documents(_query)
 print(pretty_print_docs(_docs))
 exit()
 
+llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=200, _stopping_strings=["```", "###"])
 _qa = load_qa_chain(
     llm,
     chain_type='stuff'
