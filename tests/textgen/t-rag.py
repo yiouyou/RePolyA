@@ -21,7 +21,7 @@ from repolya._const import WORKSPACE_RAG
 
 
 _textgen_url = "http://127.0.0.1:5552"
-llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=20000, _stopping_strings=[])
+llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=1000, _stopping_strings=["```"])
 
 class LineList(BaseModel):
     # "lines" is the key (attribute name) of the parsed output
