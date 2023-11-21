@@ -14,7 +14,7 @@ from repolya.chat import chat_predict_openai
 from repolya.rag.vdb_faiss import (
     get_faiss_OpenAI,
     get_faiss_HuggingFace,
-    merge_faiss_openai,
+    merge_faiss_OpenAI,
 )
 from repolya.rag.qa_chain import (
     qa_vdb_multi_query,
@@ -30,7 +30,7 @@ from repolya.rag.doc_loader import (
 from repolya.rag.doc_splitter import split_pdf_docs_recursive
 from repolya.rag.digest_dir import (
     calculate_md5,
-    dir_to_faiss_openai,
+    dir_to_faiss_OpenAI,
 )
 from repolya.autogen.wf_jd import (
     generate_search_dict_for_event,
@@ -266,9 +266,9 @@ def rag_handle_upload(_tmp_path):
         # print(i_fp_new)
         if not os.path.exists(i_fp_new):
             logger_rag.info(f"upload {i_fn} to {i_fn_new}")
-            dir_to_faiss_openai(i_dir, i_db_name, _clean_txt_dir)
+            dir_to_faiss_OpenAI(i_dir, i_db_name, _clean_txt_dir)
             shutil.move(i_fp, i_fp_new)
-            merge_faiss_openai(_db_name, i_db_name)
+            merge_faiss_OpenAI(_db_name, i_db_name)
             shutil.rmtree(i_db_name)
             logger_rag.info(f"done upload process")
             _out.append(f"upload {i_fn} to {i_fn_new}")

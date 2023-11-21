@@ -422,3 +422,23 @@ class TextGen(LLM):
             if run_manager:
                 await run_manager.on_llm_new_token(token=chunk.text)
 
+
+def get_textgen_llm(_textgen_url,
+                    _temperature=0.01,
+                    _top_p=0.9,
+                    _seed=10,
+                    _max_tokens=200,
+                    _streaming=False,
+                    _stopping_strings=["\n\n"]
+    ):
+    llm = TextGen(
+        model_url=_textgen_url,
+        temperature=_temperature,
+        top_p=_top_p,
+        seed=_seed,
+        max_tokens=_max_tokens,
+        streaming=_streaming,
+        stopping_strings=_stopping_strings
+    )
+    return llm
+

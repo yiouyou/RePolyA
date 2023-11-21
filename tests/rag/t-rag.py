@@ -6,7 +6,7 @@ sys.path.append(_RePolyA)
 from repolya._const import WORKSPACE_RAG
 from repolya._log import logger_rag
 
-from repolya.rag.digest_dir import dir_to_faiss_openai, get_files_from_dir
+from repolya.rag.digest_dir import dir_to_faiss_OpenAI, get_files_from_dir
 from repolya.rag.vdb_faiss import (
   get_faiss_OpenAI,
   show_faiss,
@@ -26,7 +26,7 @@ elif sys.argv[1] == 'rerun':
         shutil.rmtree(_db_name)
     if os.path.exists(_clean_txt_dir):
         shutil.rmtree(_clean_txt_dir)
-    dir_to_faiss_openai(_dir, _db_name, _clean_txt_dir)
+    dir_to_faiss_OpenAI(_dir, _db_name, _clean_txt_dir)
     show_faiss(get_faiss_OpenAI(_db_name))
 else:
     print('Usage: python t-rag.py show/rerun')

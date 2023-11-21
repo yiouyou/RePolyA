@@ -35,6 +35,8 @@ from pydantic import BaseModel, Field
 import os
 
 from repolya.rag.doc_splitter import get_RecursiveCharacterTextSplitter
+from repolya.rag.embedding import get_embedding_HuggingFace
+from repolya.local.textgen import get_textgen_llm
 
 
 ##### Multi Query Retriever
@@ -72,6 +74,55 @@ Original question: {question}""",
     _base_retriever = _vdb.as_retriever(search_kwargs={"k": 5})
     ##### Remove redundant results from the merged retrievers
     _filter = EmbeddingsRedundantFilter(embeddings=OpenAIEmbeddings())
+    ##### Re-order results to avoid performance degradation
+    _reordering = LongContextReorder()
+    ##### ContextualCompressionRetriever
+    _pipeline = DocumentCompressorPipeline(transformers=[_filter, _reordering])
+    _compression_retriever_reordered = ContextualCompressionRetriever(
+        base_compressor=_pipeline,
+        base_retriever=_base_retriever
+    )
+    ##### MultiQueryRetriever
+    _multi_retriever = MultiQueryRetriever(
+        retriever=_compression_retriever_reordered,
+        llm_chain=llm_chain,
+        parser_key="lines"
+    )
+    return _multi_retriever
+
+
+def get_vdb_multi_query_retriever_textgen(_vdb, _textgen_url):
+    class LineList(BaseModel):
+        # "lines" is the key (attribute name) of the parsed output
+        lines: List[str] = Field(description="Lines of text")
+
+    class LineListOutputParser(PydanticOutputParser):
+        def __init__(self) -> None:
+            super().__init__(pydantic_object=LineList)
+        def parse(self, text: str) -> LineList:
+            lines = text.strip().split("\n")
+            return LineList(lines=lines)
+    output_parser = LineListOutputParser()
+    
+    QUERY_PROMPT = PromptTemplate(
+        input_variables=["question"],
+        template="""You are an AI language model assistant. Your task is to generate five 
+different versions of the given user question to retrieve relevant documents from a vector 
+database. By generating multiple perspectives on the user question, your goal is to help
+the user overcome some of the limitations of the distance-based similarity search. 
+Provide these alternative questions seperated by newlines.
+Original question: {question}""",
+    )
+    llm = get_textgen_llm(_textgen_url)
+    llm_chain = LLMChain(
+        llm=llm,
+        prompt=QUERY_PROMPT,
+        output_parser=output_parser,
+    )
+    _base_retriever = _vdb.as_retriever(search_kwargs={"k": 5})
+    ##### Remove redundant results from the merged retrievers
+    _model_name, _embedding = get_embedding_HuggingFace()
+    _filter = EmbeddingsRedundantFilter(embeddings=_embedding)
     ##### Re-order results to avoid performance degradation
     _reordering = LongContextReorder()
     ##### ContextualCompressionRetriever

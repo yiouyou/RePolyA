@@ -25,7 +25,7 @@ from repolya.toolset.tool_langchain import (
 from repolya.toolset.util import calc_token_cost
 from repolya.rag.digest_dir import (
     calculate_md5,
-    dir_to_faiss_openai,
+    dir_to_faiss_OpenAI,
 )
 from repolya.rag.doc_loader import clean_txt
 from repolya.rag.digest_urls import urls_to_faiss
@@ -246,7 +246,7 @@ def fetch_all_link(_all, _event_dir):
 
 def handle_fetch(_event_dir, _db_name, _clean_txt_dir):
     logger_yj.info(f"generate faiss_openai：开始")
-    dir_to_faiss_openai(_event_dir, _db_name, _clean_txt_dir)
+    dir_to_faiss_OpenAI(_event_dir, _db_name, _clean_txt_dir)
     logger_yj.info(f"generate faiss_openai：{_db_name}")
     logger_yj.info(f"generate faiss_openai：完成")
 

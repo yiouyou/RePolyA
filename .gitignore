@@ -2,7 +2,7 @@
 tmp*
 *_examples*
 *cache*
-*_JQ.txt
+*_tag.txt
 
 # gradio tmp
 gradio/

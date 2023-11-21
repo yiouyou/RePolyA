@@ -63,7 +63,7 @@ def get_files_from_dir(_dir, _ext):
     return _files
 
 
-def dir_to_faiss_openai(_dir: str, _db_name: str, _clean_txt_dir: str):
+def dir_to_faiss_OpenAI(_dir: str, _db_name: str, _clean_txt_dir: str):
     if not os.path.exists(_clean_txt_dir):
         os.makedirs(_clean_txt_dir)
     _DOCs = []
@@ -139,6 +139,86 @@ def dir_to_faiss_openai(_dir: str, _db_name: str, _clean_txt_dir: str):
             embedding_to_faiss_OpenAI(_splited_docs, _db_name)
         else:
             logger_rag.info(f"db_name '{_db_name}' is not ends with '_openai'")
+    else:
+        logger_rag.error(f"db_name '{_db_name}' exists already.")
+
+
+def dir_to_faiss_HuggingFace(_dir: str, _db_name: str, _clean_txt_dir: str):
+    if not os.path.exists(_clean_txt_dir):
+        os.makedirs(_clean_txt_dir)
+    _DOCs = []
+    # _csv_files = get_files_from_dir(_dir, ['.csv'])
+    _txt_files = get_files_from_dir(_dir, ['.txt'])
+    _pdf_files = get_files_from_dir(_dir, ['.pdf'])
+    _md_files = get_files_from_dir(_dir, ['.md'])
+    _html_files = get_files_from_dir(_dir, ['.html'])
+    _py_files = get_files_from_dir(_dir, ['.py'])
+    _docx_files = get_files_from_dir(_dir, ['.docx', '.doc'])
+    _pptx_files = get_files_from_dir(_dir, ['.pptx', '.ppt'])
+    _eml_files = get_files_from_dir(_dir, ['.eml', '.msg'])
+    for i in _txt_files:
+        _doc = load_txt_to_docs(i)
+        _DOCs.extend(_doc)
+    for i in _pdf_files:
+        _doc = load_pdf_to_docs(i)
+        _DOCs.extend(_doc)
+    for i in _md_files:
+        _doc = load_md_to_docs(i)
+        _DOCs.extend(_doc)
+    for i in _html_files:
+        _doc = load_html_to_docs(i)
+        _DOCs.extend(_doc)
+    for i in _py_files:
+        _doc = load_py_to_docs(i)
+        _DOCs.extend(_doc)
+    for i in _docx_files:
+        _doc = load_docx_to_docs(i)
+        # print(f"'{_doc[0].page_content}'")
+        _DOCs.extend(_doc)
+    for i in _pptx_files:
+        _doc = load_pptx_to_docs(i)
+        _DOCs.extend(_doc)
+    for i in _eml_files:
+        _doc = load_eml_to_docs(i)
+        _DOCs.extend(_doc)
+    ### docs -> faiss
+    if len(_DOCs) == 0:
+        logger_rag.error(f"NO docs found in dir '{_dir}'")
+        return
+    logger_rag.info(f"load {len(_DOCs)} docs from '{_dir}'")
+    _clean_DOCs = []
+    for i in range(len(_DOCs)):
+        _d = _DOCs[i].to_json()
+        _page_content = _d['kwargs']['page_content']
+        _new_page_content = clean_txt(_page_content)
+        _metadata = _d['kwargs']['metadata']
+        _new_metadata = {}
+        _new_metadata['source'] = _metadata['source']
+        _source_fn = os.path.splitext(os.path.basename(_metadata['source']))[0]
+        ### title: 前10个非空字符
+        _new_metadata['title'] = f"{_source_fn}, " + re.sub(r'[\s/]', '', _new_page_content)[:10]
+        # print(_new_metadata['source'])
+        # print(_source_fn)
+        # print(_new_metadata['title'])
+        _new_metadata['description'] = ''
+        _DOCs[i].page_content = _new_page_content
+        _DOCs[i].metadata = _new_metadata
+        # _clean_file = str_to_sha256(_new_page_content.split('\n')[0]) + ".txt"
+        _clean_file = _new_metadata['title'] + ".txt"
+        # logger_rag.info(f"write '{_clean_file}'")
+        _clean_out = os.path.join(_clean_txt_dir, _clean_file)
+        if _new_page_content != '':
+            with open(_clean_out, 'w') as f:
+                f.write(f"{_new_metadata['title']}\n\n'{_new_page_content}'")
+            _clean_DOCs.append(_DOCs[i])
+        else:
+            logger_rag.info(f"empty doc '{_clean_file}'")
+    _splited_docs = split_docs_recursive(_clean_DOCs, text_chunk_size, text_chunk_overlap)
+    if not os.path.exists(_db_name):
+        if _db_name.endswith('_hf'):
+            embedding_to_faiss_HuggingFace(_splited_docs, _db_name)
+        else:
+            logger_rag.info(f"db_name '{_db_name}' is not ends with '_hf'")
     else:
         logger_rag.error(f"db_name '{_db_name}' exists already.")
 
