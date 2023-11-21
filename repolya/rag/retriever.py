@@ -120,7 +120,7 @@ def get_vdb_multi_query_retriever_textgen(_vdb, _textgen_url):
 ### Response
 """,
     )
-    llm = get_textgen_llm(_textgen_url)
+    llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=200, _stopping_strings=["```", "###"])
     llm_chain = LLMChain(
         llm=llm,
         prompt=QUERY_PROMPT,
