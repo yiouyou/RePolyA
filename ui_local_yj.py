@@ -7,6 +7,7 @@ from repolya._log import logger_yj
 from repolya.autogen.wf_jd import (
     generate_search_dict_for_event,
     generate_event_context,
+    generate_event_context_textgen,
     generate_event_plan,
 )
 
@@ -78,7 +79,26 @@ def yj_sort_out_context(_event):
     logger_yj.info(_time)
     time.sleep(1)
     return gr.Button(variant="primary")
-    
+
+
+def yj_sort_out_context_textgen(_event):
+    write_log_ans(_log_ans_yj_context, '')
+    start_time = time.time()
+    write_log_ans(_log_ans_yj_context, '', 'continue')
+    #####
+    _dict = generate_search_dict_for_event(_event)
+    global _content_fp
+    _textgen_url = "http://127.0.0.1:5552"
+    _context, _content_fp = generate_event_context_textgen(_event, _dict, _textgen_url)
+    write_log_ans(_log_ans_yj_context, _context, 'done')
+    #####
+    end_time = time.time()
+    execution_time = end_time - start_time
+    _time = f"'梳理脉络'耗时：{execution_time:.1f} seconds"
+    logger_yj.info(_time)
+    time.sleep(1)
+    return gr.Button(variant="primary")
+
 
 def yj_write_plan(_event, _context):
     write_log_ans(_log_ans_yj_plan, '')

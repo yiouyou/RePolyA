@@ -13,7 +13,7 @@ from repolya.rag.vdb_faiss import (
     get_faiss_OpenAI,
     get_faiss_HuggingFace,
 )
-from repolya.rag.digest_urls import urls_to_faiss
+from repolya.rag.digest_urls import urls_to_faiss_OpenAI
 from repolya.rag.qa_chain import qa_vdb_multi_query
 from repolya.toolset.tool_latent import ACTIVE_LATENT_TEMPLATE, ACTIVE_LATENT_TEMPLATE_ZH
 
@@ -301,8 +301,8 @@ def create_bp_from_urls(pj_urls: list[str], _category: str, bp_schema_urls=bp_sc
         os.makedirs(_dir)
     vdb_pj = str(WORKSPACE_TOOLSET / f"{_category}_pj_openai")
     vdb_bp = str(WORKSPACE_TOOLSET / f"{_category}_schema_openai")
-    urls_to_faiss(pj_urls, vdb_pj, str(WORKSPACE_TOOLSET / f"{_category}_pj_clean_txt"))
-    urls_to_faiss(bp_schema_urls, vdb_bp, str(WORKSPACE_TOOLSET / f"{_category}_schema_clean_txt"))
+    urls_to_faiss_OpenAI(pj_urls, vdb_pj, str(WORKSPACE_TOOLSET / f"{_category}_pj_clean_txt"))
+    urls_to_faiss_OpenAI(bp_schema_urls, vdb_bp, str(WORKSPACE_TOOLSET / f"{_category}_schema_clean_txt"))
     for _topic in _bp_10_zh.keys():
         _re, _token_cost = get_inspiration(_category, _topic)
         with open(os.path.join(_dir, f"{_topic}.qlist"), "w") as f:

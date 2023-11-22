@@ -5,7 +5,7 @@ sys.path.append(_RePolyA)
 
 from repolya._const import WORKSPACE_RAG
 from repolya._log import logger_rag
-from repolya.rag.digest_urls import urls_to_faiss
+from repolya.rag.digest_urls import urls_to_faiss_OpenAI
 from repolya.rag.vdb_faiss import (
     get_faiss_OpenAI,
     get_faiss_HuggingFace,
@@ -36,8 +36,8 @@ if not os.path.exists(_dir):
     os.makedirs(_dir)
 vdb_pj = str(WORKSPACE_RAG / "cq_bp_pj_openai")
 vdb_bp = str(WORKSPACE_RAG / "cq_bp_schema_openai")
-# urls_to_faiss(pj_urls, vdb_pj, str(WORKSPACE_RAG / "cq_bp_pj_clean_txt"))
-# urls_to_faiss(bp_schema_urls, vdb_bp, str(WORKSPACE_RAG / "cq_bp_schema_clean_txt"))
+# urls_to_faiss_OpenAI(pj_urls, vdb_pj, str(WORKSPACE_RAG / "cq_bp_pj_clean_txt"))
+# urls_to_faiss_OpenAI(bp_schema_urls, vdb_bp, str(WORKSPACE_RAG / "cq_bp_schema_clean_txt"))
 # for _topic in _bp_10_zh.keys():
 #     _re, _token_cost = get_inspiration("新式茶饮", _topic)
 #     with open(os.path.join(_dir, f"{_topic}.qlist"), "w") as f:

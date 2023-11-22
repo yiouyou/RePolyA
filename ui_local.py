@@ -17,13 +17,13 @@ from ui_local_tag import (
     show_JQ_file,
 )
 
-# from ui_local_yj import (
-#     yj_read_logs,
-#     yj_sort_out_context,
-#     yj_clean_all,
-#     yj_write_plan,
-#     show_YJ_context,
-# )
+from ui_local_yj import (
+    yj_read_logs,
+    yj_sort_out_context_textgen,
+    yj_clean_all,
+    yj_write_plan,
+    show_YJ_context,
+)
 
 
 def chg_btn_color_if_input(input):
@@ -52,7 +52,7 @@ def chg_textbox_visible(_radio):
 
 ##### UI
 _description = """
-# 报文问答 / 标签提取
+# 报文问答 / 标签提取 / 应急事件
 """
 chat_ask = gr.Textbox(label="", placeholder="...", lines=5, max_lines=5, interactive=True, visible=True, scale=9)
 
@@ -147,49 +147,50 @@ with gr.Blocks(title=_description) as demo:
             outputs=[download_JQ]
         )
 
-    # with gr.Tab(label = "应急事件"):
-    #     with gr.Row():
-    #         with gr.Column(scale=1):
-    #             yj_query = gr.Textbox(label="专题", placeholder="...", lines=8, max_lines=8, interactive=True, visible=True)
-    #             yj_start_btn = gr.Button("开始梳理", variant="secondary", visible=True)
-    #             yj_clean_btn = gr.Button("清空", variant="secondary", visible=True)
-    #         with gr.Column(scale=1):
-    #             yj_log = gr.Textbox(label="日志", placeholder="...", lines=14, max_lines=14, interactive=False, visible=True)
-    #     yj_context = gr.Textbox(label="事件脉络", placeholder="...", lines=18, max_lines=18, interactive=False, visible=True)
-    #     yj_plan_btn = gr.Button("生成总结", variant="secondary", visible=False)
-    #     yj_plan = gr.Textbox(label="总结报告", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
-    #     yj_download_context = gr.File(label="下载文件", file_count="single", type="file", file_types=['.md'], interactive=True, visible=False)
-    #     yj_query.change(
-    #         chg_btn_color_if_input,
-    #         [yj_query],
-    #         [yj_start_btn]
-    #     )
-    #     yj_start_btn.click(
-    #         yj_read_logs,
-    #         [],
-    #         [yj_log, yj_context, yj_plan],
-    #         every=1
-    #     )
-    #     yj_start_btn.click(
-    #         yj_sort_out_context,
-    #         [yj_query],
-    #         [yj_plan_btn]
-    #     )
-    #     yj_clean_btn.click(
-    #         yj_clean_all,
-    #         [],
-    #         [yj_query, yj_start_btn, yj_plan_btn, yj_log, yj_context, yj_plan]
-    #     )
-    #     yj_plan_btn.click(
-    #         yj_write_plan,
-    #         [yj_query, yj_context],
-    #         []
-    #     )
-    #     yj_context.change(
-    #         show_YJ_context,
-    #         inputs=[yj_context],
-    #         outputs=[yj_download_context]
-    #     )
+
+    with gr.Tab(label = "应急事件"):
+        with gr.Row():
+            with gr.Column(scale=1):
+                yj_query = gr.Textbox(label="专题", placeholder="...", lines=8, max_lines=8, interactive=True, visible=True)
+                yj_start_btn = gr.Button("开始梳理", variant="secondary", visible=True)
+                yj_clean_btn = gr.Button("清空", variant="secondary", visible=True)
+            with gr.Column(scale=1):
+                yj_log = gr.Textbox(label="日志", placeholder="...", lines=14, max_lines=14, interactive=False, visible=True)
+        yj_context = gr.Textbox(label="事件脉络", placeholder="...", lines=18, max_lines=18, interactive=False, visible=True)
+        yj_plan_btn = gr.Button("生成总结", variant="secondary", visible=False)
+        yj_plan = gr.Textbox(label="总结报告", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
+        yj_download_context = gr.File(label="下载文件", file_count="single", type="file", file_types=['.md'], interactive=True, visible=False)
+        yj_query.change(
+            chg_btn_color_if_input,
+            [yj_query],
+            [yj_start_btn]
+        )
+        yj_start_btn.click(
+            yj_read_logs,
+            [],
+            [yj_log, yj_context, yj_plan],
+            every=1
+        )
+        yj_start_btn.click(
+            yj_sort_out_context_textgen,
+            [yj_query],
+            [yj_plan_btn]
+        )
+        yj_clean_btn.click(
+            yj_clean_all,
+            [],
+            [yj_query, yj_start_btn, yj_plan_btn, yj_log, yj_context, yj_plan]
+        )
+        yj_plan_btn.click(
+            yj_write_plan,
+            [yj_query, yj_context],
+            []
+        )
+        yj_context.change(
+            show_YJ_context,
+            inputs=[yj_context],
+            outputs=[yj_download_context]
+        )
 
 
     # with gr.Tab(label = "聊天"):

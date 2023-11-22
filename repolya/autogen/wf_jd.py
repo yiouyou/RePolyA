@@ -28,10 +28,17 @@ from repolya.rag.digest_dir import (
     dir_to_faiss_OpenAI,
 )
 from repolya.rag.doc_loader import clean_txt
-from repolya.rag.digest_urls import urls_to_faiss
-from repolya.rag.vdb_faiss import get_faiss_OpenAI
+from repolya.rag.digest_urls import (
+    urls_to_faiss_OpenAI,
+    urls_to_faiss_HuggingFace,
+)
+from repolya.rag.vdb_faiss import (
+    get_faiss_OpenAI,
+    get_faiss_HuggingFace,
+)
 from repolya.rag.qa_chain import (
     qa_vdb_multi_query,
+    qa_vdb_multi_query_textgen,
     qa_with_context_as_go,
 )
 
@@ -118,9 +125,9 @@ def generate_context_for_each_query(_query: str, _db_name: str, _clean_txt_dir: 
     _all_link = [i['link'] for i in _all]
     _urls = list(set(_all_link))
     if not os.path.exists(_db_name):
-        urls_to_faiss(_urls, _db_name, _clean_txt_dir)
+        urls_to_faiss_OpenAI(_urls, _db_name, _clean_txt_dir)
     else:
-        logger_yj.info(f"'{_db_name}'已存在，无需 urls_to_faiss")
+        logger_yj.info(f"'{_db_name}'已存在，无需 urls_to_faiss_OpenAI")
     ### multi query
     _vdb = get_faiss_OpenAI(_db_name)
     _ask = _query.replace(' AND ', ' ')
@@ -129,6 +136,59 @@ def generate_context_for_each_query(_query: str, _db_name: str, _clean_txt_dir: 
     _ans_fp = os.path.join(os.path.dirname(_db_name), "_ans.txt")
     if not os.path.exists(_ans_fp):
         _ans, _step, _token_cost = qa_vdb_multi_query(_ask, _vdb, 'stuff')
+        with open(_ans_fp, "w") as f:
+            f.write(_ans)
+        ##### _context
+        _context = clean_txt(_ans)
+        ### 去除 _context 中的 [1] [50.14] 等标记
+        _context = re.sub(r'\[\d+\]', '', _context)
+        _context = re.sub(r'\[\d+\.\d+\]', '', _context)
+        with open(_context_fp, "w") as f:
+            f.write(_context)
+    else:
+        with open(_ans_fp, "r") as f:
+            _ans = f.read()
+        _context = clean_txt(_ans)
+        ### 去除 _context 中的 [1] [50.14] 等标记
+        _context = re.sub(r'\[\d+\]', '', _context)
+        _context = re.sub(r'\[\d+\.\d+\]', '', _context)
+        if '- ' in _context:
+            _clean = []
+            _li = _context.split('\n')
+            for i in _li:
+                if '- ' in i:
+                    _clean.append(i)
+            _context = '\n'.join(_clean)
+        with open(_context_fp, "w") as f:
+            f.write(_context)
+    logger_yj.info(_ask)
+    # logger_yj.info(_ans)
+    # logger_yj.info(_matches)
+    logger_yj.info(_context)
+    logger_yj.info(_token_cost)
+    return _context, _token_cost, _urls
+
+
+def generate_context_for_each_query_textgen(_query: str, _db_name: str, _clean_txt_dir: str, _textgen_url: str):
+    _context, _token_cost = "", "Tokens: 0 = (Prompt 0 + Completion 0) Cost: $0"
+    _all = search_all(_query)
+    logger_yj.info(print_search_all(_all))
+    _all_link = [i['link'] for i in _all]
+    _urls = list(set(_all_link))
+    if not os.path.exists(_db_name):
+        urls_to_faiss_HuggingFace(_urls, _db_name, _clean_txt_dir)
+    else:
+        logger_yj.info(f"'{_db_name}'已存在，无需 urls_to_faiss_HuggingFace")
+    ### multi query
+    _vdb = get_faiss_HuggingFace(_db_name)
+    _ask = _query.replace(' AND ', ' ')
+    _key = _query.split(" AND ")[1]
+    _context_fp = os.path.join(os.path.dirname(_db_name), "_context.txt")
+    _ans_fp = os.path.join(os.path.dirname(_db_name), "_ans.txt")
+    if not os.path.exists(_ans_fp):
+        _ans, _step, _token_cost = qa_vdb_multi_query_textgen(_ask, _vdb, 'stuff', _textgen_url)
+        if _token_cost == "":
+            _token_cost = "Tokens: 0 = (Prompt 0 + Completion 0) Cost: $0"
         with open(_ans_fp, "w") as f:
             f.write(_ans)
         ##### _context
@@ -199,6 +259,34 @@ def generate_event_context(_event: str, _dict: dict[str]) -> dict[str]:
         i_db_name = os.path.join(_event_dir, f"{i_key}/yj_rag_openai")
         i_clean_txt_dir = os.path.join(_event_dir, f"{i_key}/yj_rag_clean_txt")
         i_context, i_token_cost, i_urls = generate_context_for_each_query(_dict[i], i_db_name, i_clean_txt_dir)
+        _context[i] = i_context
+        _tc.append(i_token_cost)
+        _urls[i] = i_urls
+    _token_cost = calc_token_cost(_tc)
+    logger_yj.info(_token_cost)
+    logger_yj.info("generate_context_for_search_list：完成")
+    _context_str = json.dumps(_context, ensure_ascii=False, indent=4)
+    _report, _title = context_report(_event, _context, _urls)
+    _report_fp = os.path.join(_event_dir, f"{_title}.md")
+    with open(_report_fp, "w") as f:
+        f.write(_report)
+    return _report, _report_fp
+
+
+def generate_event_context_textgen(_event: str, _dict: dict[str], _textgen_url: str) -> dict[str]:
+    _event_name = clean_filename(_event, 20)
+    _event_dir = str(AUTOGEN_JD / _event_name)
+    _context = {}
+    if not os.path.exists(_event_dir):
+        os.makedirs(_event_dir)
+    logger_yj.info("generate_context_for_search_list：开始")
+    _tc = []
+    _urls = {}
+    for i in _dict.keys():
+        i_key = _dict[i].split(" AND ")[1]
+        i_db_name = os.path.join(_event_dir, f"{i_key}/yj_rag_hf")
+        i_clean_txt_dir = os.path.join(_event_dir, f"{i_key}/yj_rag_clean_txt")
+        i_context, i_token_cost, i_urls = generate_context_for_each_query_textgen(_dict[i], i_db_name, i_clean_txt_dir, _textgen_url)
         _context[i] = i_context
         _tc.append(i_token_cost)
         _urls[i] = i_urls

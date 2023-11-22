@@ -24,10 +24,6 @@ import re
 import hashlib
 
 
-text_chunk_size = 1000
-text_chunk_overlap = 100
-
-
 def calculate_md5(_fp):
     hash_md5 = hashlib.md5()
     with open(_fp, "rb") as f:

@@ -88,7 +88,7 @@ def qa_vdb_multi_query(_query, _vdb, _chain_type):
 def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
     if _chain_type not in ['stuff', 'map_reduce', 'refine', 'map_rerank']:
         logger_rag.error("_chain_type must be one of 'stuff', 'map_reduce', 'refine', or 'map_rerank'")
-    _ans, _steps, _token_cost = "", "", ""   
+    _ans, _steps, _token_cost = "", "", ""
     llm = get_textgen_llm(_textgen_url)
     _multi_retriever = get_vdb_multi_query_retriever_textgen(_vdb, _textgen_url)
     _run_manager = CallbackManagerForRetrieverRun.get_noop_manager()
