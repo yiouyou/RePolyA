@@ -103,37 +103,42 @@ def get_vdb_multi_query_retriever_textgen(_vdb, _textgen_url):
             lines = text.strip().split("\n")
             return LineList(lines=lines)
     output_parser = LineListOutputParser()
-    
     QUERY_PROMPT = PromptTemplate(
         input_variables=["question"],
-        template="""### System:
+        template="""### 系统:
 
 你是一名AI语言模型助手。
 你的任务是生成五个给定用户问题的不同版本，用于从向量中检索相关文档数据库。
-通过对用户问题产生多种观点，帮助用户克服了基于距离的相似性搜索的一些限制。
+通过对用户问题产生多种观点，帮助用户克服基于距离的相似性搜索的一些限制。
 请提供这些替代问题，并用换行符分隔。
 
-### Instruction:
+### 操作说明:
 
 原问题：{question}
 
-### Response
+### 回复:
 """,
     )
-    llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=200, _stopping_strings=["```", "###"])
+    llm = get_textgen_llm(_textgen_url, _top_p=0.5, _max_tokens=200, _stopping_strings=["```", "###"])
     llm_chain = LLMChain(
         llm=llm,
         prompt=QUERY_PROMPT,
         output_parser=output_parser,
     )
-    _base_retriever = _vdb.as_retriever(search_kwargs={"k": 5})
+    _base_retriever = _vdb.as_retriever(
+        search_type="mmr",
+        search_kwargs={"k": 5, 'fetch_k': 20},
+        # search_type="similarity_score_threshold",
+        # search_kwargs={'score_threshold': 0.5},
+    )
     ##### Remove redundant results from the merged retrievers
     _model_name, _embedding = get_embedding_HuggingFace()
     _filter = EmbeddingsRedundantFilter(embeddings=_embedding)
-    ##### Re-order results to avoid performance degradation
-    _reordering = LongContextReorder()
+    _pipeline = DocumentCompressorPipeline(transformers=[_filter])
+    # ##### Re-order results to avoid performance degradation
+    # _reordering = LongContextReorder()
+    # _pipeline = DocumentCompressorPipeline(transformers=[_filter, _reordering])
     ##### ContextualCompressionRetriever
-    _pipeline = DocumentCompressorPipeline(transformers=[_filter, _reordering])
     _compression_retriever_reordered = ContextualCompressionRetriever(
         base_compressor=_pipeline,
         base_retriever=_base_retriever

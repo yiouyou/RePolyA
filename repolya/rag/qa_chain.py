@@ -21,6 +21,7 @@ from langchain.callbacks.manager import (
     AsyncCallbackManagerForRetrieverRun,
     CallbackManagerForRetrieverRun,
 )
+from langchain.retrievers import BM25Retriever
 
 from repolya.rag.retriever import (
     get_vdb_multi_query_retriever,
@@ -92,10 +93,30 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
     _multi_retriever = get_vdb_multi_query_retriever_textgen(_vdb, _textgen_url)
     ##### _docs
     _docs = _multi_retriever.get_relevant_documents(_query)
+    _bm25_retriever = BM25Retriever.from_documents(_docs)
+    _docs = _bm25_retriever.get_relevant_documents(_query)
     #####
+    rag_prompt_yi = PromptTemplate(
+        input_variables=["question", "context"],
+        template="""### 系统:
+
+您是问答任务的助手。使用以下检索到的上下文来回答问题。如果你不知道答案，就说你不知道。最多使用三个句子并保持答案简洁通顺。
+
+### 操作说明: 
+
+上下文: 
+{context} 
+
+问题: {question}
+
+### 回复:
+""",
+    )
+    llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=2000, _stopping_strings=["```", "###", "\n\n"])
     _qa = load_qa_chain(
         llm,
-        chain_type=_chain_type
+        chain_type=_chain_type,
+        prompt=rag_prompt_yi
     )
     _ans = _qa(
         {

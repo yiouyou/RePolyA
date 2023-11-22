@@ -24,8 +24,8 @@ import re
 import hashlib
 
 
-text_chunk_size = 500
-text_chunk_overlap = 50
+text_chunk_size = 1000
+text_chunk_overlap = 100
 
 
 def calculate_md5(_fp):
@@ -133,6 +133,8 @@ def dir_to_faiss_OpenAI(_dir: str, _db_name: str, _clean_txt_dir: str):
             _clean_DOCs.append(_DOCs[i])
         else:
             logger_rag.info(f"empty doc '{_clean_file}'")
+    text_chunk_size = 500
+    text_chunk_overlap = 50
     _splited_docs = split_docs_recursive(_clean_DOCs, text_chunk_size, text_chunk_overlap)
     if not os.path.exists(_db_name):
         if _db_name.endswith('_openai'):
@@ -190,7 +192,7 @@ def dir_to_faiss_HuggingFace(_dir: str, _db_name: str, _clean_txt_dir: str):
     for i in range(len(_DOCs)):
         _d = _DOCs[i].to_json()
         _page_content = _d['kwargs']['page_content']
-        _new_page_content = clean_txt(_page_content)
+        _new_page_content = _page_content #clean_txt(_page_content)
         _metadata = _d['kwargs']['metadata']
         _new_metadata = {}
         _new_metadata['source'] = _metadata['source']
@@ -213,6 +215,8 @@ def dir_to_faiss_HuggingFace(_dir: str, _db_name: str, _clean_txt_dir: str):
             _clean_DOCs.append(_DOCs[i])
         else:
             logger_rag.info(f"empty doc '{_clean_file}'")
+    text_chunk_size = 1000
+    text_chunk_overlap = 100
     _splited_docs = split_docs_recursive(_clean_DOCs, text_chunk_size, text_chunk_overlap)
     if not os.path.exists(_db_name):
         if _db_name.endswith('_hf'):

@@ -16,7 +16,7 @@ def call_yi_tag(_sentence):
     from langchain.prompts import PromptTemplate
     from langchain.chains import LLMChain
     llm = get_textgen_llm(_textgen_url)
-    _t1 = """### System:
+    _t1 = """### 系统:
 
 假定你是情报分析员，请从给定新闻句子中，抽取如下实体：'时间'，'地点'，'人物'，'军队'，'武器'，'伤亡'。下面是一些csv格式的新闻句子分析示例，其中新闻句子已用双引号括起来，逗号后面是句子的分析结果：
 
@@ -40,13 +40,13 @@ def call_yi_tag(_sentence):
 
 "指挥中心派遣陆军第三保障部队前往。", {"时间":"", "地点":"", "人物": "", "军队":"陆军第三保障部队", "武器": "", "伤亡":""}
 
-### Instruction: 
+### 操作说明: 
 
 """
     _t2 = """
 以json格式( {"时间":"", "地点":"", "人物": "", "军队":"", "武器":"", "伤亡":""} )输出；如果某个实体里包含多项信息，请将它们用'，'隔开。
 
-### Response:
+### 回复:
 
 """
     jinja2_template = _t1 + "请分析\"{{_sentence}}\"" + _t2
