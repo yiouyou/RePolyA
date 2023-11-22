@@ -52,7 +52,7 @@ def chg_textbox_visible(_radio):
 
 ##### UI
 _description = """
-# 报文问答 / 标签提取 / 应急事件
+# 报文问答 / 标签提取
 """
 chat_ask = gr.Textbox(label="", placeholder="...", lines=5, max_lines=5, interactive=True, visible=True, scale=9)
 
