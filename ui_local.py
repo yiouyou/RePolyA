@@ -69,9 +69,9 @@ with gr.Blocks(title=_description) as demo:
         rag_query = gr.Textbox(label="提问", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
         rag_radio = gr.Radio(
             ["快速"],
-            label="快速(<半分钟)",
+            label="快速(<1分钟)",
             # ["快速", "多智"],
-            # label="快速(<半分钟), 多智(~2分钟)",
+            # label="快速(<1分钟), 多智(~2分钟)",
             info="",
             type="value",
             value="快速",
