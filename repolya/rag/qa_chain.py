@@ -91,6 +91,8 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
     _ans, _steps, _token_cost = "", "", ""   
     llm = get_textgen_llm(_textgen_url)
     _multi_retriever = get_vdb_multi_query_retriever_textgen(_vdb, _textgen_url)
+    _run_manager = CallbackManagerForRetrieverRun.get_noop_manager()
+    _generated_queries = _multi_retriever.generate_queries(_query, _run_manager)
     ##### _docs
     _docs = _multi_retriever.get_relevant_documents(_query)
     _bm25_retriever = BM25Retriever.from_documents(_docs)
@@ -126,8 +128,6 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
         return_only_outputs=True
     )
     #####
-    _run_manager = CallbackManagerForRetrieverRun.get_noop_manager()
-    _generated_queries = _multi_retriever.generate_queries(_query, _run_manager)
     logger_rag.info(f"Q: {_query}")
     for i in _generated_queries:
         logger_rag.info(i)
