@@ -64,7 +64,7 @@ with gr.Blocks(title=_description) as demo:
 
     with gr.Tab(label = "报文问答"):
         with gr.Row():
-            rag_upload = gr.File(label="上传报文", file_count="multiple", type="file", interactive=True, visible=True)
+            rag_upload = gr.File(label="上传TXT", file_count="multiple", type="file", file_types=['.txt'], interactive=True, visible=True)
             rag_tmp_files = gr.Textbox(label="上传日志", placeholder="...", lines=9, max_lines=9, interactive=False, visible=True)
         rag_query = gr.Textbox(label="提问", placeholder="...", lines=10, max_lines=10, interactive=True, visible=True)
         rag_radio = gr.Radio(

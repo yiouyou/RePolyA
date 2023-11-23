@@ -19,7 +19,7 @@ _log_ref_yj = LOG_ROOT / '_ref_yj.txt'
 def write_log_ans(_log_ans, _txt, _status=None):
     with open(_log_ans, 'w', encoding='utf-8') as wf:
         if _status == "continue":
-            _txt += "\n\n计算中，请稍候..."
+            _txt += "\n\n计算中，预计需要30分钟，请稍候..."
         # elif _status == "done":
         #     _txt += "\n\n[完成]"
         wf.write(_txt)
@@ -88,6 +88,7 @@ def yj_sort_out_context_textgen(_event):
     #####
     _dict = generate_search_dict_for_event(_event)
     global _content_fp
+    _content_fp = ""
     _textgen_url = "http://127.0.0.1:5552"
     _context, _content_fp = generate_event_context_textgen(_event, _dict, _textgen_url)
     write_log_ans(_log_ans_yj_context, _context, 'done')

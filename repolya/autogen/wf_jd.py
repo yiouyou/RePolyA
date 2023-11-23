@@ -149,9 +149,12 @@ def generate_context_for_each_query(_query: str, _db_name: str, _clean_txt_dir: 
         with open(_ans_fp, "r") as f:
             _ans = f.read()
         _context = clean_txt(_ans)
-        ### 去除 _context 中的 [1] [50.14] 等标记
+        ### 去除 _context 中的 [1] [50.14] [81-82] 等标记
         _context = re.sub(r'\[\d+\]', '', _context)
         _context = re.sub(r'\[\d+\.\d+\]', '', _context)
+        _context = re.sub(r'\[\d+\-\d+\]', '', _context)
+        ### 去除 _context 中那些只包含空白（如空格、制表符等）的行
+        _context = re.sub(r'^\s+\n$', '\n', _context, flags=re.MULTILINE)
         if '- ' in _context:
             _clean = []
             _li = _context.split('\n')
@@ -170,12 +173,12 @@ def generate_context_for_each_query(_query: str, _db_name: str, _clean_txt_dir: 
 
 
 def generate_context_for_each_query_textgen(_query: str, _db_name: str, _clean_txt_dir: str, _textgen_url: str):
-    _context, _token_cost = "", "Tokens: 0 = (Prompt 0 + Completion 0) Cost: $0"
-    _all = search_all(_query)
-    logger_yj.info(print_search_all(_all))
-    _all_link = [i['link'] for i in _all]
-    _urls = list(set(_all_link))
+    _context, _token_cost, _urls = "", "Tokens: 0 = (Prompt 0 + Completion 0) Cost: $0", ""
     if not os.path.exists(_db_name):
+        _all = search_all(_query)
+        logger_yj.info(print_search_all(_all))
+        _all_link = [i['link'] for i in _all]
+        _urls = list(set(_all_link))
         urls_to_faiss_HuggingFace(_urls, _db_name, _clean_txt_dir)
     else:
         logger_yj.info(f"'{_db_name}'已存在，无需 urls_to_faiss_HuggingFace")
@@ -222,9 +225,8 @@ def generate_context_for_each_query_textgen(_query: str, _db_name: str, _clean_t
     return _context, _token_cost, _urls
 
 
-def context_report(_event: str, _context: dict, _urls: dict):
+def context_report(_event: str, _title: str, _context: dict, _urls: dict):
     _report = []
-    _title = f"'{_event}'事件脉络梳理报告"
     _report.append(_title)
     _section = [
         "基本情况",
@@ -242,7 +244,7 @@ def context_report(_event: str, _context: dict, _urls: dict):
                 _section.append(f"## [{yj_keyword[j]}]({_urls[j][0]})\n{_context[j]}")
         _report.append("\n\n".join(_section))
     # _report.append(f"# {_event}相关链接" + "\n\n" + "\n".join(_urls)
-    return "\n\n\n".join(_report), _title
+    return "\n\n\n".join(_report)
 
 
 def generate_event_context(_event: str, _dict: dict[str]) -> dict[str]:
@@ -265,11 +267,16 @@ def generate_event_context(_event: str, _dict: dict[str]) -> dict[str]:
     _token_cost = calc_token_cost(_tc)
     logger_yj.info(_token_cost)
     logger_yj.info("generate_context_for_search_list：完成")
-    _context_str = json.dumps(_context, ensure_ascii=False, indent=4)
-    _report, _title = context_report(_event, _context, _urls)
+    _title = f"'{_event}'事件脉络梳理报告"
     _report_fp = os.path.join(_event_dir, f"{_title}.md")
-    with open(_report_fp, "w") as f:
-        f.write(_report)
+    if not os.path.exists(_report_fp):
+        _context_str = json.dumps(_context, ensure_ascii=False, indent=4)
+        _report = context_report(_event, _context, _urls)
+        with open(_report_fp, "w") as f:
+            f.write(_report)
+    else:
+        with open(_report_fp, "r") as f:
+            _report = f.read()
     return _report, _report_fp
 
 
@@ -293,11 +300,16 @@ def generate_event_context_textgen(_event: str, _dict: dict[str], _textgen_url: 
     _token_cost = calc_token_cost(_tc)
     logger_yj.info(_token_cost)
     logger_yj.info("generate_context_for_search_list：完成")
-    _context_str = json.dumps(_context, ensure_ascii=False, indent=4)
-    _report, _title = context_report(_event, _context, _urls)
+    _title = f"'{_event}'事件脉络梳理报告"
     _report_fp = os.path.join(_event_dir, f"{_title}.md")
-    with open(_report_fp, "w") as f:
-        f.write(_report)
+    if not os.path.exists(_report_fp):
+        _context_str = json.dumps(_context, ensure_ascii=False, indent=4)
+        _report = context_report(_event, _title, _context, _urls)
+        with open(_report_fp, "w") as f:
+            f.write(_report)
+    else:
+        with open(_report_fp, "r") as f:
+            _report = f.read()
     return _report, _report_fp
 
 
