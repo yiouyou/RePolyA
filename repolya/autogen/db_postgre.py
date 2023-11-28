@@ -14,9 +14,14 @@ from repolya.autogen.tool_function import (
 from dataclasses import dataclass
 from datetime import datetime
 import json
+import os
 
 
 class PostgresManager:
+    """
+    A class to manage postgres connections and queries
+    """
+
     def __init__(self):
         self.conn = None
         self.cur = None
@@ -31,53 +36,36 @@ class PostgresManager:
             self.conn.close()
 
     def connect_with_url(self, url):
-        self.conn = psycopg2.connect(url)
-        self.cur = self.conn.cursor()
-
-    def upsert(self, table_name, _dict):
-        columns = _dict.keys()
-        values = [SQL("%s")] * len(columns)
-        upsert_stmt = SQL(
-            "INSERT INTO {} ({}) VALUES ({}) ON CONFLICT (id) DO UPDATE SET {}"
-        ).format(
-            Identifier(table_name),
-            SQL(", ").join(map(Identifier, columns)),
-            SQL(", ").join(values),
-            SQL(", ").join(
-                [
-                    SQL("{} = EXCLUDED.{}").format(Identifier(k), Identifier(k))
-                    for k in columns
-                ]
-            ),
+        # self.conn = psycopg2.connect(url)
+        self.conn = psycopg2.connect(
+            user="sz",
+            password="1123",
+            host=url,
+            port="5432",
+            database="dvdrental"
         )
-        self.cur.execute(upsert_stmt, list(_dict.values()))
-        self.conn.commit()
-
-    def delete(self, table_name, _id):
-        delete_stmt = SQL("DELETE FROM {} WHERE id = %s").format(Identifier(table_name))
-        self.cur.execute(delete_stmt, (_id,))
-        self.conn.commit()
-
-    def get(self, table_name, _id):
-        select_stmt = SQL("SELECT * FROM {} WHERE id = %s").format(Identifier(table_name))
-        self.cur.execute(select_stmt, (_id,))
-        return self.cur.fetchone()
-
-    def get_all(self, table_name):
-        select_all_stmt = SQL("SELECT * FROM {}").format(Identifier(table_name))
-        self.cur.execute(select_all_stmt)
-        return self.cur.fetchall()
+        self.cur = self.conn.cursor()
+    
+    def close(self):
+        if self.cur:
+            self.cur.close()
+        if self.conn:
+            self.conn.close()
 
     def run_postgre(self, sql) -> str:
+        """
+        Run a SQL query against the postgres database
+        """
         self.cur.execute(sql)
         columns = [desc[0] for desc in self.cur.description]
         res = self.cur.fetchall()
         list_of_dicts = [dict(zip(columns, row)) for row in res]
-        json_result = json.dumps(list_of_dicts, indent=4, default=self.datetime_handler)
+        json_result = json.dumps(list_of_dicts, ensure_ascii=False, indent=4, default=self.datetime_handler)
         # dump these results to a file
         with open("results.json", "w") as f:
             f.write(json_result)
-        return "Successfully delivered results to json file"
+        print("Successfully delivered results to json file")
+        return json_result
 
     def datetime_handler(obj):
         """
@@ -88,6 +76,9 @@ class PostgresManager:
         return str(obj)  # or just return the object unchanged, or another default value
 
     def get_table_definition(self, table_name):
+        """
+        Generate the 'create' definition for a table
+        """
         get_def_stmt = """
         SELECT pg_class.relname as tablename,
                pg_attribute.attnum,
@@ -109,11 +100,19 @@ class PostgresManager:
         return create_table_stmt
 
     def get_all_table_names(self):
-        get_all_tables_stmt = "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
+        """
+        Get all table names in the database
+        """
+        get_all_tables_stmt = (
+            "SELECT tablename FROM pg_tables WHERE schemaname = 'public';"
+        )
         self.cur.execute(get_all_tables_stmt)
         return [row[0] for row in self.cur.fetchall()]
 
     def get_table_definitions_for_prompt(self):
+        """
+        Get all table 'create' definitions in the database
+        """
         table_names = self.get_all_table_names()
         definitions = []
         for table_name in table_names:
@@ -121,25 +120,132 @@ class PostgresManager:
         return "\n\n".join(definitions)
 
     def get_table_definition_map_for_embeddings(self):
+        """
+        Creates a map of table names to table definitions
+        """
         table_names = self.get_all_table_names()
         definitions = {}
         for table_name in table_names:
             definitions[table_name] = self.get_table_definition(table_name)
         return definitions
 
+    def get_related_tables(self, table_list, n=2):
+        """
+        Get tables that have foreign keys referencing the given table
+        """
+        related_tables_dict = {}
+        for table in table_list:
+            # Query to fetch tables that have foreign keys referencing the given table
+            self.cur.execute(
+                """
+                SELECT 
+                    a.relname AS table_name
+                FROM 
+                    pg_constraint con 
+                    JOIN pg_class a ON a.oid = con.conrelid 
+                WHERE 
+                    confrelid = (SELECT oid FROM pg_class WHERE relname = %s)
+                LIMIT %s;
+                """,
+                (table, n),
+            )
+            related_tables = [row[0] for row in self.cur.fetchall()]
+            # Query to fetch tables that the given table references
+            self.cur.execute(
+                """
+                SELECT 
+                    a.relname AS referenced_table_name
+                FROM 
+                    pg_constraint con 
+                    JOIN pg_class a ON a.oid = con.confrelid 
+                WHERE 
+                    conrelid = (SELECT oid FROM pg_class WHERE relname = %s)
+                LIMIT %s;
+                """,
+                (table, n),
+            )
+            related_tables += [row[0] for row in self.cur.fetchall()]
+            related_tables_dict[table] = related_tables
+        # convert dict to list and remove dups
+        related_tables_list = []
+        for table, related_tables in related_tables_dict.items():
+            related_tables_list += related_tables
+        related_tables_list = list(set(related_tables_list))
+        return related_tables_list
+
+    # def upsert(self, table_name, _dict):
+    #     columns = _dict.keys()
+    #     values = [SQL("%s")] * len(columns)
+    #     upsert_stmt = SQL(
+    #         "INSERT INTO {} ({}) VALUES ({}) ON CONFLICT (id) DO UPDATE SET {}"
+    #     ).format(
+    #         Identifier(table_name),
+    #         SQL(", ").join(map(Identifier, columns)),
+    #         SQL(", ").join(values),
+    #         SQL(", ").join(
+    #             [
+    #                 SQL("{} = EXCLUDED.{}").format(Identifier(k), Identifier(k))
+    #                 for k in columns
+    #             ]
+    #         ),
+    #     )
+    #     self.cur.execute(upsert_stmt, list(_dict.values()))
+    #     self.conn.commit()
+
+    # def delete(self, table_name, _id):
+    #     delete_stmt = SQL("DELETE FROM {} WHERE id = %s").format(Identifier(table_name))
+    #     self.cur.execute(delete_stmt, (_id,))
+    #     self.conn.commit()
+
+    # def get(self, table_name, _id):
+    #     select_stmt = SQL("SELECT * FROM {} WHERE id = %s").format(Identifier(table_name))
+    #     self.cur.execute(select_stmt, (_id,))
+    #     return self.cur.fetchone()
+
+    # def get_all(self, table_name):
+    #     select_all_stmt = SQL("SELECT * FROM {}").format(Identifier(table_name))
+    #     self.cur.execute(select_all_stmt)
+    #     return self.cur.fetchall()
+
 
 class DatabaseEmbedder:
-    def __init__(self):
-        self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-        self.model = BertModel.from_pretrained("bert-base-uncased")
+    """
+    This class is responsible for embedding database table definitions and
+    computing similarity between user queries and table definitions.
+    """
+
+    def __init__(self, db: PostgresManager):
+        self.tokenizer = BertTokenizer.from_pretrained('/home/sz/bert-base-uncased')
+        self.model = BertModel.from_pretrained('/home/sz/bert-base-uncased')
         self.map_name_to_embeddings = {}
         self.map_name_to_table_def = {}
+        self.db = db
+
+    def get_similar_table_defs_for_prompt(self, prompt: str, n_similar=5, n_foreign=0):
+        map_table_name_to_table_def = self.db.get_table_definition_map_for_embeddings()
+        for name, table_def in map_table_name_to_table_def.items():
+            self.add_table(name, table_def)
+        similar_tables = self.get_similar_tables(prompt, n=n_similar)
+        table_definitions = self.get_table_definitions_from_names(similar_tables)
+        if n_foreign > 0:
+            foreign_table_names = self.db.get_foreign_tables(similar_tables, n=3)
+            table_definitions = self.get_table_definitions_from_names(
+                foreign_table_names + similar_tables
+            )
+        return table_definitions
 
     def add_table(self, table_name: str, text_representation: str):
+        """
+        Add a table to the database embedder.
+        Map the table name to its embedding and text representation.
+        """
         self.map_name_to_embeddings[table_name] = self.compute_embeddings(text_representation)
         self.map_name_to_table_def[table_name] = text_representation
 
     def compute_embeddings(self, text):
+        """
+        Compute embeddings for a given text using the BERT model.
+        """
         inputs = self.tokenizer(
             text,
             return_tensors="pt",
@@ -151,13 +257,25 @@ class DatabaseEmbedder:
         return outputs["pooler_output"].detach().numpy()
 
     def get_similar_tables_via_embeddings(self, query, n=3):
+        """
+        Given a query, find the top 'n' tables that are most similar to it.
+
+        Args:
+        - query (str): The user's natural language query.
+        - n (int, optional): Number of top tables to return. Defaults to 3.
+
+        Returns:
+        - list: Top 'n' table names ranked by their similarity to the query.
+        """
+        # Compute the embedding for the user's query
         query_embedding = self.compute_embeddings(query)
-        similarities = {}
-        for table_name, table_embedding in self.map_name_to_embeddings.items():
-            similarities[table_name] = cosine_similarity(
-                query_embedding, table_embedding
-            )[0][0]
-        return sorted(similarities.items(), key=lambda x: x[1], reverse=True)[:n]
+        # Calculate cosine similarity between the query and all tables
+        similarities = {
+            table: cosine_similarity(query_embedding, emb)[0][0]
+            for table, emb in self.map_name_to_embeddings.items()
+        }
+        # Rank tables based on their similarity scores and return top 'n'
+        return sorted(similarities, key=similarities.get, reverse=True)[:n]
     
     def get_similar_table_names_via_word_match(self, query: str):
         """
@@ -178,7 +296,13 @@ class DatabaseEmbedder:
         return similar_tables_via_embeddings + similar_tables_via_word_match
 
     def get_table_definitions_from_names(self, table_names: list) -> list:
-        return [self.map_name_to_table_def[table_name] for table_name in table_names]
+        """
+        Given a list of table names, return their table definitions.
+        """
+        table_defs = [
+            self.map_name_to_table_def[table_name] for table_name in table_names
+        ]
+        return "\n\n".join(table_defs)
 
 
 class PostgresAgentInstruments(AgentInstruments):
@@ -204,31 +328,53 @@ class PostgresAgentInstruments(AgentInstruments):
         self.db = None
         self.session_id = session_id
         self.messages = []
-        self.complete_keyword = "APPROVED"
         self.invocation_index = 0
 
     def __enter__(self):
+        """
+        Support entering the 'with' statement
+        """
         self.reset_files()
         self.db = PostgresManager()
         self.db.connect_with_url(self.db_url)
         return self, self.db
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Support exiting the 'with' statement
+        """
         self.db.close()
 
     def sync_messages(self, messages: list):
+        """
+        Syncs messages with the orchestrator
+        """
         self.messages = messages
 
     def reset_files(self):
-        pass
+        """
+        Clear everything in the root_dir
+        """
+        # if it does not exist create it
+        if not os.path.exists(self.root_dir):
+            os.makedirs(self.root_dir)
+        for fname in os.listdir(self.root_dir):
+            os.remove(os.path.join(self.root_dir, fname))
 
     def get_file_path(self, fname: str):
-        pass
+        """
+        Get the full path to a file in the root_dir
+        """
+        return os.path.join(self.root_dir, fname)
 
     # --------------------- Agent Properties --------------------- #
     @property
     def run_postgre_results_file(self):
         return self.get_file_path("run_postgre_results.json")
+    
+    @property
+    def postgre_query_file(self):
+        return self.get_file_path("postgre_query.sql")
 
     # --------------------- Agent Functions --------------------- #
     def run_postgre(self, sql: str) -> str:
@@ -240,6 +386,8 @@ class PostgresAgentInstruments(AgentInstruments):
         # dump these results to a file
         with open(fname, "w") as f:
             f.write(results_as_json)
+        with open(self.postgre_query_file, "w") as f:
+            f.write(sql)
         return "Successfully delivered results to json file"
 
     def validate_run_postgre(self):
@@ -250,8 +398,8 @@ class PostgresAgentInstruments(AgentInstruments):
         with open(fname, "r") as f:
             content = f.read()
         if not content:
-            return False
-        return True
+            return False, f"File {fname} is empty"
+        return True, ""
 
     def write_file(self, content: str):
         fname = self.get_file_path("write_file.txt")
@@ -280,6 +428,6 @@ class PostgresAgentInstruments(AgentInstruments):
             with open(fname, "r") as f:
                 content = f.read()
                 if not content:
-                    return False
-        return True
+                    return False, f"File {fname} is empty"
+        return True, ""
 

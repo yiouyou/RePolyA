@@ -249,7 +249,7 @@ def text_to_image_generation(prompt):
 ##### run_postgre
 _def_run_postgre = {
     "name": "run_postgre",
-    "description": "Run a query against the PostgreSQL",
+    "description": "Run a SQL query against the postgres database",
     "parameters": {
         "type": "object",
         "properties": {
@@ -308,12 +308,12 @@ _def_write_json_file = {
 }
 def write_json_file(fname, json_str: str):
     # Convert ' to "
-    json_str = json_str.replace("'", "\"")
+    json_str = json_str.replace("'", '"')
     # Convert the string to a Python object
     data = json.loads(json_str)
     # Write the Python object to the file as JSON
     with open(fname, "w") as f:
-        json.dump(data, f, indent=4)
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 
 ##### write_yaml_file
@@ -336,10 +336,11 @@ _def_write_yaml_file = {
     },
 }
 def write_yaml_file(fname, yaml_str: str):
-    print("write_yaml_file() ", yaml_str)
+    # Try to replace single quotes with double quotes for JSON
+    cleaned_yaml_str = yaml_str.replace("'", '"')
     # Safely convert the YAML string to a Python object
     try:
-        data = yaml.safe_load(yaml_str)
+        data = yaml.safe_load(cleaned_yaml_str)
     except yaml.YAMLError as e:
         print(f"Error decoding YAML: {e}")
         return

@@ -3,29 +3,27 @@ from repolya._log import logger_autogen
 
 from autogen import (
     ConversableAgent,
-    AssistantAgent,
-    UserProxyAgent,
     config_list_from_json,
 )
 
 from typing import List, Optional, Tuple, Union
-from dataclasses import asdict
-import json
-
-from openai.openai_object import OpenAIObject
-from dataclasses import dataclass
+from dataclasses import dataclass, field, asdict
 from datetime import datetime
 import tiktoken
+import json
+import time
 import os
 
 
 config_list = config_list_from_json(env_or_file=str(AUTOGEN_CONFIG))
+
 
 @dataclass
 class Chat:
     from_name: str
     to_name: str
     message: str
+    created: int = field(default_factory=time.time)
 
 @dataclass
 class ConversationResult:
@@ -34,6 +32,7 @@ class ConversationResult:
     cost: float
     tokens: int
     last_message_str: str
+    error_message: str
 
 
 class AgentInstruments:
@@ -57,33 +56,43 @@ class AgentInstruments:
         """
         raise NotImplementedError
 
+    def make_agent_chat_file(self, team_name: str):
+        return os.path.join(self.root_dir, f"agent_chats_{team_name}.json")
+
+    def make_agent_cost_file(self, team_name: str):
+        return os.path.join(self.root_dir, f"agent_cost_{team_name}.json")
+
     @property
     def root_dir(self):
         return os.path.join(str(WORKSPACE_AUTOGEN / "agent_results"), self.session_id)
 
-    @property
-    def agent_chat_file(self):
-        return os.path.join(self.root_dir, "agent_chats.json")
-
 
 class Organizer:
+    """
+    Orchestrators manage conversations between multi-agent teams.
+    """
+
     def __init__(
         self,
         name: str,
         agents: List[ConversableAgent],
-        validate_results_func: callable,
-        agent_instruments: AgentInstruments = None,
+        agent_instruments: AgentInstruments,
+        validate_results_func: callable = None,
     ):
+        # Name of agent team
         self.name = name
+        # List of agents
         self.agents = agents
+        # List of raw messages - partially redundant due to self.chats
         self.messages = []
-        self.completed_keyword = "APPROVED"
-        self.error_keyword = "ERROR"
+        # Agent instruments - state and functions that agents can use
         self.agent_instruments = agent_instruments
+        # List of chats - {from, to, message}
         self.chats: List[Chat] = []
+        # Function to validate results at the end of every conversation
         self.validate_results_func = validate_results_func
         if len(self.agents) < 2:
-            raise Exception("Organizer needs at least 2 agents.")
+            raise Exception("Organizer needs at least two agents.")
 
     @property
     def total_agents(self):
@@ -122,13 +131,25 @@ class Organizer:
         if self.last_message_is_content:
             return self.latest_message.get("content", "")
         return str(self.messages[-1])
-    
+
+    def handle_validate_func(self) -> Tuple[bool, str]:
+        """
+        Run the validate_results_func if it exists
+        """
+        if self.validate_results_func:
+            return self.validate_results_func()
+        return True, ""
+
     def send_message(
         self,
         from_agent: ConversableAgent,
         to_agent: ConversableAgent,
         message: str
     ):
+        """
+        Send a message from one agent to another.
+        Record the message in chat log in the orchestrator
+        """
         from_agent.send(message, to_agent)
         self.chats.append(
             Chat(
@@ -137,8 +158,17 @@ class Organizer:
                 message=str(message),
             )
         )
-    
+
+    def add_message(self, message: str):
+        """
+        Add a message to the orchestrator
+        """
+        self.messages.append(message)
+
     def get_message_as_str(self):
+        """
+        Get all messages as a string
+        """
         messages_as_str = ""
         for message in self.messages:
             if message is None:
@@ -157,12 +187,8 @@ class Organizer:
     def get_cost_and_tokens(self):
         return estimate_price_and_tokens(self.get_message_as_str())
 
-    def add_message(self, message: str):
-        # message = fix_msg_ascii(message)
-        self.messages.append(message)
-
     def has_functions(self, agent: ConversableAgent):
-        return agent._function_map is not None
+        return len(agent._function_map) > 0
 
     def basic_chat(
         self,
@@ -171,7 +197,6 @@ class Organizer:
         message: str,
     ):
         print(f"basic_chat(): {agent_a.name} -> {agent_b.name}")
-        # agent_a.send(message, agent_b)
         self.send_message(agent_a, agent_b, message)
         reply = agent_b.generate_reply(sender=agent_a)
         self.add_message(reply)
@@ -184,9 +209,9 @@ class Organizer:
         message: str,
     ):
         print(f"memory_chat(): {agent_a.name} -> {agent_b.name}")
-        agent_a.send(message, agent_b)
+        self.send_message(agent_a, agent_b, message)
         reply = agent_b.generate_reply(sender=agent_a)
-        agent_b.send(reply, agent_b)
+        self.send_message(agent_b, agent_b, message)
         self.add_message(reply)
 
     def function_chat(
@@ -206,13 +231,14 @@ class Organizer:
         reply = agent.generate_reply(sender=agent)
         self.send_message(agent, agent, message)
         self.add_message(reply)
+        print(f"self_function_chat(): replied with:", reply)
     
     def spy_on_agents(self, append_to_file: bool = True):
         conversations = []
         for chat in self.chats:
             conversations.append(asdict(chat))
         if append_to_file:
-            file_name = str(WORKSPACE_AUTOGEN / "organizer_conversations.json")
+            file_name = self.agent_instruments.make_agent_chat_file(self.name)
             with open(file_name, "w", encoding='utf-8') as f:
                 f.write(json.dumps(conversations, ensure_ascii=False, indent=4))
 
@@ -221,7 +247,7 @@ class Organizer:
         For example:
             "Agent A" -> "Agent B" -> "Agent C" -> "Agent D" -> "Agent E"
         """
-        print(f"\n---------- {self.name} Organizer Starting ----------\n")
+        print(f"\n---------- {self.name} Organizer Starting (sequential_conversation) ----------\n")
         self.add_message(prompt)
         for idx, agent_iterate in enumerate(self.agents[:-1]):
             agent_a = self.agents[idx]
@@ -236,22 +262,23 @@ class Organizer:
             self.spy_on_agents()
             if idx == self.total_agents - 2:
                 if self.has_functions(agent_b):
+                    # agent_b -> func() -> agent_b
                     self.self_function_chat(agent_b, self.latest_message)
-                print(f"---------- Organizer Complete ----------\n")
-                # success = self.completed_keyword in self.latest_message
-                success = self.validate_results_func()
-                if success:
-                    print(f"✅ Organizer was successful")
-                else:
-                    print(f"✅ NO 'APPROVED'(completed_keyword) OR ❌ Organizer failed")
+                print(f"---------- Organizer Complete (sequential_conversation) ----------\n")
+                was_successful, error_message = self.handle_validate_func()
                 self.spy_on_agents()
+                if was_successful:
+                    print(f"✅ sequential_conversation was successful")
+                else:
+                    print(f"❌ sequential_conversation failed")
                 cost, tokens = self.get_cost_and_tokens()
                 return ConversationResult(
-                    success=success,
+                    success=was_successful,
                     messages=self.messages,
                     cost=cost,
                     tokens=tokens,
                     last_message_str=self.last_message_always_string,
+                    error_message=error_message,
                 )
 
     def broadcast_conversation(self, prompt: str) -> ConversationResult:
@@ -262,7 +289,7 @@ class Organizer:
             "Agent A" -> "Agent D"
             "Agent A" -> "Agent E"
         """
-        print(f"\n---------- {self.name} Organizer Starting ----------\n")
+        print(f"\n---------- {self.name} Organizer Starting (broadcast_conversation) ----------\n")
         self.add_message(prompt)
         broadcast_agent = self.agents[0]
         for idx, agent_iterate in enumerate(self.agents[1:]):
@@ -273,21 +300,73 @@ class Organizer:
             # agent_a -> func() -> agent_b
             if self.last_message_is_func_call and self.has_functions(agent_iterate):
                 self.function_chat(agent_iterate, agent_iterate, self.latest_message)
-        print(f"---------- Organizer Complete ----------\n")
-        # success = self.completed_keyword in self.latest_message
-        success = self.validate_results_func()
-        if success:
-            print(f"✅ Organizer was successful")
+            self.spy_on_agents()
+        print(f"---------- Organizer Complete (broadcast_conversation) ----------\n")
+        was_successful, error_message = self.handle_validate_func()
+        if was_successful:
+            print(f"✅ broadcast_conversation was successful")
         else:
-            print(f"✅ NO 'APPROVED'(completed_keyword) OR ❌ Organizer failed")
+            print(f"❌ broadcast_conversation failed")
         cost, tokens = self.get_cost_and_tokens()
         return ConversationResult(
-            success=success,
+            success=was_successful,
             messages=self.messages,
             cost=cost,
             tokens=tokens,
             last_message_str=self.last_message_always_string,
+            error_message=error_message,
         )
+
+    def round_robin_conversation(
+        self, prompt: str, loops: int = 1
+    ) -> ConversationResult:
+        """
+        Runs a basic round robin conversation between agents:
+        Example for a setup with agents A, B, and C:
+            (1)
+            A -> B
+            B -> C
+            C -> A
+            (2)
+            A -> B
+            B -> C
+            C -> A
+            ...
+        `loops` determines the number of times the sequence is repeated.
+        """
+        print(f"\n---------- {self.name} Organizer Starting (round_robin_conversation) ----------\n\n")
+        self.add_message(prompt)
+        total_iterations = loops * len(self.agents)
+        for iteration in range(total_iterations):
+            idx = iteration % len(self.agents)
+            agent_a = self.agents[idx]
+            agent_b = self.agents[(idx + 1) % len(self.agents)]
+            print(
+                f"\n\n💬 ---------- Running iteration {iteration} with conversation ({agent_a.name} -> {agent_b.name}) ----------\n\n",
+            )
+            # if we're back at the first agent, we need to reset the last message to the prompt
+            if iteration % (len(self.agents)) == 0:
+                self.add_message(prompt)
+            # agent_a -> chat -> agent_b
+            if self.last_message_is_string:
+                self.basic_chat(agent_a, agent_b, self.latest_message)
+            # agent_a -> func() -> agent_b
+            if self.last_message_is_func_call and self.has_functions(agent_a):
+                self.function_chat(agent_a, agent_b, self.latest_message)
+            self.spy_on_agents()
+        print(f"---------- Organizer Complete (round_robin_conversation) ----------\n\n")
+        self.spy_on_agents()
+        agents_were_successful, error_message = self.handle_validate_func()
+        cost, tokens = self.get_cost_and_tokens()
+        conversation_result: ConversationResult = ConversationResult(
+            success=agents_were_successful,
+            messages=self.messages,
+            cost=cost,
+            tokens=tokens,
+            last_message_str=self.last_message_always_string,
+            error_message=error_message,
+        )
+        return conversation_result
 
 
 def generate_session_id(raw_prompt: str):
@@ -316,39 +395,43 @@ def add_cap_ref(
     cap_ref: str, 
     cap_ref_content: str
 ) -> str:
-    new_prompt = f"""{prompt} {prompt_suffix}\n{cap_ref}\n\n{cap_ref_content}"""
+    """
+    Attaches a capitalized reference to the prompt.
+    Example
+        prompt = 'Refactor this code.'
+        prompt_suffix = 'Make it more readable using this EXAMPLE.'
+        cap_ref = 'EXAMPLE'
+        cap_ref_content = 'def foo():\n    return True'
+        returns 'Refactor this code. Make it more readable using this EXAMPLE.\n\nEXAMPLE\n\ndef foo():\n    return True'
+    """
+    new_prompt = f"""{prompt} {prompt_suffix}\n\n{cap_ref}\n\n{cap_ref_content}"""
     return new_prompt
 
 
 def count_tokens(text: str):
+    """
+    Count the number of tokens in a string.
+    """
     enc = tiktoken.get_encoding("cl100k_base")
     return len(enc.encode(text))
 
 
-def estimate_price_and_tokens(text):
-    COST_PER_1k_TOKENS = 0.06
+map_model_to_cost_per_1k_tokens = {
+    "gpt-4": 0.075,  # ($0.03 Input Tokens + $0.06 Output Tokens) / 2
+    "gpt-4-1106-preview": 0.02,  # ($0.01 Input Tokens + $0.03 Output Tokens) / 2
+    "gpt-4-1106-vision-preview": 0.02,  # ($0.01 Input Tokens + $0.03 Output Tokens) / 2
+    "gpt-3.5-turbo-1106": 0.0015,  # ($0.001 Input Tokens + $0.002 Output Tokens) / 2
+}
+
+def estimate_price_and_tokens(text, model="gpt-4"):
+    """
+    Conservative estimate the price and tokens for a given text.
+    """
+    # round up to the output tokens
+    COST_PER_1k_TOKENS = map_model_to_cost_per_1k_tokens[model]
     tokens = count_tokens(text)
     estimated_cost = (tokens / 1000) * COST_PER_1k_TOKENS
-    # round up to the output tokens
+    # round
     estimated_cost = round(estimated_cost, 2)
     return estimated_cost, tokens
-
-
-def is_valid_json(json_str):
-    try:
-        json.loads(json_str)
-        return True
-    except json.JSONDecodeError:
-        return False
-
-
-def fix_msg_ascii(_str):
-    if isinstance(_str, str) and is_valid_json(_str):
-        data = json.loads(_str)
-        _zh = json.dumps(data, ensure_ascii=False, indent=4)
-        return _zh
-    elif isinstance(_str, OpenAIObject): #<class 'openai.openai_object.OpenAIObject'>
-        return _str.to_dict()
-    else:
-        return _str
 

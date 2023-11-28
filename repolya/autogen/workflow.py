@@ -20,10 +20,10 @@ from repolya.autogen.as_rd import RD_user, RD_researcher
 from repolya.autogen.as_research import RES_user, RES_engineer, RES_scientist, RES_planner, RES_executor, RES_critic
 from repolya.autogen.as_draw import DRAW_user, DRAW_artist, DRAW_critic
 from repolya.autogen.as_postgre import (
-    POSTGRE_user,
-    POSTGRE_engineer,
-    POSTGRE_pm,
-    build_sr_data_analyst_agent,
+    # POSTGRE_user,
+    # POSTGRE_engineer,
+    # POSTGRE_pm,
+    # build_sr_data_analyst_agent,
     build_team_organizer,
 )
 from repolya.autogen.as_util import text_report_analyst, json_report_analyst, yaml_report_analyst
@@ -491,64 +491,59 @@ def do_draw(msg):
     return DRAW_user.last_message()["content"]
 
 
-# def do_postgre(msg):
-#     DB_URL = os.environ.get("POSTGRE_URL")
-#     POSTGRES_TABLE_DEFINITIONS_CAP_REF = "TABLE_DEFINITIONS"
-#     _prompt = f"Fulfill this database query: {msg}. "
-#     with PostgresManager() as db:
-#         db.connect_with_url(DB_URL)
-#         # users_table = db.get_all("users")
-#         table_definitions = db.get_table_definitions_for_prompt()
-#     prompt = add_cap_ref(
-#         _prompt,
-#         f"Use these {POSTGRES_TABLE_DEFINITIONS_CAP_REF} to satisfy the database query.",
-#         POSTGRES_TABLE_DEFINITIONS_CAP_REF,
-#         table_definitions,
-#     )
-#     groupchat = GroupChat(
-#         agents=[
-#             POSTGRE_user,
-#             POSTGRE_engineer,
-#             POSTGRE_analyst,
-#             POSTGRE_pm,
-#         ],
-#         messages=[],
-#         max_round=10,
-#     )
-#     manager = GroupChatManager(
-#         groupchat=groupchat,
-#         llm_config=base_config,
-#     )
-#     POSTGRE_user.initiate_chat(
-#         manager,
-#         message=prompt,
-#         clear_history=True,
-#     )
-#     return POSTGRE_user.last_message()["content"]
-
-
 def do_postgre_organizer(msg):
     DB_URL = os.environ.get("POSTGRE_URL")
     POSTGRES_TABLE_DEFINITIONS_CAP_REF = "TABLE_DEFINITIONS"
     prompt = f"Fulfill this database query: {msg}. "
     session_id = generate_session_id(msg)
     with PostgresAgentInstruments(DB_URL, session_id) as (agent_instruments, db):
+        # ----------- Gate Team: Prevent bad prompts from running and burning your $$$ -------------
+        gate_organizer = build_team_organizer(
+            "scrum_master",
+            agent_instruments,
+            validate_results=lambda: (True, ""),
+        )
+        gate_organizer: ConversationResult = (
+            gate_organizer.sequential_conversation(prompt)
+        )
+        print("gate_organizer.last_message_str", gate_organizer.last_message_str)
+        nlq_confidence = int(gate_organizer.last_message_str)
+        match nlq_confidence:
+            case (1 | 2):
+                print(f"❌ Gate Team Rejected - Confidence too low: {nlq_confidence}")
+                return
+            case (3 | 4 | 5):
+                print(f"✅ Gate Team Approved - Valid confidence: {nlq_confidence}")
+            case _:
+                print("❌ Gate Team Rejected - Invalid response")
+                return
+        # -------- BUILD TABLE DEFINITIONS -----------
         map_table_name_to_table_def = db.get_table_definition_map_for_embeddings()
         database_embedder = DatabaseEmbedder()
         for name, table_def in map_table_name_to_table_def.items():
             database_embedder.add_table(name, table_def)
         similar_tables = database_embedder.get_similar_tables(msg, n=5)
-        table_definitions = database_embedder.get_table_definitions_from_names(similar_tables)
+
+        table_definitions = database_embedder.get_table_definitions_from_names(
+            similar_tables
+        )
+        related_table_names = db.get_related_tables(similar_tables, n=3)
+        core_and_related_table_definitions = (
+            database_embedder.get_table_definitions_from_names(
+                related_table_names + similar_tables
+            )
+        )
         prompt = add_cap_ref(
             prompt,
             f"Use these {POSTGRES_TABLE_DEFINITIONS_CAP_REF} to satisfy the database query.",
             POSTGRES_TABLE_DEFINITIONS_CAP_REF,
             table_definitions,
         )
+        # ----------- Data Eng Team: Based on a sql table definitions and a prompt create an sql statement and execute it -------------
         data_eng_organizer = build_team_organizer(
-            "data-eng",
+            "data_eng",
             agent_instruments,
-            validate_results_func=agent_instruments.validate_run_postgre,
+            validate_results=agent_instruments.validate_run_postgre,
         )
         data_eng_conversation_result: ConversationResult = (
             data_eng_organizer.sequential_conversation(prompt)
@@ -557,104 +552,34 @@ def do_postgre_organizer(msg):
             case ConversationResult(
                 success=True, cost=data_eng_cost, tokens=data_eng_tokens
             ):
-                print(
-                    f"✅ Organizer was successful. Team: {data_eng_organizer.name}"
-                )
-                print(
-                    f"📊 Name: {data_eng_organizer.name} Cost: {data_eng_cost}, tokens: {data_eng_tokens}"
-                )
+                print(f"✅ Organizer was successful. Team: {data_eng_organizer.name}")
+                print(f"📊 {data_eng_organizer.name} Cost: {data_eng_cost}, tokens: {data_eng_tokens}")
             case _:
-                print(
-                    f"❌ Organizer failed. Team: {data_eng_organizer.name}"
-                )
-
-    # with PostgresManager() as db:
-    #     db.connect_with_url(DB_URL)
-    #     map_table_name_to_table_def = db.get_table_definition_map_for_embeddings()
-    #     database_embedder = DatabaseEmbedder()
-    #     for name, table_def in map_table_name_to_table_def.items():
-    #         database_embedder.add_table(name, table_def)
-    #     similar_tables = database_embedder.get_similar_tables(msg, n=5)
-    #     table_definitions = database_embedder.get_table_definitions_from_names(similar_tables)
-    #     # users_table = db.get_all("users")
-    #     # table_definitions = db.get_table_definitions_for_prompt()
-    #     prompt = add_cap_ref(
-    #         _prompt,
-    #         f"Use these {POSTGRES_TABLE_DEFINITIONS_CAP_REF} to satisfy the database query.",
-    #         POSTGRES_TABLE_DEFINITIONS_CAP_REF,
-    #         table_definitions,
-    #     )
-    #     def validate_results_func() -> bool:
-    #         with open("results.json", "r") as f:
-    #             content = f.read()
-    #         return bool(content)
-    #     # data_eng_organizer = build_team_organizer(
-    #     #     "data_eng",
-    #     #     db,
-    #     #     validate_results_func
-    #     # )
-    #     data_eng_organizer = Organizer(
-    #         name="Postgres Data Analytics Multi-Agent ::: Data Engineering Team",
-    #         agents=[
-    #             POSTGRE_user,
-    #             POSTGRE_engineer,
-    #             build_sr_data_analyst_agent(db),
-    #             # POSTGRE_pm,
-    #         ],
-    #         validate_results_func=validate_results_func,
-    #     )
-    #     data_eng_conversation_result: ConversationResult = (
-    #         data_eng_organizer.sequential_conversation(prompt)
-    #     )
-    #     match data_eng_conversation_result:
-    #         case ConversationResult(
-    #             success=True, cost=data_eng_cost, tokens=data_eng_tokens
-    #         ):
-    #             print(
-    #                 f"✅ Organizer was successful. Team: {data_eng_organizer.name}"
-    #             )
-    #             print(
-    #                 f"📊 Name: {data_eng_organizer.name}: Cost: {data_eng_cost}, tokens: {data_eng_tokens}"
-    #             )
-    #         case _:
-    #             print(
-    #                 f"❌ Organizer failed. Team: {data_eng_organizer.name}"
-    #             )
-    #     # data_to_report = data_eng_messages[-2]["content"]
-    #     # data_to_report = [
-    #     #     {
-    #     #         "id": 1,
-    #     #         "created": "2023-09-28T10:00:00",
-    #     #         "updated": "2023-09-28T10:10:00",
-    #     #         "authed": True,
-    #     #         "plan": "Basic",
-    #     #         "name": "John Doe",
-    #     #         "email": "john.doe@outlook.com"
-    #     #     },
-    #     #     {
-    #     #         "id": 2,
-    #     #         "created": "2023-09-27T11:00:00",
-    #     #         "updated": "2023-09-28T11:15:00",
-    #     #         "authed": True,
-    #     #         "plan": "Premium",
-    #     #         "name": "Jane Smith",
-    #     #         "email": "jane.smith@outlook.com"
-    #     #     }
-    #     # ]
-    #     ##### write to txt, json, yaml
-    #     # data_viz_organizer = Organizer(
-    #     #     name="Postgres Data Analytics Multi-Agent ::: Data Viz Team",
-    #     #     agents=[
-    #     #         POSTGRE_user,
-    #     #         text_report_analyst,
-    #     #         json_report_analyst,
-    #     #         yaml_report_analyst,
-    #     #     ],
-    #     #     validate_results_func=validate_results_func,
-    #     # )
-    #     # data_viz_prompt = f"Here is the data to report: {data_to_report}"
-    #     # data_viz_organizer.broadcast_conversation(data_viz_prompt)
-    #     # data_viz_cost, data_viz_tokens = data_viz_organizer.get_cost_and_tokens()
-    #     # print(f"Data Viz Cost: {data_viz_cost}, tokens: {data_viz_tokens}")
-    #     # print(f"Organizer Cost: {data_eng_cost + data_viz_cost}, tokens: {data_eng_tokens + data_viz_tokens}")
+                print(f"❌ Organizer failed. Team: {data_eng_organizer.name} Failed")
+        # ----------- Data Insights Team: Based on sql table definitions and a prompt generate novel insights -------------
+        innovation_prompt = f"Given this database query: '{msg}'. Generate novel insights and new database queries to give business insights."
+        insights_prompt = add_cap_ref(
+            innovation_prompt,
+            f"Use these {POSTGRES_TABLE_DEFINITIONS_CAP_REF} to satisfy the database query.",
+            POSTGRES_TABLE_DEFINITIONS_CAP_REF,
+            core_and_related_table_definitions,
+        )
+        data_insights_organizer = build_team_organizer(
+            "data_insights",
+            agent_instruments,
+            validate_results=agent_instruments.validate_innovation_files,
+        )
+        data_insights_conversation_result: ConversationResult = (
+            data_insights_organizer.round_robin_conversation(
+                insights_prompt, loops=1
+            )
+        )
+        match data_insights_conversation_result:
+            case ConversationResult(
+                success=True, cost=data_insights_cost, tokens=data_insights_tokens
+            ):
+                print(f"✅ Organizer was successful. Team: {data_insights_organizer.name}")
+                print(f"📊 {data_insights_organizer.name} Cost: {data_insights_cost}, tokens: {data_insights_tokens}")
+            case _:
+                print(f"❌ Organizer failed. Team: {data_insights_organizer.name} Failed")
 
