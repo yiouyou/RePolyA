@@ -19,6 +19,7 @@ fastapi
 fire
 flaml
 gradio
+google_patent_scraper
 googlemaps
 guidance
 html2text
