@@ -21,7 +21,7 @@ flaml
 gradio
 google_patent_scraper
 googlemaps
-guidance
+guidance==0.0.64
 html2text
 ipython
 langchain
@@ -31,12 +31,12 @@ loguru
 markdownify
 matplotlib
 matplotlib-venn
-openai
+openai==1.2.3
 openpyxl
 pandas
 playwright
-psycopg2-binary
-pyautogen
+psycopg2-binary==2.9.8
+pyautogen==0.2.0
 pybtex
 pydantic==1.10.9
 pydub
@@ -55,6 +55,7 @@ seaborn
 sentence-transformers
 setuptools
 scrapetube
+scikit-learn==1.3.1
 termcolor
 tiktoken
 tqdm
