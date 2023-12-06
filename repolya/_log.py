@@ -1,6 +1,6 @@
 import sys
 from loguru import logger
-from repolya._const import LOG_CHAT, LOG_PAPER, LOG_WRITER, LOG_METAGPT, LOG_CODER, LOG_AZURE, LOG_AUTOGEN, LOG_RAG, LOG_TOOLSET, LOG_YJ
+from repolya._const import LOG_CHAT, LOG_PAPER, LOG_WRITER, LOG_METAGPT, LOG_CODER, LOG_AZURE, LOG_AUTOGEN, LOG_RAG, LOG_TOOLSET, LOG_JD
 
 
 logger.remove()
@@ -18,7 +18,7 @@ logger.add(LOG_AZURE, level='DEBUG', format=_format, filter=lambda x: x["extra"]
 logger.add(LOG_AUTOGEN, level='DEBUG', format=_format, filter=lambda x: x["extra"]["job"] == "autogen", backtrace=True, diagnose=True)
 logger.add(LOG_RAG, level='DEBUG', format=_format, filter=lambda x: x["extra"]["job"] == "rag", backtrace=True, diagnose=True)
 logger.add(LOG_TOOLSET, level='DEBUG', format=_format, filter=lambda x: x["extra"]["job"] == "toolset", backtrace=True, diagnose=True)
-logger.add(LOG_YJ, level='DEBUG', format=_format, filter=lambda x: x["extra"]["job"] == "yj", backtrace=True, diagnose=True)
+logger.add(LOG_JD, level='DEBUG', format=_format, filter=lambda x: x["extra"]["job"] == "jd", backtrace=True, diagnose=True)
 
 logger_chat = logger.bind(job="chat")
 logger_paper = logger.bind(job="paper")
@@ -29,5 +29,5 @@ logger_azure = logger.bind(job="azure")
 logger_autogen = logger.bind(job="autogen")
 logger_rag = logger.bind(job="rag")
 logger_toolset = logger.bind(job="toolset")
-logger_yj = logger.bind(job="yj")
+logger_jd = logger.bind(job="jd")
 

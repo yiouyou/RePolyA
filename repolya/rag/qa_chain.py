@@ -102,19 +102,21 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
         input_variables=["question", "context"],
         template="""### 系统:
 
-您是问答任务的助手。使用以下检索到的上下文来回答问题。如果你不知道答案，就说你不知道。最多使用三个句子并保持答案简洁通顺。
+您是问答任务的助手。使用以下检索到的上下文来回答问题。如果你不知道答案，就说你不知道。
 
 ### 操作说明: 
 
 上下文: 
 {context} 
 
-问题: {question}
+请回答如下问题：
+{question}
 
 ### 回复:
 """,
     )
-    llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=2000, _stopping_strings=["```", "###", "\n\n"])
+    llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=3000, _stopping_strings=["```", "###", "\n\n"])
+    # llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=3000, _stopping_strings=[])
     _qa = load_qa_chain(
         llm,
         chain_type=_chain_type,
@@ -125,8 +127,9 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
             "input_documents": _docs,
             "question": _query
         },
-        return_only_outputs=True
+        return_only_outputs=False
     )
+    logger_rag.info(_ans)
     #####
     logger_rag.info(f"Q: {_query}")
     for i in _generated_queries:

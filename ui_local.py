@@ -22,7 +22,16 @@ from ui_local_yj import (
     yj_sort_out_context_textgen,
     yj_clean_all,
     yj_write_plan,
-    show_YJ_context,
+    show_yj_context,
+)
+
+
+from ui_local_ct import (
+    ct_read_logs,
+    ct_sort_out_context_textgen,
+    ct_clean_all,
+    ct_write_plan,
+    show_ct_context,
 )
 
 
@@ -52,7 +61,7 @@ def chg_textbox_visible(_radio):
 
 ##### UI
 _description = """
-# 报文问答 / 标签提取 / 应急事件
+# 报文问答 / 标签提取 / 事件脉络
 """
 chat_ask = gr.Textbox(label="", placeholder="...", lines=5, max_lines=5, interactive=True, visible=True, scale=9)
 
@@ -187,9 +196,54 @@ with gr.Blocks(title=_description) as demo:
             []
         )
         yj_context.change(
-            show_YJ_context,
+            show_yj_context,
             inputs=[yj_context],
             outputs=[yj_download_context]
+        )
+
+
+    with gr.Tab(label = "冲突事件"):
+        with gr.Row():
+            with gr.Column(scale=1):
+                ct_query = gr.Textbox(label="专题", placeholder="...", lines=8, max_lines=8, interactive=True, visible=True)
+                ct_start_btn = gr.Button("开始梳理", variant="secondary", visible=True)
+                ct_clean_btn = gr.Button("清空", variant="secondary", visible=True)
+            with gr.Column(scale=1):
+                ct_log = gr.Textbox(label="日志", placeholder="...", lines=14, max_lines=14, interactive=False, visible=True)
+        ct_context = gr.Textbox(label="事件脉络", placeholder="...", lines=18, max_lines=18, interactive=False, visible=True)
+        ct_plan_btn = gr.Button("生成总结", variant="secondary", visible=False)
+        ct_plan = gr.Textbox(label="总结报告", placeholder="...", lines=15, max_lines=15, interactive=False, visible=False)
+        ct_download_context = gr.File(label="下载文件", file_count="single", type="file", file_types=['.md'], interactive=True, visible=False)
+        ct_query.change(
+            chg_btn_color_if_input,
+            [ct_query],
+            [ct_start_btn]
+        )
+        ct_start_btn.click(
+            ct_read_logs,
+            [],
+            [ct_log, ct_context, ct_plan],
+            every=1
+        )
+        ct_start_btn.click(
+            ct_sort_out_context_textgen,
+            [ct_query],
+            [ct_plan_btn]
+        )
+        ct_clean_btn.click(
+            ct_clean_all,
+            [],
+            [ct_query, ct_start_btn, ct_plan_btn, ct_log, ct_context, ct_plan]
+        )
+        ct_plan_btn.click(
+            ct_write_plan,
+            [ct_query, ct_context],
+            []
+        )
+        ct_context.change(
+            show_ct_context,
+            inputs=[ct_context],
+            outputs=[ct_download_context]
         )
 
 

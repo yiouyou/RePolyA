@@ -1,5 +1,5 @@
 from repolya._const import WORKSPACE_AUTOGEN, AUTOGEN_JD
-from repolya._log import logger_yj
+from repolya._log import logger_jd
 
 from repolya.autogen.organizer import (
     Organizer,
@@ -64,9 +64,9 @@ def clean_filename(text, max_length=10):
 
 def search_all(_query):
     _all = []
-    _all.extend(google(_query, n=1))
-    _all.extend(bing(_query, n=1))
-    _all.extend(ddg(_query, n=1))
+    # _all.extend(google(_query, n=1))
+    _all.extend(bing(_query, n=3))
+    # _all.extend(ddg(_query, n=1))
     return _all
 
 
@@ -89,45 +89,29 @@ def task_with_context_template(_task, _context, template):
 
 
 ##### event context
-yj_keyword = {
-    "基本情况_1": "发生发展时间线",
-    "基本情况_2": "灾害规模和强度",
-    "处置过程_1": "实施应急响应和救援措施的时间线",
-    "处置过程_2": "政府和非政府组织角色",#
-    "军民协作_1": "军队参与救灾行动的时间线",
-    "军民协作_2": "军队救援行动和协作细节",
-    "法规依据_1": "军队协助救灾的法律依据",
-    "法规依据_2": "应急救援军地联动机制",
-    "影响评估_1": "灾害对经济和社会的影响",
-    "影响评估_2": "受灾群体和地区的恢复进程",
-    "反思启示_1": "灾害管理和应对的有效性评估",
-    "反思启示_2": "灾害的经验教训和改进措施",
-}
-
-
-def generate_search_dict_for_event(_event: str) -> dict[str]:
+def generate_search_dict_for_event(_event: str, _keyword: dict) -> dict[str]:
     _event_name = clean_filename(_event, 20)
     _event_dir = str(AUTOGEN_JD / _event_name)
     _dict = {}
-    logger_yj.info("generate_search_dict_for_event：开始")
-    for i in yj_keyword.keys():
-        _i = f"{_event} AND {yj_keyword[i]}"
+    logger_jd.info("generate_search_dict_for_event：开始")
+    for i in _keyword.keys():
+        _i = f"{_event} AND {_keyword[i]}"
         _dict[i] = _i
-        logger_yj.info(_i)
-    logger_yj.info("generate_search_dict_for_event：完成")
+        logger_jd.info(_i)
+    logger_jd.info("generate_search_dict_for_event：完成")
     return _dict
 
 
 def generate_context_for_each_query(_query: str, _db_name: str, _clean_txt_dir: str):
     _context, _token_cost = "", "Tokens: 0 = (Prompt 0 + Completion 0) Cost: $0"
     _all = search_all(_query)
-    logger_yj.info(print_search_all(_all))
+    logger_jd.info(print_search_all(_all))
     _all_link = [i['link'] for i in _all]
     _urls = list(set(_all_link))
     if not os.path.exists(_db_name):
         urls_to_faiss_OpenAI(_urls, _db_name, _clean_txt_dir)
     else:
-        logger_yj.info(f"'{_db_name}'已存在，无需 urls_to_faiss_OpenAI")
+        logger_jd.info(f"'{_db_name}'已存在，无需 urls_to_faiss_OpenAI")
     ### multi query
     _vdb = get_faiss_OpenAI(_db_name)
     _ask = _query.replace(' AND ', ' ')
@@ -164,11 +148,11 @@ def generate_context_for_each_query(_query: str, _db_name: str, _clean_txt_dir: 
             _context = '\n'.join(_clean)
         with open(_context_fp, "w") as f:
             f.write(_context)
-    logger_yj.info(_ask)
-    # logger_yj.info(_ans)
-    # logger_yj.info(_matches)
-    logger_yj.info(_context)
-    logger_yj.info(_token_cost)
+    logger_jd.info(_ask)
+    # logger_jd.info(_ans)
+    # logger_jd.info(_matches)
+    logger_jd.info(_context)
+    logger_jd.info(_token_cost)
     return _context, _token_cost, _urls
 
 
@@ -176,12 +160,12 @@ def generate_context_for_each_query_textgen(_query: str, _db_name: str, _clean_t
     _context, _token_cost, _urls = "", "Tokens: 0 = (Prompt 0 + Completion 0) Cost: $0", ""
     if not os.path.exists(_db_name):
         _all = search_all(_query)
-        logger_yj.info(print_search_all(_all))
+        logger_jd.info(print_search_all(_all))
         _all_link = [i['link'] for i in _all]
         _urls = list(set(_all_link))
         urls_to_faiss_HuggingFace(_urls, _db_name, _clean_txt_dir)
     else:
-        logger_yj.info(f"'{_db_name}'已存在，无需 urls_to_faiss_HuggingFace")
+        logger_jd.info(f"'{_db_name}'已存在，无需 urls_to_faiss_HuggingFace")
     ### multi query
     _vdb = get_faiss_HuggingFace(_db_name)
     _ask = _query.replace(' AND ', ' ')
@@ -217,61 +201,53 @@ def generate_context_for_each_query_textgen(_query: str, _db_name: str, _clean_t
             _context = '\n'.join(_clean)
         with open(_context_fp, "w") as f:
             f.write(_context)
-    logger_yj.info(_ask)
-    # logger_yj.info(_ans)
-    # logger_yj.info(_matches)
-    logger_yj.info(_context)
-    logger_yj.info(_token_cost)
+    logger_jd.info(_ask)
+    # logger_jd.info(_ans)
+    # logger_jd.info(_matches)
+    logger_jd.info(_context)
+    logger_jd.info(_token_cost)
     return _context, _token_cost, _urls
 
 
-def context_report(_event: str, _title: str, _context: dict, _urls: dict):
+def context_report(_event: str, _title: str, _context: dict, _urls: dict, _keyword: dict, _section: list[str]):
     _report = []
     _report.append(_title)
-    _section = [
-        "基本情况",
-        "处置过程",
-        "军民协作",
-        "法规依据",
-        "影响评估",
-        "反思启示",
-    ]
     for i in _section:
         _section = []
         _section.append(f"# {i}")
         for j in _context.keys():
             if i in j:
-                _section.append(f"## [{yj_keyword[j]}]({_urls[j][0]})\n{_context[j]}")
+                _section.append(f"## [{_keyword[j]}]({_urls[j][0]})\n{_context[j]}")
         _report.append("\n\n".join(_section))
     # _report.append(f"# {_event}相关链接" + "\n\n" + "\n".join(_urls)
     return "\n\n\n".join(_report)
 
 
-def generate_event_context(_event: str, _dict: dict[str]) -> dict[str]:
+def generate_event_context(_event: str, _dict: dict[str], _keyword: dict, _section: list[str]) -> dict[str]:
     _event_name = clean_filename(_event, 20)
     _event_dir = str(AUTOGEN_JD / _event_name)
     _context = {}
     if not os.path.exists(_event_dir):
         os.makedirs(_event_dir)
-    logger_yj.info("generate_context_for_search_list：开始")
+    logger_jd.info("generate_context_for_search_list：开始")
     _tc = []
     _urls = {}
     for i in _dict.keys():
         i_key = _dict[i].split(" AND ")[1]
-        i_db_name = os.path.join(_event_dir, f"{i_key}/yj_rag_openai")
-        i_clean_txt_dir = os.path.join(_event_dir, f"{i_key}/yj_rag_clean_txt")
+        i_db_name = os.path.join(_event_dir, f"{i_key}/_rag_openai")
+        i_clean_txt_dir = os.path.join(_event_dir, f"{i_key}/_rag_clean_txt")
         i_context, i_token_cost, i_urls = generate_context_for_each_query(_dict[i], i_db_name, i_clean_txt_dir)
         _context[i] = i_context
         _tc.append(i_token_cost)
         _urls[i] = i_urls
     _token_cost = calc_token_cost(_tc)
-    logger_yj.info(_token_cost)
-    logger_yj.info("generate_context_for_search_list：完成")
+    logger_jd.info(_token_cost)
+    logger_jd.info("generate_context_for_search_list：完成")
     _title = f"'{_event}'事件脉络梳理报告"
     _report_fp = os.path.join(_event_dir, f"{_title}.md")
     if not os.path.exists(_report_fp):
         _context_str = json.dumps(_context, ensure_ascii=False, indent=4)
-        _report = context_report(_event, _context, _urls)
+        _report = context_report(_event, _title, _context, _urls, _keyword, _section)
         with open(_report_fp, "w") as f:
             f.write(_report)
     else:
@@ -280,31 +256,31 @@ def generate_event_context(_event: str, _dict: dict[str]) -> dict[str]:
     return _report, _report_fp
 
 
-def generate_event_context_textgen(_event: str, _dict: dict[str], _textgen_url: str) -> dict[str]:
+def generate_event_context_textgen(_event: str, _dict: dict[str], _textgen_url: str, _keyword: dict, _section: list[str]) -> dict[str]:
     _event_name = clean_filename(_event, 20)
     _event_dir = str(AUTOGEN_JD / _event_name)
     _context = {}
     if not os.path.exists(_event_dir):
         os.makedirs(_event_dir)
-    logger_yj.info("generate_context_for_search_list：开始")
+    logger_jd.info("generate_context_for_search_list：开始")
     _tc = []
     _urls = {}
     for i in _dict.keys():
         i_key = _dict[i].split(" AND ")[1]
-        i_db_name = os.path.join(_event_dir, f"{i_key}/yj_rag_hf")
-        i_clean_txt_dir = os.path.join(_event_dir, f"{i_key}/yj_rag_clean_txt")
+        i_db_name = os.path.join(_event_dir, f"{i_key}/_rag_hf")
+        i_clean_txt_dir = os.path.join(_event_dir, f"{i_key}/_rag_clean_txt")
         i_context, i_token_cost, i_urls = generate_context_for_each_query_textgen(_dict[i], i_db_name, i_clean_txt_dir, _textgen_url)
         _context[i] = i_context
         _tc.append(i_token_cost)
         _urls[i] = i_urls
     _token_cost = calc_token_cost(_tc)
-    logger_yj.info(_token_cost)
-    logger_yj.info("generate_context_for_search_list：完成")
+    logger_jd.info(_token_cost)
+    logger_jd.info("generate_context_for_search_list：完成")
     _title = f"'{_event}'事件脉络梳理报告"
     _report_fp = os.path.join(_event_dir, f"{_title}.md")
     if not os.path.exists(_report_fp):
         _context_str = json.dumps(_context, ensure_ascii=False, indent=4)
-        _report = context_report(_event, _title, _context, _urls)
+        _report = context_report(_event, _title, _context, _urls, _keyword, _section)
         with open(_report_fp, "w") as f:
             f.write(_report)
     else:
@@ -317,10 +293,10 @@ def generate_event_context_textgen(_event: str, _dict: dict[str], _textgen_url: 
 def generate_event_plan(_event: str, _context:str) -> str:
     _event_name = clean_filename(_event, 20)
     _event_dir = str(AUTOGEN_JD / _event_name)
-    # _db_name = os.path.join(_event_dir, f"yj_rag_openai")
-    logger_yj.info("generate_event_plan：开始")
+    # _db_name = os.path.join(_event_dir, f"_rag_openai")
+    logger_jd.info("generate_event_plan：开始")
     _plan = f"{_context}\n\n【plan】"
-    logger_yj.info("generate_event_plan：完成")
+    logger_jd.info("generate_event_plan：完成")
     return _plan
 
 
@@ -339,16 +315,16 @@ def fetch_all_link(_all, _event_dir):
             # _txt = _re[i].get_text()
             _txt = _re[i].get_text()
             wf.write(_txt)
-        logger_yj.info(f"{_all_link[i]} -> {_fn}.txt")
+        logger_jd.info(f"{_all_link[i]} -> {_fn}.txt")
         _txt_fp.append(_fp)
     return _txt_fp
 
 
 def handle_fetch(_event_dir, _db_name, _clean_txt_dir):
-    logger_yj.info(f"generate faiss_openai：开始")
+    logger_jd.info(f"generate faiss_openai：开始")
     dir_to_faiss_OpenAI(_event_dir, _db_name, _clean_txt_dir)
-    logger_yj.info(f"generate faiss_openai：{_db_name}")
-    logger_yj.info(f"generate faiss_openai：完成")
+    logger_jd.info(f"generate faiss_openai：{_db_name}")
+    logger_jd.info(f"generate faiss_openai：完成")
 
 
 
@@ -356,15 +332,15 @@ def handle_fetch(_event_dir, _db_name, _clean_txt_dir):
 #     _event_dir = str(AUTOGEN_JD / _event_name)
 #     if not os.path.exists(_event_dir):
 #         os.makedirs(_event_dir)
-#         _db_name = str(AUTOGEN_JD / _event_dir / f"yj_rag_openai")
-#         _clean_txt_dir = str(AUTOGEN_JD / _event_dir / f"yj_rag_clean_txt")
-#         logger_yj.info("generate_vdb_for_search_query：开始")
+#         _db_name = str(AUTOGEN_JD / _event_dir / f"_rag_openai")
+#         _clean_txt_dir = str(AUTOGEN_JD / _event_dir / f"_rag_clean_txt")
+#         logger_jd.info("generate_vdb_for_search_query：开始")
 #         # ### search, fetch, vdb
 #         # for i in _query:
 #         #     i_all = search_all(i)
 #         #     i_psa = print_search_all(i_all)
-#         #     logger_yj.info(f"'{i}'")
-#         #     logger_yj.info(i_psa)
+#         #     logger_jd.info(f"'{i}'")
+#         #     logger_jd.info(i_psa)
 #         #     fetch_all_link(i_all, _event_dir)
 #         # handle_fetch(_event_dir, _db_name, _clean_txt_dir)
 #         ### search, load, vdb
@@ -373,13 +349,13 @@ def handle_fetch(_event_dir, _db_name, _clean_txt_dir):
 #             i_all = search_all(i)
 #             _all.extend(i_all)
 #         _psa = print_search_all(_all)
-#         logger_yj.info(_psa)
+#         logger_jd.info(_psa)
 #         _all_link = [i['link'] for i in _all]
 #         _urls = list(set(_all_link))
 #         urls_to_faiss(_urls, _db_name, _clean_txt_dir)
-#         logger_yj.info("generate_vdb_for_search_query：完成")
+#         logger_jd.info("generate_vdb_for_search_query：完成")
 #     else:
-#         logger_yj.info(f"'{_event_name}'专题已存在，无需 generate_vdb_for_search_query")
+#         logger_jd.info(f"'{_event_name}'专题已存在，无需 generate_vdb_for_search_query")
 #         # shutil.rmtree(_event_dir)
 #         # os.makedirs(_event_dir)
 
@@ -394,25 +370,25 @@ def handle_fetch(_event_dir, _db_name, _clean_txt_dir):
 #     with get_openai_callback() as cb:
 #         _res = chain({"question": _ask}, return_only_outputs=True)
 #         _token_cost = f"Tokens: {cb.total_tokens} = (Prompt {cb.prompt_tokens} + Completion {cb.completion_tokens}) Cost: ${format(cb.total_cost, '.5f')}"
-#         logger_yj.info(_token_cost)
+#         logger_jd.info(_token_cost)
 #     return _res['answer'], _res['sources'], _token_cost
 
 
 # def generate_event_context(_event: str, _event_name: str) -> str:
-#     _db_name = str(AUTOGEN_JD / _event_name / f"yj_rag_openai")
+#     _db_name = str(AUTOGEN_JD / _event_name / f"_rag_openai")
 #     _ask_vdb = str(AUTOGEN_JD / _event_name / 'ask_vdb.txt')
 #     if os.path.exists(_ask_vdb):
 #         os.remove(_ask_vdb)
-#     logger_yj.info("generate_event_context：开始")
+#     logger_jd.info("generate_event_context：开始")
 #     _task = "请生成关于'{_context}'的详细信息查询问题列表（一个问题一行）。确保只列出具体的问题，而不包括任何章节标题或编号。"
 #     _ans, _tc = task_with_context_template(_task, _event, _gec_ask)
-#     # logger_yj.info(f"\n{_ans}")
+#     # logger_jd.info(f"\n{_ans}")
 #     _extracted = re.findall(r'\s+-\s+(.*)\n', _ans)
 #     for i in _extracted:
-#         logger_yj.info(i)
-#     logger_yj.info(_tc)
+#         logger_jd.info(i)
+#     logger_jd.info(_tc)
 #     ### ask_vdb
-#     logger_yj.info("ask_vdb：开始")
+#     logger_jd.info("ask_vdb：开始")
 #     _vdb = get_faiss_OpenAI(_db_name)
 #     _qas = []
 #     _tc = []
@@ -432,7 +408,7 @@ def handle_fetch(_event_dir, _db_name, _clean_txt_dir):
 #         i_ans = i_ans.strip()
 #         if i_ans != '':
 #             i_qas = f"Q: {i}\nA: {i_ans}"
-#             logger_yj.info(i_qas)
+#             logger_jd.info(i_qas)
 #             _qas.append(i_qas)
 #             with open(_ask_vdb, "w") as f:
 #                 f.write("\n\n".join(_qas))
@@ -440,11 +416,11 @@ def handle_fetch(_event_dir, _db_name, _clean_txt_dir):
 #         _tc.append(s_token_cost)
 #         _tc.append(i_token_cost)
 #     _token_cost = calc_token_cost(_tc)
-#     logger_yj.info(_token_cost)
-#     logger_yj.info("ask_vdb：完成")
+#     logger_jd.info(_token_cost)
+#     logger_jd.info("ask_vdb：完成")
 #     ### 
 #     _context = "【_context】"
-#     logger_yj.info("generate_event_context：完成")
+#     logger_jd.info("generate_event_context：完成")
 #     return _context
 
 
@@ -452,18 +428,18 @@ def handle_fetch(_event_dir, _db_name, _clean_txt_dir):
 #     _event_dir = str(AUTOGEN_JD / _event_name)
 #     _query = []
 #     if not os.path.exists(_event_dir):
-#         logger_yj.info("generate_search_query_for_event：开始")
+#         logger_jd.info("generate_search_query_for_event：开始")
 #         _task = "请生成关于'{_context}'的信息查询列表。确保只列出具体的查询语句，而不包括任何章节标题或编号。"
 #         _ans, _tc = task_with_context_template(_task, _event, _gsqfe)
-#         # logger_yj.info(f"\n{_ans}")
+#         # logger_jd.info(f"\n{_ans}")
 #         _extracted = re.findall(r'\s+-\s+(.*)\n', _ans)
 #         for i in _extracted:
-#             logger_yj.info(i)
-#         logger_yj.info(_tc)
+#             logger_jd.info(i)
+#         logger_jd.info(_tc)
 #         _query = _extracted
-#         logger_yj.info("generate_search_query_for_event：完成")
+#         logger_jd.info("generate_search_query_for_event：完成")
 #     else:
-#         logger_yj.info(f"'{_event_name}'专题已存在，无需 generate_search_query_for_event")
+#         logger_jd.info(f"'{_event_name}'专题已存在，无需 generate_search_query_for_event")
 #     return _query
 
 

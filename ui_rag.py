@@ -394,14 +394,39 @@ def ml_helper(_query):
 
 
 ##### yj
+yj_keyword = {
+    "基本情况_1": "发生发展时间线",
+    "基本情况_2": "灾害规模和强度",
+    "处置过程_1": "实施应急响应和救援措施的时间线",
+    "处置过程_2": "政府和非政府组织角色",#
+    "军民协作_1": "军队参与救灾行动的时间线",
+    "军民协作_2": "军队救援行动和协作细节",
+    "法规依据_1": "军队协助救灾的法律依据",
+    "法规依据_2": "应急救援军地联动机制",
+    "影响评估_1": "灾害对经济和社会的影响",
+    "影响评估_2": "受灾群体和地区的恢复进程",
+    "反思启示_1": "灾害管理和应对的有效性评估",
+    "反思启示_2": "灾害的经验教训和改进措施",
+}
+
+yj_section = [
+    "基本情况",
+    "处置过程",
+    "军民协作",
+    "法规依据",
+    "影响评估",
+    "反思启示",
+]
+
+
 def yj_sort_out_context(_event):
     write_log_ans(_log_ans_yj_context, '')
     start_time = time.time()
     write_log_ans(_log_ans_yj_context, '', 'continue')
     #####
-    _dict = generate_search_dict_for_event(_event)
+    _dict = generate_search_dict_for_event(_event, yj_keyword)
     global _content_fp
-    _context, _content_fp = generate_event_context(_event, _dict)
+    _context, _content_fp = generate_event_context(_event, _dict, yj_keyword, yj_section)
     write_log_ans(_log_ans_yj_context, _context, 'done')
     #####
     end_time = time.time()

@@ -28,7 +28,7 @@ AUTOGEN_DOC = WORKSPACE_AUTOGEN / 'doc'
 AUTOGEN_REF = WORKSPACE_AUTOGEN / 'ref'
 AUTOGEN_IMG = WORKSPACE_AUTOGEN / 'img'
 AUTOGEN_JD = WORKSPACE_AUTOGEN / 'wf_jd'
-LOG_YJ = LOG_ROOT / "_ref_yj.txt"
+LOG_JD = LOG_ROOT / "_ref_jd.txt"
 
 
 ##### azure
