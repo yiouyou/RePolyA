@@ -98,13 +98,22 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
     _bm25_retriever = BM25Retriever.from_documents(_docs)
     _docs = _bm25_retriever.get_relevant_documents(_query)
     #####
-    rag_prompt_yi = PromptTemplate(
-        input_variables=["question", "context"],
-        template="""### 系统:
+#     _template = """### 系统:
 
-您是问答任务的助手。使用以下检索到的上下文来回答问题。如果你不知道答案，就说你不知道。
+# 您是问答任务的助手。使用以下检索到的上下文来回答问题。如果你不知道答案，就说你不知道。
 
-### 操作说明: 
+# ### 操作说明: 
+
+# 上下文: 
+# {context} 
+
+# 请回答如下问题：
+# {question}
+
+# ### 回复:
+# """
+    _template = """### Human:
+假定你是问答任务的助手，请使用以下检索到的上下文来回答问题。如果你不知道答案，就说你不知道。
 
 上下文: 
 {context} 
@@ -112,11 +121,14 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
 请回答如下问题：
 {question}
 
-### 回复:
-""",
+### Assistant:
+"""
+    rag_prompt_yi = PromptTemplate(
+        input_variables=["question", "context"],
+        template=_template,
     )
-    llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=3000, _stopping_strings=["```", "###", "\n\n"])
-    # llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=3000, _stopping_strings=[])
+    # llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=3000, _stopping_strings=["```", "###", "\n\n"])
+    llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=3000, _stopping_strings=[])
     _qa = load_qa_chain(
         llm,
         chain_type=_chain_type,

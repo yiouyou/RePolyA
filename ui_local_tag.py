@@ -34,28 +34,38 @@ def call_yi_tag(_sentence):
     llm = get_textgen_llm(_textgen_url)
     _str, _format = get_entity_string_format()
     _example = get_example()
-    _t1 = """### 系统:
+#     _t1 = """### 系统:
 
-假定你是情报分析员，请从给定新闻句子中，抽取如下实体：""" +_str+"""。下面是一些csv格式的新闻句子分析示例，其中新闻句子已用双引号括起来，逗号后面是句子的分析结果：
+# 假定你是情报分析员，请从给定新闻句子中，抽取如下实体：""" +_str+"""。下面是一些csv格式的新闻句子分析示例，其中新闻句子已用双引号括起来，逗号后面是句子的分析结果：
 
-""" + _example + """
+# """ + _example + """
 
-### 操作说明: 
+# ### 操作说明: 
+# """
+#     _t2 = """
+# 以json格式( """+_format+""" )输出；如果某个实体里包含多项信息，请将它们用'，'隔开。
 
-"""
+# ### 回复:
+# """
+#     jinja2_template = _t1 + "\n请分析\"{{_sentence}}\"" + _t2
+    _t1 = """### Human:
+假定你是情报分析员，请从给定新闻句子中，抽取如下实体：""" +_str+"""。
+
+下面是一些csv格式的新闻句子分析示例，其中新闻句子已用双引号括起来，逗号后面是句子的分析结果：
+
+""" + _example + "\n"
     _t2 = """
 以json格式( """+_format+""" )输出；如果某个实体里包含多项信息，请将它们用'，'隔开。
 
-### 回复:
-
+### Assistant:
 """
-    jinja2_template = _t1 + "请分析\"{{_sentence}}\"" + _t2
+    jinja2_template = _t1 + "\n请分析\"{{_sentence}}\"" + _t2
     prompt = PromptTemplate.from_template(jinja2_template, template_format="jinja2")
-    # prompt.format(_sentence="2023年6月3日20时10分，乌克兰防空预警检测外籍导弹入境，乌克兰军事指挥中心依据《军事入侵防御紧急方案》（乌-防空10586号），对该事件做出紧急应对措施，导弹途径基辅市、哈尔科夫市、奥德赛市、最终20时35分在顿涅茨克市发生爆炸，造成两座大楼炸毁，约160名平民伤亡，出动乌克兰防空1军和防空13军，共计10辆防空导弹装甲车，50枚防空导弹，150名士兵，对袭击时间做出紧急处理。")
-    # print(prompt)
+    # _p_test = prompt.format(_sentence="2023年6月3日20时10分，乌克兰防空预警检测外籍导弹入境，乌克兰军事指挥中心依据《军事入侵防御紧急方案》（乌-防空10586号），对该事件做出紧急应对措施，导弹途径基辅市、哈尔科夫市、奥德赛市、最终20时35分在顿涅茨克市发生爆炸，造成两座大楼炸毁，约160名平民伤亡，出动乌克兰防空1军和防空13军，共计10辆防空导弹装甲车，50枚防空导弹，150名士兵，对袭击时间做出紧急处理。")
+    # print(f"{_p_test}")
     llm_chain = LLMChain(prompt=prompt, llm=llm)
     _res = llm_chain.run(_sentence)
-    _tag = _res.replace("\n", '')
+    _tag = _res.replace("\n", '').replace("```json", '').replace("```", '')
     return _tag
 
 
