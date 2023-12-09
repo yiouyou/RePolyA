@@ -32,7 +32,7 @@ ct_section = [
 def write_log_ans(_log_ans, _txt, _status=None):
     with open(_log_ans, 'w', encoding='utf-8') as wf:
         if _status == "continue":
-            _txt += "\n\n计算中，预计需要30分钟，请稍候..."
+            _txt += "\n\n计算中，预计需要10分钟，请稍候..."
         # elif _status == "done":
         #     _txt += "\n\n[完成]"
         wf.write(_txt)
