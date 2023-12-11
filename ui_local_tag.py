@@ -34,6 +34,7 @@ def call_yi_tag(_sentence):
     llm = get_textgen_llm(_textgen_url)
     _str, _format = get_entity_string_format()
     _example = get_example()
+    ##### TheBloke_Yi-34B-200K-Llamafied-GPTQ
 #     _t1 = """### 系统:
 
 # 假定你是情报分析员，请从给定新闻句子中，抽取如下实体：""" +_str+"""。下面是一些csv格式的新闻句子分析示例，其中新闻句子已用双引号括起来，逗号后面是句子的分析结果：
@@ -48,7 +49,20 @@ def call_yi_tag(_sentence):
 # ### 回复:
 # """
 #     jinja2_template = _t1 + "\n请分析\"{{_sentence}}\"" + _t2
-    _t1 = """### Human:
+    ##### TheBloke_SUS-Chat-34B-GPTQ / SUS-Chat-34B-function-calling-v3-AWQ
+#     _t1 = """### Human:
+# 假定你是情报分析员，请从给定新闻句子中，抽取如下实体：""" +_str+"""。
+
+# 下面是一些csv格式的新闻句子分析示例，其中新闻句子已用双引号括起来，逗号后面是句子的分析结果：
+
+# """ + _example + "\n"
+#     _t2 = """
+# 以json格式( """+_format+""" )输出；如果某个实体里包含多项信息，请将它们用'，'隔开。
+
+# ### Assistant:
+# """
+    ##### Yi-34B-200K-Llamafied-chat-SFT-function-calling-v3-GPTQ
+    _t1 = """Human:
 假定你是情报分析员，请从给定新闻句子中，抽取如下实体：""" +_str+"""。
 
 下面是一些csv格式的新闻句子分析示例，其中新闻句子已用双引号括起来，逗号后面是句子的分析结果：
@@ -57,7 +71,7 @@ def call_yi_tag(_sentence):
     _t2 = """
 以json格式( """+_format+""" )输出；如果某个实体里包含多项信息，请将它们用'，'隔开。
 
-### Assistant:
+Assistant:
 """
     jinja2_template = _t1 + "\n请分析\"{{_sentence}}\"" + _t2
     prompt = PromptTemplate.from_template(jinja2_template, template_format="jinja2")

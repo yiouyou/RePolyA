@@ -97,7 +97,7 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
     _docs = _multi_retriever.get_relevant_documents(_query)
     _bm25_retriever = BM25Retriever.from_documents(_docs)
     _docs = _bm25_retriever.get_relevant_documents(_query)
-    #####
+    ##### TheBloke_Yi-34B-200K-Llamafied-GPTQ
 #     _template = """### 系统:
 
 # 您是问答任务的助手。使用以下检索到的上下文来回答问题。如果你不知道答案，就说你不知道。
@@ -112,7 +112,20 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
 
 # ### 回复:
 # """
-    _template = """### Human:
+    ##### TheBloke_SUS-Chat-34B-GPTQ / SUS-Chat-34B-function-calling-v3-AWQ
+#     _template = """### Human:
+# 假定你是问答任务的助手，请使用以下检索到的上下文来回答问题。如果你不知道答案，就说你不知道。
+
+# 上下文: 
+# {context} 
+
+# 请回答如下问题：
+# {question}
+
+# ### Assistant:
+# """
+    ##### Yi-34B-200K-Llamafied-chat-SFT-function-calling-v3-GPTQ
+    _template = """Human:
 假定你是问答任务的助手，请使用以下检索到的上下文来回答问题。如果你不知道答案，就说你不知道。
 
 上下文: 
@@ -121,7 +134,7 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
 请回答如下问题：
 {question}
 
-### Assistant:
+Assistant:
 """
     rag_prompt_yi = PromptTemplate(
         input_variables=["question", "context"],
