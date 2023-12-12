@@ -11,12 +11,12 @@ from repolya.rag.vdb_faiss import (
 )
 from repolya.rag.qa_chain import (
     qa_vdb_multi_query_textgen,
-    qa_with_context_as_mio,
+    qa_with_context_as_mio_textgen,
+    create_rag_subtask_list_textgen,
 )
-# from repolya.autogen.workflow import (
-#     create_rag_task_list_zh,
-#     search_faiss_openai,
-# )
+from repolya.autogen.workflow import (
+    search_faiss_openai_textgen,
+)
 from repolya.rag.digest_dir import (
     calculate_md5,
     dir_to_faiss_HuggingFace,
@@ -142,36 +142,37 @@ def rag_helper_fast(_query):
     return
 
 
-def rag_helper_autogen(_query):
+def rag_helper_autogen_textgen(_query):
+    _textgen_url = "http://127.0.0.1:5552"
     _vdb = get_faiss_HuggingFace(_db_name)
     _ans, _ref = "", ""
-    # write_log_ans(_log_ans_autogen,'')
-    # write_log_ref(_log_ref_autogen,'')
-    # start_time = time.time()
-    # write_log_ans(_log_ans_autogen, '', 'continue')
-    # # ChatCompletion.start_logging(reset_counter=True, compact=False)
-    # ### task list
-    # _task_list, _token_cost = create_rag_task_list_zh(_query)
-    # write_log_ans(_log_ans_autogen, f"生成的子问题列表：\n\n{_task_list}", 'continue')
-    # end_time = time.time()
-    # execution_time = end_time - start_time
-    # _time = f"Time: {execution_time:.1f} seconds"
-    # write_log_ref(_log_ref_autogen, f"\n\n{_time}")
-    # # print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")
-    # ### context
-    # _context, _token_cost = search_faiss_openai(_task_list, _vdb)
-    # write_log_ans(_log_ans_autogen, f"生成的 QA 上下文：\n\n{_context}", 'continue')
-    # end_time = time.time()
-    # execution_time = end_time - start_time
-    # _time = f"Time: {execution_time:.1f} seconds"
-    # write_log_ref(_log_ref_autogen, f"\n\n{_time}")
-    # ### qa
-    # _qa, _tc = qa_with_context_as_mio(_query, _context)
-    # write_log_ans(_log_ans_autogen, f"生成的最终答案：\n\n{_qa}", 'done')
-    # end_time = time.time()
-    # execution_time = end_time - start_time
-    # _time = f"Time: {execution_time:.1f} seconds"
-    # write_log_ref(_log_ref_autogen, f"\n\n{_time}\n\n{'='*40}\n\n{_context}")
+    write_log_ans(_log_ans_autogen,'')
+    write_log_ref(_log_ref_autogen,'')
+    start_time = time.time()
+    write_log_ans(_log_ans_autogen, '', 'continue')
+    # ChatCompletion.start_logging(reset_counter=True, compact=False)
+    ### task list
+    _subtask, _token_cost = create_rag_subtask_list_textgen(_query, _textgen_url)
+    write_log_ans(_log_ans_autogen, f"生成的子问题列表：\n\n{_subtask}", 'continue')
+    end_time = time.time()
+    execution_time = end_time - start_time
+    _time = f"Time: {execution_time:.1f} seconds"
+    write_log_ref(_log_ref_autogen, f"\n\n{_time}")
+    # print(f"cost_usage: {cost_usage(ChatCompletion.logged_history)}")
+    ### context
+    _context, _token_cost = search_faiss_openai_textgen(_subtask, _vdb, _textgen_url)
+    write_log_ans(_log_ans_autogen, f"生成的 QA 上下文：\n\n{_context}", 'continue')
+    end_time = time.time()
+    execution_time = end_time - start_time
+    _time = f"Time: {execution_time:.1f} seconds"
+    write_log_ref(_log_ref_autogen, f"\n\n{_time}")
+    ### qa
+    _qa, _tc = qa_with_context_as_mio_textgen(_query, _context, _textgen_url)
+    write_log_ans(_log_ans_autogen, f"生成的最终答案：\n\n{_qa}", 'done')
+    end_time = time.time()
+    execution_time = end_time - start_time
+    _time = f"Time: {execution_time:.1f} seconds"
+    write_log_ref(_log_ref_autogen, f"\n\n{_time}\n\n{'='*40}\n\n{_context}")
     return
 
 
@@ -181,5 +182,5 @@ def rag_helper(_query, _radio):
         rag_helper_fast(_query)
     if _radio == "多智":
         logger_rag.info("[多智]")
-        rag_helper_autogen(_query)
+        rag_helper_autogen_textgen(_query)
 

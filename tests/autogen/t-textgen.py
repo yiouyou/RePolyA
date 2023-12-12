@@ -16,7 +16,7 @@ openai.api_version = "2023-11-22"
 response = oai.Completion.create(
     config_list=[
         {
-            "model": "TheBloke_Yi-34B-200K-Llamafied-GPTQ",
+            "model": "Yi-34B-200K-Llamafied-chat-SFT-function-calling-v3-GPTQ",
             "base_url": "http://127.0.0.1:5552/v1",
             "api_type": "openai",
             "api_key": "...", # just a placeholder
@@ -30,7 +30,7 @@ print(response)
 # response = oai.ChatCompletion.create(
 #     config_list=[
 #         {
-#             "model": "TheBloke_Yi-34B-200K-Llamafied-GPTQ",
+#             "model": "Yi-34B-200K-Llamafied-chat-SFT-function-calling-v3-GPTQ",
 #             "base_url": "http://127.0.0.1:5552/v1",
 #             "api_type": "openai",
 #             "api_key": "...",
@@ -43,7 +43,7 @@ print(response)
 
 local_config_list = [
     {
-        'model': 'TheBloke_Yi-34B-200K-Llamafied-GPTQ',
+        'model': 'Yi-34B-200K-Llamafied-chat-SFT-function-calling-v3-GPTQ',
         'api_key': '...',
         'api_type': 'openai',
         'api_base': "http://127.0.0.1:5552/v1",

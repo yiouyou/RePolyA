@@ -1,15 +1,23 @@
+import os
+_RePolyA = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import sys
+sys.path.append(_RePolyA)
+
 model_url = "http://127.0.0.1:5552"
 
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
-from langchain.llms import TextGen
+from repolya.local.textgen import TextGen
 # langchain.debug = True
 llm = TextGen(
     model_url=model_url,
     temperature=0.01,
+    top_p=0.9,
+    seed=10,
     max_new_tokens=200, # 250/2500
-    stop=["\nHuman:", "\n```\n"],
-    # verbose=True,
+    # stop=["\nHuman:", "\n```\n"],
+    stop=[],
+    streaming=False,
 )
 
 
@@ -90,47 +98,45 @@ agent = initialize_agent(
 )
 # print(agent.agent.llm_chain.prompt)
 
+sys_msg = """Human:
+Bot is a expert JSON builder designed to assist with a wide range of tasks.
 
-B_INST, E_INST = "[INST] ", "[/INST]"
-B_SYS, E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n"
-sys_msg = B_INST + B_SYS + """Assistant is a expert JSON builder designed to assist with a wide range of tasks.
+Bot is able to respond to the User and use tools using JSON strings that contain "action" and "action_input" parameters.
 
-Assistant is able to respond to the User and use tools using JSON strings that contain "action" and "action_input" parameters.
+All of Bot's communication is performed using this JSON format.
 
-All of Assistant's communication is performed using this JSON format.
-
-Assistant can also use tools by responding to the user with tool use instructions in the same "action" and "action_input" JSON format. Tools available to Assistant are:
+Bot can also use tools by responding to the user with tool use instructions in the same "action" and "action_input" JSON format. Tools available to Bot are:
 
 - "Calculator": Useful for when you need to answer questions about math.
-  - To use the calculator tool, Assistant should write like so:
+  - To use the calculator tool, Bot should write like so:
     ```json
     {{"action": "Calculator", "action_input": "sqrt(4)"}}
     ```
 
-Here are some previous conversations between the Assistant and User:
+Here are some previous conversations between the Bot and User:
 
 User: Hey how are you today?
-Assistant: ```json
+Bot: ```json
 {{"action": "Final Answer", "action_input": "I'm good thanks, how are you?"}}
 ```
 User: I'm great, what is the square root of 4?
-Assistant: ```json
+Bot: ```json
 {{"action": "Calculator", "action_input": "sqrt(4)"}}
 ```
 User: 2.0
-Assistant: ```json
+Bot: ```json
 {{"action": "Final Answer", "action_input": "The answer is 2"}}
 ```
 User: Thanks could you tell me what 4 to the power of 2 is?
-Assistant: ```json
+Bot: ```json
 {{"action": "Calculator", "action_input": "4**2"}}
 ```
 User: 16.0
-Assistant: ```json
+Bot: ```json
 {{"action": "Final Answer", "action_input": "The answer is 16.0"}}
 ```
 
-Here is the latest conversation between Assistant and User."""
+Here is the latest conversation between Bot and User."""
 new_prompt = agent.agent.create_prompt(
     system_message=sys_msg,
     tools=tools
@@ -138,12 +144,12 @@ new_prompt = agent.agent.create_prompt(
 agent.agent.llm_chain.prompt = new_prompt
 
 
-human_msg = E_SYS + "Respond to the following in JSON with 'action' and 'action_input' values:\n{input}" + E_INST
+human_msg = "Respond to the following in JSON with 'action' and 'action_input' values:\n{input}\n\nAssistant:\n"
 agent.agent.llm_chain.prompt.messages[2].prompt.template = human_msg
-# print(agent.agent.llm_chain.prompt)
+print(agent.agent.llm_chain.prompt)
 
 
 print(agent("hey how are you today?")["output"])
 print(agent("what is 4 to the power of 2.1?")["output"])
-# print(agent("can you multiply that by 3?")["output"])
+print(agent("can you multiply that by 3?")["output"])
 

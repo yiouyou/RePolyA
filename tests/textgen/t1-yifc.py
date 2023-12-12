@@ -13,12 +13,15 @@ set_debug(True)
 
 model_url = "http://127.0.0.1:5552"
 
-template = """Question: {question}
+template = """Human:
+{question}
 
-Answer: Let us think step by step."""
+Assistant:
+
+"""
 prompt = PromptTemplate(template=template, input_variables=["question"])
 
-question = "Human:\nWhat NFL team won the Super Bowl in the year Justin Bieber was born?\n\nAssistant:\n"
+question = "What NFL team won the Super Bowl in the year Justin Bieber was born?"
 
 llm = TextGen(
     model_url=model_url,
@@ -26,6 +29,7 @@ llm = TextGen(
     top_p=0.9,
     seed=10,
     max_tokens=200,
+    stop=[],
     streaming=False,
 )
 

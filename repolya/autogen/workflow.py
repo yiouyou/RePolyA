@@ -1,5 +1,5 @@
 from repolya._const import AUTOGEN_CONFIG, WORKSPACE_RAG, WORKSPACE_AUTOGEN
-from repolya._log import logger_autogen
+from repolya._log import logger_autogen, logger_rag
 
 from repolya.autogen.as_basic import A_user, A_assist
 from repolya.autogen.as_teachable import TEACHABLE_user, TEACHABLE_agent
@@ -50,6 +50,7 @@ from repolya.rag.vdb_faiss import (
 )
 from repolya.rag.qa_chain import (
     qa_vdb_multi_query,
+    qa_vdb_multi_query_textgen,
     qa_docs_ensemble_query,
     qa_docs_parent_query,
     qa_summerize,
@@ -336,6 +337,26 @@ def search_faiss_openai(text, _vdb):
         _re.append(f"Q: {i}\nA: {i_ans}")
         _tc.append(i_token_cost)
     _token_cost = calc_token_cost(_tc)
+    return '\n\n'.join(_re), _token_cost
+
+
+def search_faiss_openai_textgen(text, _vdb, _textgen_url):
+    _re = []
+    _li = text.split("\n")
+    questions = []
+    for i in _li:
+        if re.match(r"^\d+\.", i):            
+            questions.append(re.sub(r"^\d+\.\s*", "", i))
+        else:
+            questions.append(i)
+    logger_rag.info(questions)
+    for i in questions:
+        i_ans, i_step, i_token_cost = qa_vdb_multi_query_textgen(i, _vdb, 'stuff', _textgen_url)
+        i_ans = clean_txt(i_ans)
+        i_out = f"Q: {i}\nA: {i_ans}"
+        logger_rag.info(i_out)
+        _re.append(i_out)
+    _token_cost = ""
     return '\n\n'.join(_re), _token_cost
 
 

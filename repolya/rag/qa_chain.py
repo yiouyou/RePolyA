@@ -89,7 +89,6 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
     if _chain_type not in ['stuff', 'map_reduce', 'refine', 'map_rerank']:
         logger_rag.error("_chain_type must be one of 'stuff', 'map_reduce', 'refine', or 'map_rerank'")
     _ans, _steps, _token_cost = "", "", ""
-    llm = get_textgen_llm(_textgen_url)
     _multi_retriever = get_vdb_multi_query_retriever_textgen(_vdb, _textgen_url)
     _run_manager = CallbackManagerForRetrieverRun.get_noop_manager()
     _generated_queries = _multi_retriever.generate_queries(_query, _run_manager)
@@ -100,7 +99,7 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
     ##### TheBloke_Yi-34B-200K-Llamafied-GPTQ
 #     _template = """### 系统:
 
-# 您是问答任务的助手。使用以下检索到的上下文来回答问题。如果你不知道答案，就说你不知道。
+# 你是问答任务助手，请使用以下检索到的上下文信息来回答问题。如果你不知道答案，就说你不知道。
 
 # ### 操作说明: 
 
@@ -114,7 +113,7 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
 # """
     ##### TheBloke_SUS-Chat-34B-GPTQ / SUS-Chat-34B-function-calling-v3-AWQ
 #     _template = """### Human:
-# 假定你是问答任务的助手，请使用以下检索到的上下文来回答问题。如果你不知道答案，就说你不知道。
+# 你是问答任务助手，请使用以下检索到的上下文信息来回答问题。如果你不知道答案，就说你不知道。
 
 # 上下文: 
 # {context} 
@@ -126,7 +125,7 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
 # """
     ##### Yi-34B-200K-Llamafied-chat-SFT-function-calling-v3-GPTQ
     _template = """Human:
-假定你是问答任务的助手，请使用以下检索到的上下文来回答问题。如果你不知道答案，就说你不知道。
+你是问答任务助手，请使用以下检索到的上下文信息来回答问题。如果你不知道答案，就说你不知道。
 
 上下文: 
 {context} 
@@ -295,6 +294,27 @@ def qa_with_context_as_mio(_query, _context):
     return [_ans, _token_cost]
 
 
+##### qa with context as military intelligence officer
+def qa_with_context_as_mio_textgen(_query, _context, _textgen_url):
+    _ans, _steps, _token_cost = "", "", ""
+    llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=500, _stopping_strings=[])
+    template ="""Human:
+给定下面信息：
+{_context}
+
+作为一名军事情报人员，请从各个角度完整清晰的回答以下问题：
+{_query}
+
+Assistant:
+"""
+    prompt = PromptTemplate.from_template(template)
+    chain = prompt | llm | StrOutputParser()
+    _ans = chain.invoke({"_query": _query, "_context": _context})
+    logger_rag.info(f"{_ans}")
+    logger_rag.info(f"{_token_cost}")
+    return [_ans, _token_cost]
+
+
 ##### qa with context as government officer
 def qa_with_context_as_go(_query, _context):
     llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
@@ -312,4 +332,21 @@ def qa_with_context_as_go(_query, _context):
         logger_rag.info(f"{_ans}")
         logger_rag.info(f"{_token_cost}")
     return [_ans, _token_cost]
+
+
+##### create_rag_subtask_list_textgen
+def create_rag_subtask_list_textgen(_query, _textgen_url):
+    _ans, _token_cost = "", ""
+    llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=500, _stopping_strings=[])
+    template ="""### Human:
+请将"{_query}"这个复杂问题从多个方面和多个角度拆解为5个更简单的子问题。只输出子问题列表，不输出其他任何内容。
+
+### Assistant:
+"""
+    prompt = PromptTemplate.from_template(template)
+    chain = prompt | llm | StrOutputParser()
+    _ans = chain.invoke({"_query": _query})
+    logger_rag.info(f"{_ans}")
+    logger_rag.info(f"{_token_cost}")
+    return _ans, _token_cost
 
