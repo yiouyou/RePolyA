@@ -105,21 +105,24 @@ def get_vdb_multi_query_retriever_textgen(_vdb, _textgen_url):
     output_parser = LineListOutputParser()
     QUERY_PROMPT = PromptTemplate(
         input_variables=["question"],
-        template="""### 系统:
-
+        template="""### Human:
 你是一名AI语言模型助手。
-你的任务是生成五个给定用户问题的不同版本，用于从向量中检索相关文档数据库。
-通过对用户问题产生多种观点，帮助用户克服基于距离的相似性搜索的一些限制。
-请提供这些替代问题，并用换行符分隔。
+你的任务是针对给定问题生成3个不同的版本，用于从向量中检索相关文档数据库。
+通过将给定问题生成多个变体，帮助用户克服基于距离的相似性搜索的一些限制。
+仅输出这些替代性问题，并用换行符分隔，务必不用重复。
 
-### 操作说明:
+问题:
+{question}
 
-原问题：{question}
-
-### 回复:
+### Assistant:
 """,
     )
-    llm = get_textgen_llm(_textgen_url, _top_p=0.5, _max_tokens=200, _stopping_strings=["```", "###"])
+    llm = get_textgen_llm(
+        _textgen_url,
+        _top_p=0.5,
+        _max_tokens=5000,
+        _stopping_strings=[]
+    )
     llm_chain = LLMChain(
         llm=llm,
         prompt=QUERY_PROMPT,

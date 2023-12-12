@@ -54,7 +54,6 @@ QUERY_PROMPT = PromptTemplate(
 原问题：{question}
 
 Assistant:
-
 """,
 )
 
@@ -140,7 +139,6 @@ rag_prompt_yi = PromptTemplate(
 请回答问题: {question}
 
 Assistant:
-
 """,
 )
 

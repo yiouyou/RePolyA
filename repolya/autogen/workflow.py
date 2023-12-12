@@ -341,10 +341,11 @@ def search_faiss_openai(text, _vdb):
 
 
 def search_faiss_openai_textgen(text, _vdb, _textgen_url):
+    _context, _token_cost = "", ""
     _re = []
-    _li = text.split("\n")
+    _list = text.split("\n")
     questions = []
-    for i in _li:
+    for i in _list:
         if re.match(r"^\d+\.", i):            
             questions.append(re.sub(r"^\d+\.\s*", "", i))
         else:
@@ -353,11 +354,14 @@ def search_faiss_openai_textgen(text, _vdb, _textgen_url):
     for i in questions:
         i_ans, i_step, i_token_cost = qa_vdb_multi_query_textgen(i, _vdb, 'stuff', _textgen_url)
         i_ans = clean_txt(i_ans)
-        i_out = f"Q: {i}\nA: {i_ans}"
-        logger_rag.info(i_out)
-        _re.append(i_out)
-    _token_cost = ""
-    return '\n\n'.join(_re), _token_cost
+        # i_out = f"Q: {i}\nA: {i_ans}"
+        i_out = f"{i_ans}"
+        if i != i_ans:
+            # logger_rag.info(i_out)
+            _re.append(i_out)
+    _context = '\n\n'.join(_re)
+    logger_rag.info(f"context:\n'{_context}'")
+    return _context, _token_cost
 
 
 def do_rag_code_aid(msg, docs_path, collection_name):

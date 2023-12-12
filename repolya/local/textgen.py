@@ -429,7 +429,7 @@ def get_textgen_llm(_textgen_url,
                     _seed=10,
                     _max_tokens=200,
                     _streaming=False,
-                    _stopping_strings=["\n\n"]
+                    _stopping_strings=[]
     ):
     llm = TextGen(
         model_url=_textgen_url,

@@ -99,7 +99,7 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
     ##### TheBloke_Yi-34B-200K-Llamafied-GPTQ
 #     _template = """### 系统:
 
-# 你是问答任务助手，请使用以下检索到的上下文信息来回答问题。如果你不知道答案，就说你不知道。
+# 你是问答任务助手，请使用以下检索到的上下文信息来回答问题。如果没有明确答案，请回复"不知道"。
 
 # ### 操作说明: 
 
@@ -111,36 +111,29 @@ def qa_vdb_multi_query_textgen(_query, _vdb, _chain_type, _textgen_url):
 
 # ### 回复:
 # """
-    ##### TheBloke_SUS-Chat-34B-GPTQ / SUS-Chat-34B-function-calling-v3-AWQ
-#     _template = """### Human:
-# 你是问答任务助手，请使用以下检索到的上下文信息来回答问题。如果你不知道答案，就说你不知道。
-
-# 上下文: 
-# {context} 
-
-# 请回答如下问题：
-# {question}
-
-# ### Assistant:
-# """
-    ##### Yi-34B-200K-Llamafied-chat-SFT-function-calling-v3-GPTQ
-    _template = """Human:
-你是问答任务助手，请使用以下检索到的上下文信息来回答问题。如果你不知道答案，就说你不知道。
+    ##### TheBloke_SUS-Chat-34B-GPTQ / SUS-Chat-34B-function-calling-v3-AWQ / Yi-34B-200K-Llamafied-chat-SFT-function-calling-v3-GPTQ
+    _template = """### Human:
+你是问答任务助手，请使用下面的上下文信息来回答给定问题。如果没有明确答案，请回复"不知道"，务必不要重复问题。
 
 上下文: 
 {context} 
 
-请回答如下问题：
+给定问题：
 {question}
 
-Assistant:
+### Assistant:
 """
     rag_prompt_yi = PromptTemplate(
         input_variables=["question", "context"],
         template=_template,
     )
     # llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=3000, _stopping_strings=["```", "###", "\n\n"])
-    llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=3000, _stopping_strings=[])
+    llm = get_textgen_llm(
+        _textgen_url,
+        _top_p=0.1,
+        _max_tokens=5000,
+        _stopping_strings=[]
+    )
     _qa = load_qa_chain(
         llm,
         chain_type=_chain_type,
@@ -297,15 +290,22 @@ def qa_with_context_as_mio(_query, _context):
 ##### qa with context as military intelligence officer
 def qa_with_context_as_mio_textgen(_query, _context, _textgen_url):
     _ans, _steps, _token_cost = "", "", ""
-    llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=500, _stopping_strings=[])
-    template ="""Human:
-你是一名军事情报人员，给定下面信息：
+    llm = get_textgen_llm(
+        _textgen_url,
+        _top_p=0.1,
+        _max_tokens=1000,
+        _stopping_strings=[]
+    )
+    template ="""### Human:
+你是一名军事情报人员，请根据给定上下文，从各维度全面回答给定问题，并给出具体的解释。如果没有明确答案，请回复"不知道"，务必不要重复问题。
+
+上下文:
 {_context}
 
-请从各个方面、角度、维度完整清晰地回答以下问题：
+问题:
 {_query}
 
-Assistant:
+### Assistant:
 """
     prompt = PromptTemplate.from_template(template)
     chain = prompt | llm | StrOutputParser()
@@ -337,11 +337,16 @@ def qa_with_context_as_go(_query, _context):
 ##### create_rag_subtask_list_textgen
 def create_rag_subtask_list_textgen(_query, _textgen_url):
     _ans, _token_cost = "", ""
-    llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=500, _stopping_strings=[])
+    llm = get_textgen_llm(
+        _textgen_url,
+        _top_p=0.1,
+        _max_tokens=500,
+        _stopping_strings=[]
+    )
     template ="""### Human:
-你是一名军事情报人员，请将下面的复杂问题从多个方面和多个角度拆解为3个左右更简单的子问题。
-请注意子问题中不要含有'是否'类型的提问，且必须与原问题密切相关。
-只输出子问题列表，不能重复，不输出其他任何内容。
+你是一名军事情报人员，请将给定的复杂问题从多个方面和多个角度拆解为3个左右更简单的子问题。
+请注意子问题中不能含有'是否'类的提问，且必须与原问题密切相关。
+仅输出子问题列表，不能重复，不输出其他任何内容。
 
 复杂问题:
 "{_query}"
