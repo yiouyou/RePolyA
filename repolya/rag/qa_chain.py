@@ -299,10 +299,10 @@ def qa_with_context_as_mio_textgen(_query, _context, _textgen_url):
     _ans, _steps, _token_cost = "", "", ""
     llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=500, _stopping_strings=[])
     template ="""Human:
-给定下面信息：
+你是一名军事情报人员，给定下面信息：
 {_context}
 
-作为一名军事情报人员，请从各个角度完整清晰的回答以下问题：
+请从各个方面、角度、维度完整清晰地回答以下问题：
 {_query}
 
 Assistant:
@@ -339,7 +339,12 @@ def create_rag_subtask_list_textgen(_query, _textgen_url):
     _ans, _token_cost = "", ""
     llm = get_textgen_llm(_textgen_url, _top_p=0.1, _max_tokens=500, _stopping_strings=[])
     template ="""### Human:
-请将"{_query}"这个复杂问题从多个方面和多个角度拆解为5个更简单的子问题。只输出子问题列表，不输出其他任何内容。
+你是一名军事情报人员，请将下面的复杂问题从多个方面和多个角度拆解为3个左右更简单的子问题。
+请注意子问题中不要含有'是否'类型的提问，且必须与原问题密切相关。
+只输出子问题列表，不能重复，不输出其他任何内容。
+
+复杂问题:
+"{_query}"
 
 ### Assistant:
 """
@@ -348,5 +353,6 @@ def create_rag_subtask_list_textgen(_query, _textgen_url):
     _ans = chain.invoke({"_query": _query})
     logger_rag.info(f"{_ans}")
     logger_rag.info(f"{_token_cost}")
+    _ans = f"{_query}\n{_ans}"
     return _ans, _token_cost
 
