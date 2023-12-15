@@ -16,7 +16,7 @@ openai.api_version = "2023-11-22"
 response = oai.Completion.create(
     config_list=[
         {
-            "model": "Yi-34B-200K-Llamafied-chat-SFT-function-calling-v3-GPTQ",
+            "model": "Yi34B200K-Llamafied-chatSFT-fcv3-GPTQ",
             "base_url": "http://127.0.0.1:5552/v1",
             "api_type": "openai",
             "api_key": "...", # just a placeholder
